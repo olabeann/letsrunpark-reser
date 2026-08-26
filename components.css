@@ -1,0 +1,41 @@
+/* PLAY Design System component subset used by the reservation prototype. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding-inline:20px;border-radius:var(--r-md);font-size:var(--fs-body-sm);font-weight:var(--fw-bold)}
+.btn--dark{background:var(--ink);color:var(--white)}
+.btn--full{width:100%;height:48px;font-size:var(--fs-body-lg)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.ds-btn-outline{background:var(--white);border:1px solid var(--line);color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:36px;min-width:48px;padding-inline:14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--white);color:var(--grey);font-size:var(--fs-label);font-weight:var(--fw-medium);display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.chip:hover{background:var(--bg)}
+.chip.is-selected{background:var(--ink);border-color:var(--ink);color:var(--white)}
+.chip--slots,.chip--slots.is-selected{background:var(--white);border-color:var(--ink);color:var(--ink)}
+.chip--slots.is-selected{box-shadow:inset 0 0 0 1px var(--ink)}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
+.badge{height:26px;padding-inline:12px;border-radius:var(--r-full);font-size:var(--fs-label);font-weight:var(--fw-medium);display:inline-flex;align-items:center;width:max-content}
+.badge--on{background:var(--ink);color:var(--white)}
+.badge--muted{background:#EDEDEF;color:var(--ink)}
+.badge--ended{background:transparent;border:1px solid var(--line);color:var(--soft)}
+.tag--cat{height:26px;padding-inline:12px;border-radius:var(--r-full);font-size:var(--fs-label);display:inline-flex;align-items:center;width:max-content}
+.tag--event{background:var(--yellow-500);color:var(--ink)}
+.tag--season{background:var(--coral-500);color:var(--ink)}
+.tag--exp{background:var(--ground-500);color:var(--ink)}
+.tag--fac{background:var(--green-500);color:var(--ink)}
+.card{display:flex;flex-direction:column}
+.card__media{position:relative;border-radius:var(--r-media);overflow:hidden;background:var(--img,var(--neut-thumb));background-size:cover;background-position:center;margin-bottom:16px}
+.card__title{font-size:var(--fs-h3);font-weight:var(--fw-semibold);padding-inline:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card__sub{font-size:var(--fs-body-sm);color:var(--grey);margin-top:5px;padding-inline:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card--wide{width:420px}
+.program-card.card--wide{width:auto;flex-direction:row}
+.program-card .card__media{margin-bottom:0;border-radius:0}
+.program-copy>.tag--cat{margin-bottom:10px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--yellow-500);outline-offset:2px}
+.reservation-header{height:72px;padding-inline:var(--pad-page);display:flex;align-items:center;justify-content:space-between;background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.reservation-brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
+.reservation-brand>span{width:38px;height:38px;border-radius:var(--r-md);background:var(--yellow-500);display:grid;place-items:center;font-size:12px;font-weight:800;letter-spacing:-.04em}
+.reservation-brand strong,.reservation-brand small{display:block}.reservation-brand strong{font-size:var(--fs-body-sm)}.reservation-brand small{font-size:10px;color:var(--grey);margin-top:2px}
+.reservation-header__actions{display:flex;align-items:center;gap:8px}.reservation-header__actions button{height:40px;padding-inline:14px;border-radius:var(--r-md);font-size:var(--fs-label)}
+.reservation-header__actions .header-login{background:var(--ink);color:var(--white);font-weight:700}
+.ticket-brand{font-size:var(--fs-body-sm)}
+.experience-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.experience-card{position:relative;text-align:left;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;background:var(--white);transition:.18s}.experience-card:hover{border-color:var(--soft)}.experience-card.is-selected{border:2px solid var(--ink);padding:17px;background:var(--yellow-100)}.experience-card__number{position:absolute;right:14px;top:12px;color:var(--coral-700);font-size:10px;font-weight:700}.experience-card__icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--ground-200);font-size:29px;margin-bottom:14px}.experience-card:nth-child(2) .experience-card__icon{background:var(--green-200)}.experience-card__head{display:flex;justify-content:space-between;align-items:end;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line)}.experience-card__head small,.experience-card__head strong{display:block}.experience-card__head small{font-size:10px;color:var(--coral-700);margin-bottom:4px}.experience-card__head strong{font-size:var(--fs-body-lg)}.experience-card__head>b{font-size:var(--fs-h3)}.experience-card ul{margin:14px 0 0;padding:0;list-style:none}.experience-card li{position:relative;padding-left:14px;margin-top:7px;color:var(--grey);font-size:var(--fs-caption);line-height:1.45}.experience-card li:before{content:"✓";position:absolute;left:0;color:var(--green-700);font-weight:700}.citizen-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:14px 16px;border:1px solid var(--yellow-500);border-radius:var(--r-md);background:var(--yellow-100)}.citizen-banner strong{font-size:var(--fs-body-sm)}.citizen-banner span{color:var(--grey);font-size:var(--fs-caption)}.experience-overlap,.weather-note{margin:12px 0 0;color:var(--coral-700);font-size:var(--fs-caption)}.slot-guide{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--line);margin-bottom:16px}.slot-guide span{display:flex;gap:10px;background:var(--green-100);padding:11px 12px;color:var(--grey);font-size:var(--fs-caption)}.slot-guide b{min-width:60px;color:var(--green-900)}
+@media(max-width:997px){.reservation-header{height:60px}.reservation-header__actions button:first-child{display:none}.reservation-brand>span{width:34px;height:34px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
+@media(max-width:700px){.experience-options{grid-template-columns:1fr}.experience-card__head{align-items:center}.citizen-banner{align-items:flex-start;flex-direction:column}.slot-guide{grid-template-columns:1fr}}
