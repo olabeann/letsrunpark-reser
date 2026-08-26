@@ -39,3 +39,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .experience-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.experience-card{position:relative;text-align:left;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;background:var(--white);transition:.18s}.experience-card:hover{border-color:var(--soft)}.experience-card.is-selected{border:2px solid var(--ink);padding:17px;background:var(--yellow-100)}.experience-card__number{position:absolute;right:14px;top:12px;color:var(--coral-700);font-size:10px;font-weight:700}.experience-card__icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--ground-200);font-size:29px;margin-bottom:14px}.experience-card:nth-child(2) .experience-card__icon{background:var(--green-200)}.experience-card__head{display:flex;justify-content:space-between;align-items:end;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line)}.experience-card__head small,.experience-card__head strong{display:block}.experience-card__head small{font-size:10px;color:var(--coral-700);margin-bottom:4px}.experience-card__head strong{font-size:var(--fs-body-lg)}.experience-card__head>b{font-size:var(--fs-h3)}.experience-card ul{margin:14px 0 0;padding:0;list-style:none}.experience-card li{position:relative;padding-left:14px;margin-top:7px;color:var(--grey);font-size:var(--fs-caption);line-height:1.45}.experience-card li:before{content:"✓";position:absolute;left:0;color:var(--green-700);font-weight:700}.citizen-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:14px 16px;border:1px solid var(--yellow-500);border-radius:var(--r-md);background:var(--yellow-100)}.citizen-banner strong{font-size:var(--fs-body-sm)}.citizen-banner span{color:var(--grey);font-size:var(--fs-caption)}.experience-overlap,.weather-note{margin:12px 0 0;color:var(--coral-700);font-size:var(--fs-caption)}.slot-guide{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--line);margin-bottom:16px}.slot-guide span{display:flex;gap:10px;background:var(--green-100);padding:11px 12px;color:var(--grey);font-size:var(--fs-caption)}.slot-guide b{min-width:60px;color:var(--green-900)}
 @media(max-width:997px){.reservation-header{height:60px}.reservation-header__actions button:first-child{display:none}.reservation-brand>span{width:34px;height:34px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
 @media(max-width:700px){.experience-options{grid-template-columns:1fr}.experience-card__head{align-items:center}.citizen-banner{align-items:flex-start;flex-direction:column}.slot-guide{grid-template-columns:1fr}}
+.calendar-legend{display:flex;justify-content:flex-end;gap:14px;margin-top:2px;color:var(--grey);font-size:var(--fs-caption)}
+.calendar-legend span{display:inline-flex;align-items:center;gap:6px}
+.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.legend-dot--available{background:var(--green-700)}
+.legend-dot--disabled{background:var(--line)}
+.month-title strong{min-width:104px;text-align:center}
+.month-title button:hover:not(:disabled){border-color:var(--ink);background:var(--bg)}
+.month-title button:disabled{opacity:.28;cursor:not-allowed}
+.calendar-head span:first-child{color:var(--coral-700)}
+.calendar-grid .calendar-empty{height:58px}
+.calendar-grid button{border:1px solid transparent}
+.calendar-grid button:hover:not(:disabled){border-color:var(--green-700)}
+.calendar-grid button:disabled{background:var(--bg)}
+.calendar-grid button.is-available{color:var(--ink);font-weight:var(--fw-semibold)}
+.calendar-grid button.is-available:before{content:"";position:absolute;left:50%;bottom:7px;width:4px;height:4px;border-radius:50%;background:var(--green-700);transform:translateX(-50%)}
+.calendar-grid button[data-weekday="0"].is-available{color:var(--coral-700)}
+.calendar-grid button[data-weekday="6"].is-available{color:#2f65b9}
+.calendar-grid button.is-today{border-color:var(--yellow-500)}
+.calendar-grid button.is-selected{border-color:var(--ink)}
+.calendar-grid button.is-selected:before{display:none}
+@media(max-width:997px){.calendar-grid .calendar-empty{height:50px}}

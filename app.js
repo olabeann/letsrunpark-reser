@@ -66,7 +66,22 @@
 
   var query = new URLSearchParams(window.location.search);
   var program = programs[query.get("program")] || programs.pony;
-  var state = { date: "2026.08.30 (일)", time: program.slots[0].time, qty: 2, discount: false, experience: "ride", step: 1 };
+  var weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
+  var bookingStart = new Date();
+  bookingStart.setHours(0, 0, 0, 0);
+  var bookingEnd = new Date(bookingStart);
+  bookingEnd.setDate(bookingEnd.getDate() + 14);
+  var calendarMonth = new Date(bookingStart.getFullYear(), bookingStart.getMonth(), 1);
+
+  function dateKey(date) {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+  }
+
+  function formatBookingDate(date) {
+    return date.getFullYear() + "." + String(date.getMonth() + 1).padStart(2, "0") + "." + String(date.getDate()).padStart(2, "0") + " (" + weekdayNames[date.getDay()] + ")";
+  }
+
+  var state = { date: formatBookingDate(bookingStart), dateKey: dateKey(bookingStart), time: program.slots[0].time, qty: 2, discount: false, experience: "ride", step: 1 };
   var byId = function (id) { return document.getElementById(id); };
   var money = function (value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; };
   var currentExperience = function () { return program.experiences ? program.experiences[state.experience] : null; };
@@ -86,6 +101,52 @@
           item.classList.toggle("is-selected", selected);
           item.setAttribute("aria-pressed", String(selected));
         });
+        update();
+      });
+    });
+  }
+
+  function renderCalendar() {
+    var grid = byId("calendar-grid");
+    var year = calendarMonth.getFullYear();
+    var month = calendarMonth.getMonth();
+    var firstWeekday = new Date(year, month, 1).getDay();
+    var lastDate = new Date(year, month + 1, 0).getDate();
+    var cells = [];
+
+    byId("calendar-title").textContent = year + "년 " + (month + 1) + "월";
+    byId("calendar-prev").disabled = year === bookingStart.getFullYear() && month === bookingStart.getMonth();
+    byId("calendar-next").disabled = year === bookingEnd.getFullYear() && month === bookingEnd.getMonth();
+
+    for (var empty = 0; empty < firstWeekday; empty += 1) {
+      cells.push('<span class="calendar-empty" aria-hidden="true"></span>');
+    }
+
+    for (var day = 1; day <= lastDate; day += 1) {
+      var date = new Date(year, month, day);
+      var key = dateKey(date);
+      var available = date >= bookingStart && date <= bookingEnd;
+      var selected = key === state.dateKey;
+      var today = key === dateKey(bookingStart);
+      var classNames = [];
+      if (available) classNames.push("is-available");
+      if (selected) classNames.push("is-selected");
+      if (today) classNames.push("is-today");
+      cells.push('<button type="button" data-date-key="' + key + '" data-weekday="' + date.getDay() + '" class="' + classNames.join(" ") + '" aria-label="' + formatBookingDate(date) + (available ? ' 예약 가능' : ' 예약 불가') + '"' + (selected ? ' aria-pressed="true"' : ' aria-pressed="false"') + (available ? '' : ' disabled') + '><span>' + day + '</span>' + (selected ? '<small>선택</small>' : '') + '</button>');
+    }
+
+    while (cells.length % 7 !== 0) {
+      cells.push('<span class="calendar-empty" aria-hidden="true"></span>');
+    }
+
+    grid.innerHTML = cells.join("");
+    grid.querySelectorAll("button:not([disabled])").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var parts = button.getAttribute("data-date-key").split("-");
+        var selectedDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        state.dateKey = button.getAttribute("data-date-key");
+        state.date = formatBookingDate(selectedDate);
+        renderCalendar();
         update();
       });
     });
@@ -148,14 +209,13 @@
     });
   });
 
-  document.querySelectorAll(".calendar-grid button:not([disabled])").forEach(function (button) {
-    button.addEventListener("click", function () {
-      document.querySelectorAll(".calendar-grid button").forEach(function (item) { item.classList.remove("is-selected"); item.querySelector("small")?.remove(); });
-      button.classList.add("is-selected");
-      button.insertAdjacentHTML("beforeend", "<small>선택</small>");
-      state.date = button.getAttribute("data-date") || "2026.08." + String(button.textContent).trim().padStart(2, "0");
-      update();
-    });
+  byId("calendar-prev").addEventListener("click", function () {
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  byId("calendar-next").addEventListener("click", function () {
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+    renderCalendar();
   });
 
   byId("qty-minus").addEventListener("click", function () { state.qty = Math.max(1, state.qty - 1); update(); });
@@ -179,6 +239,7 @@
   byId("pony-slot-guide").hidden = !program.experiences;
   byId("pony-weather-note").hidden = !program.experiences;
   document.querySelector(".discount-check").hidden = !program.experiences;
+  renderCalendar();
   renderSlots();
   update();
 })();
