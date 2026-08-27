@@ -279,14 +279,20 @@
     return { slot: closestSlot.slot, forceActive: true };
   }
 
-  function stateExampleReservations() {
-    var now = new Date();
+  function stateExampleReservations(now) {
+    now = now || new Date();
     var active = activeSlotForNow(now);
-    var upcomingDate = new Date(initialDate);
-    var endedDate = new Date(initialDate);
-    endedDate.setDate(endedDate.getDate() - 7);
+    var upcomingDate = new Date(now);
+    upcomingDate.setHours(0, 0, 0, 0);
     var secondSlot = programs.pony.slots[5].time;
     var endedSlot = programs.pony.slots[2].time;
+    // The waiting example must still be waiting, including on weekend afternoons.
+    while (!isWeekend(upcomingDate) || now >= new Date(slotDateTime(upcomingDate, secondSlot.split("~")[0]).getTime() - 10 * 60 * 1000)) {
+      upcomingDate.setDate(upcomingDate.getDate() + 1);
+    }
+    var endedDate = new Date(now);
+    endedDate.setDate(endedDate.getDate() - 1);
+    while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     return [
       { id: demoReservationId(now, active.slot.time), programKey: "pony", name: "어린이 포니타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive },
       { id: demoReservationId(upcomingDate, secondSlot), programKey: "pony", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 1, price: 4000, discount: false },
@@ -308,9 +314,16 @@
     return uniqueReservations(readReservations().concat(stateExampleReservations()));
   }
 
-  function ticketListReservations() {
-    var examples = stateExampleReservations();
-    return uniqueReservations([examples[0]].concat(readReservations(), examples.slice(1))).slice(0, 3);
+  function ticketListReservations(now) {
+    now = now || new Date();
+    var examples = stateExampleReservations(now);
+    var candidates = uniqueReservations([examples[0]].concat(readReservations(), examples.slice(1)));
+    // Keep one ticket per state; saved bookings must not displace the ended example.
+    return ["active", "upcoming", "ended"].map(function (accessState, index) {
+      return candidates.find(function (reservation) {
+        return ticketTiming(reservation, now).accessState === accessState;
+      }) || examples[index];
+    });
   }
 
   function hasTimeConflict(dateValue, timeValue) {
@@ -372,10 +385,19 @@
   }
 
   function updateTicketListStatuses() {
+    if (byId("my-tickets-screen").hidden || byId("my-tickets-list-view").hidden) return;
+    var now = new Date();
+    var expectedStates = ["active", "upcoming", "ended"];
+    if (ticketReservations.some(function (reservation, index) {
+      return ticketTiming(reservation, now).accessState !== expectedStates[index];
+    })) {
+      renderTicketList();
+      return;
+    }
     document.querySelectorAll(".ticket-list-card").forEach(function (card) {
       var reservation = ticketReservations.find(function (item) { return item.id === card.getAttribute("data-reservation-id"); });
       if (!reservation) return;
-      var timing = ticketTiming(reservation, new Date());
+      var timing = ticketTiming(reservation, now);
       var badge = card.querySelector("[data-ticket-status]");
       badge.className = "ticket-list-card__status ticket-list-card__status--" + timing.accessState;
       badge.textContent = timing.status.label;
