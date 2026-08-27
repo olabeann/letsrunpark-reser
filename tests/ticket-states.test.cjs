@@ -107,11 +107,15 @@ test('refreshes the visible list at a status boundary without replacing open det
   assert.equal(fixture.renders(), 1);
 });
 
-test('staff discount notice is the first item in the ticket, without a duplicate below', () => {
-  assert.match(ticketHtml, /<article class="entry-ticket"[^>]*>\s*<aside class="entry-ticket__discount" id="ticket-citizen-discount"/);
+test('staff discount notice is compact and inside the top status card', () => {
+  const statusStart = ticketHtml.indexOf('<section class="entry-ticket__status">');
+  const statusEnd = ticketHtml.indexOf('</section>', statusStart);
+  const notice = ticketHtml.indexOf('id="ticket-citizen-discount"');
+  const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
+  assert.ok(statusStart < notice && notice < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
-  assert.match(ticketHtml, /직원 확인<\/small>/);
-  assert.match(ticketHtml, /입장 전 신분증 등 증빙 서류를 확인해주세요\./);
+  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 서류 확인<\/span>/);
+  assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
