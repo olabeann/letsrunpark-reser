@@ -107,14 +107,15 @@ test('refreshes the visible list at a status boundary without replacing open det
   assert.equal(fixture.renders(), 1);
 });
 
-test('staff discount notice is compact and inside the top status card', () => {
+test('staff discount notice is an integrated strip at the top of the status card', () => {
   const statusStart = ticketHtml.indexOf('<section class="entry-ticket__status">');
   const statusEnd = ticketHtml.indexOf('</section>', statusStart);
   const notice = ticketHtml.indexOf('id="ticket-citizen-discount"');
+  const statusTop = ticketHtml.indexOf('class="entry-ticket__status-top"');
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
-  assert.ok(statusStart < notice && notice < sessionSummary && sessionSummary < statusEnd);
+  assert.ok(statusStart < notice && notice < statusTop && statusTop < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
-  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 서류 확인<\/span>/);
+  assert.match(ticketHtml, /<strong>과천시민 50% 할인<\/strong><span>증빙 확인<\/span>/);
   assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
 });
 
