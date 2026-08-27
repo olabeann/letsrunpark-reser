@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>예약하기 | 서울 렛츠런파크</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css"><link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260827-6"><link rel="stylesheet" href="styles.css">
 </head>
 <body data-page="booking">
   <header class="reservation-header"><a class="reservation-brand" href="index.html?program=pony" aria-label="포니랜드 홈"><img src="assets/logo/pony-land.png" alt="Pony Land"></a><div class="reservation-header__actions"><button class="header-login" id="reservation-login" type="button">예약 조회</button></div></header>
@@ -45,7 +45,25 @@
         </div>
         <div class="ticket-detail-view" id="ticket-detail-view" hidden>
           <button class="back-link" id="back-to-ticket-list" type="button">← 내 티켓 목록</button>
-          <article class="entry-ticket" id="entry-ticket" data-access-state="upcoming"><section class="entry-ticket__status"><div class="entry-ticket__status-top"><span class="entry-ticket__badge"><i></i><b id="ticket-status-label">입장 대기</b></span><span class="entry-ticket__clock"><small>현재 시간</small><strong id="ticket-current-time">--:--:--</strong></span></div><p id="ticket-session-summary">이용 예정 · 포니 승마체험</p><h1 id="ticket-access-title" aria-live="polite">입장 가능 시간이 아닙니다.</h1><strong id="ticket-access-detail">입장 가능 시간에 자동으로 활성화됩니다.</strong></section><section class="entry-ticket__pass"><header><div class="entry-ticket__brand"><img src="assets/logo/mascot.png" alt="포니 캐릭터"><span><small>PONYLAND</small><strong>포니랜드 입장권</strong></span></div><b id="ticket-people">2명</b></header><div class="entry-ticket__meta"><div><small>이용일</small><strong id="ticket-date">2026.08.30 (일)</strong></div><div><small>회차</small><strong id="ticket-time">10:00~10:20</strong></div><div><small>프로그램</small><strong id="ticket-name">포니 승마체험</strong></div></div><div class="entry-ticket__live"><span><img src="assets/logo/mascot.png" alt="포니 캐릭터"></span><strong id="ticket-live-message">입장 시간에 활성화됩니다.</strong></div><div class="entry-ticket__discount" id="ticket-citizen-discount" role="note" hidden><span>50%</span><div><strong>과천시민 할인 적용 고객입니다.</strong><p>현장 입장 시 신분증 등 증빙 서류를 확인해주세요.</p></div></div><dl><div><dt>입장 인원</dt><dd id="ticket-admission-count">총 2명</dd></div><div><dt>예약번호</dt><dd id="ticket-reservation-number">GP-260826-1000</dd></div></dl></section><section class="entry-ticket__window"><div><small>입장 시작</small><strong id="ticket-window-open">09:50</strong></div><i></i><div><small>예약 회차</small><strong id="ticket-window-session">10:00</strong></div><i></i><div><small>입장 마감</small><strong id="ticket-window-close">10:20</strong></div></section><p class="entry-ticket__note">입장 가능 시간은 회차 시작 10분 전부터 회차 종료 전까지입니다. 시간과 티켓 상태는 자동으로 갱신됩니다.</p><footer class="entry-ticket__footer"><span>예약이 확정되었습니다.</span><div><small>결제 금액</small><strong id="ticket-price">10,000원</strong></div></footer></article>
+          <article class="entry-ticket" id="entry-ticket" data-access-state="upcoming">
+            <aside class="entry-ticket__discount" id="ticket-citizen-discount" role="note" aria-label="직원 확인: 과천시민 할인 증빙" hidden>
+              <span aria-label="50퍼센트 할인">50%</span>
+              <div><small>직원 확인</small><strong>과천시민 할인 고객</strong><p>입장 전 신분증 등 증빙 서류를 확인해주세요.</p></div>
+            </aside>
+            <section class="entry-ticket__status">
+              <div class="entry-ticket__status-top"><span class="entry-ticket__badge"><i></i><b id="ticket-status-label">입장 대기</b></span><span class="entry-ticket__clock"><small>현재 시간</small><strong id="ticket-current-time">--:--:--</strong></span></div>
+              <p id="ticket-session-summary">이용 예정 · 포니 승마체험</p><h1 id="ticket-access-title" aria-live="polite">입장 가능 시간이 아닙니다.</h1><strong id="ticket-access-detail">입장 가능 시간에 자동으로 활성화됩니다.</strong>
+            </section>
+            <section class="entry-ticket__pass">
+              <header><div class="entry-ticket__brand"><img src="assets/logo/mascot.png" alt="포니 캐릭터"><span><small>PONYLAND</small><strong>포니랜드 입장권</strong></span></div><b id="ticket-people">2명</b></header>
+              <div class="entry-ticket__meta"><div><small>이용일</small><strong id="ticket-date">2026.08.30 (일)</strong></div><div><small>회차</small><strong id="ticket-time">10:00~10:20</strong></div><div><small>프로그램</small><strong id="ticket-name">포니 승마체험</strong></div></div>
+              <div class="entry-ticket__live"><span><img src="assets/logo/mascot.png" alt="포니 캐릭터"></span><strong id="ticket-live-message">입장 시간에 활성화됩니다.</strong></div>
+              <dl><div><dt>입장 인원</dt><dd id="ticket-admission-count">총 2명</dd></div><div><dt>예약번호</dt><dd id="ticket-reservation-number">GP-260826-1000</dd></div></dl>
+            </section>
+            <section class="entry-ticket__window"><div><small>입장 시작</small><strong id="ticket-window-open">09:50</strong></div><i></i><div><small>예약 회차</small><strong id="ticket-window-session">10:00</strong></div><i></i><div><small>입장 마감</small><strong id="ticket-window-close">10:20</strong></div></section>
+            <p class="entry-ticket__note">입장 가능 시간은 회차 시작 10분 전부터 회차 종료 전까지입니다. 시간과 티켓 상태는 자동으로 갱신됩니다.</p>
+            <footer class="entry-ticket__footer"><span>예약이 확정되었습니다.</span><div><small>결제 금액</small><strong id="ticket-price">10,000원</strong></div></footer>
+          </article>
         </div>
       </div>
     </section>

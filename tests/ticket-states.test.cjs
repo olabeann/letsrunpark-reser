@@ -5,12 +5,13 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = readFileSync(resolve(__dirname, '../app.js'), 'utf8');
+const ticketHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 const programSource = source.slice(source.indexOf('  var programs ='), source.indexOf('  var query ='));
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
   'ticketTiming', 'isWeekend', 'demoReservationId', 'slotDateTime', 'activeSlotForNow',
   'stateExampleReservations', 'uniqueReservations', 'allReservations', 'hasTimeConflict',
-  'ticketListReservations', 'updateTicketListStatuses',
+  'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
 const functions = names.map(name => {
   const start = source.indexOf('  function ' + name + '(');
@@ -25,6 +26,9 @@ function runtime(now, saved = []) {
     'my-tickets-screen': { hidden: false },
     'my-tickets-list-view': { hidden: false },
   };
+  for (const [, id] of ticketHtml.matchAll(/id="([^"]+)"/g)) {
+    if (!elements[id]) elements[id] = { hidden: true, textContent: '', setAttribute(name, value) { this[name] = value; } };
+  }
   class ClockDate extends Date {
     constructor(...args) { super(...(args.length ? args : [clock])); }
   }
@@ -32,6 +36,7 @@ function runtime(now, saved = []) {
     Date: ClockDate,
     weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
     readReservations: () => saved,
+    money: value => value + '원',
     byId: id => elements[id],
     document: { querySelectorAll: () => [] },
     renderTicketList: () => { renders += 1; },
@@ -100,4 +105,25 @@ test('refreshes the visible list at a status boundary without replacing open det
   fixture.elements['my-tickets-list-view'].hidden = true;
   fixture.context.updateTicketListStatuses();
   assert.equal(fixture.renders(), 1);
+});
+
+test('staff discount notice is the first item in the ticket, without a duplicate below', () => {
+  assert.match(ticketHtml, /<article class="entry-ticket"[^>]*>\s*<aside class="entry-ticket__discount" id="ticket-citizen-discount"/);
+  assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
+  assert.match(ticketHtml, /직원 확인<\/small>/);
+  assert.match(ticketHtml, /입장 전 신분증 등 증빙 서류를 확인해주세요\./);
+});
+
+test('discount notice visibility follows the selected ticket in every access state', () => {
+  const { context, elements } = runtime(now);
+  const examples = context.stateExampleReservations();
+  for (const [index, accessState] of ['active', 'upcoming', 'ended'].entries()) {
+    for (const discount of [true, false]) {
+      context.ticketReservation = { ...examples[index], discount };
+      context.updateTicketAccess();
+      assert.equal(elements['ticket-citizen-discount'].hidden, !discount);
+      assert.equal(elements['entry-ticket']['data-access-state'], accessState);
+      assert.equal(elements['ticket-reservation-number'].textContent, examples[index].id);
+    }
+  }
 });
