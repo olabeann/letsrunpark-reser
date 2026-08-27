@@ -138,11 +138,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__live>span{position:relative;flex:0 0 auto;width:180px;height:180px;border:5px dashed #B7B3AD;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.35)}
 .entry-ticket__live img{width:156px;height:156px;object-fit:contain;filter:grayscale(1);opacity:.45}
 .entry-ticket__live>strong{max-width:260px;font-size:var(--fs-body-lg);line-height:1.5}
-.entry-ticket__discount{margin:0 0 14px;padding:18px 22px;border:1px solid var(--yellow-400);border-left:4px solid var(--ground-600);border-radius:var(--r-lg);display:flex;align-items:center;gap:16px;background:var(--yellow-200);color:var(--ink)}
+.entry-ticket__discount{margin:0 0 14px;padding:18px 22px;border:1px solid var(--coral-500);border-left:4px solid var(--coral-700);border-radius:var(--r-lg);display:flex;align-items:center;gap:16px;background:var(--coral-500);color:var(--ink)}
 .entry-ticket__discount[hidden]{display:none}
-.entry-ticket__discount>span{flex:0 0 auto;width:58px;height:58px;border-radius:var(--r-full);display:grid;place-items:center;background:var(--yellow-500);font-size:20px;font-weight:800}
+.entry-ticket__discount>span{flex:0 0 auto;width:58px;height:58px;border-radius:var(--r-full);display:grid;place-items:center;background:var(--coral-100);color:var(--coral-900);font-size:20px;font-weight:800}
 .entry-ticket__discount>div{min-width:0}
-.entry-ticket__discount small{display:block;margin-bottom:4px;color:var(--ground-800);font-size:12px;font-weight:800}
+.entry-ticket__discount small{display:block;margin-bottom:4px;color:var(--coral-900);font-size:12px;font-weight:800}
 .entry-ticket__discount strong{display:block;font-size:18px;line-height:1.35;word-break:keep-all}
 .entry-ticket__discount p{margin:5px 0 0;font-size:14px;font-weight:500;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
 @media(max-width:600px){.entry-ticket__discount{padding:15px 14px;gap:12px}.entry-ticket__discount>span{width:46px;height:46px;font-size:17px}.entry-ticket__discount strong{font-size:16px}.entry-ticket__discount p{font-size:13px}}
