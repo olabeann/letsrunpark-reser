@@ -4,7 +4,7 @@
 @media print{.gnb,.reservation-steps,.complete-check,.complete-wrap>.eyebrow,.complete-wrap>h1,.complete-wrap>p,.complete-actions{display:none}.ticket{box-shadow:none;margin-top:20px}}
 
 /* Two-product storefront, product options and a separate cart. */
-.shop-page{background:var(--bg)!important}
+.shop-page{background:var(--white)!important}
 .shop-container{width:min(var(--container),calc(100% - var(--pad-page)*2));margin-inline:auto}
 .shop-page button:focus-visible,.shop-page a:focus-visible,.shop-page summary:focus-visible,.shop-page select:focus-visible{outline:3px solid var(--ground-500);outline-offset:2px}
 .shop-page button:disabled{cursor:not-allowed}.shop-page .btn:disabled,.shop-page .quantity-control button:disabled,.cart-item__actions button:disabled{opacity:.4}
