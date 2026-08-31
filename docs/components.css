@@ -93,13 +93,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .my-tickets-head>span{flex:0 0 auto;padding:9px 14px;border-radius:var(--r-full);background:var(--yellow-100);color:var(--ground-800);font-size:var(--fs-caption);font-weight:var(--fw-bold)}
 .ticket-list{display:grid;gap:14px}
 .ticket-list-card{width:100%;min-height:150px;padding:16px;border:1px solid var(--line);border-radius:var(--r-hero);display:grid;grid-template-columns:170px minmax(0,1fr) auto;align-items:center;gap:22px;background:var(--white);text-align:left;transition:border-color .18s,box-shadow .18s,transform .18s}
-.ticket-list-card:hover{border-color:var(--yellow-600);box-shadow:0 12px 28px rgba(24,24,28,.08);transform:translateY(-2px)}
+.ticket-list-card:hover{border-color:var(--yellow-600);transform:translateY(-2px)}
 .ticket-list-card>img{width:170px;height:116px;border-radius:var(--r-lg);object-fit:cover}
 .ticket-list-card__body{min-width:0;display:flex;align-items:flex-start;flex-direction:column}
 .ticket-list-card__status{display:inline-flex;width:max-content;padding:6px 11px;border-radius:var(--r-full);font-size:10px;font-weight:var(--fw-bold)}
 .ticket-list-card__status--upcoming{background:var(--yellow-100);color:var(--ground-800)}
 .ticket-list-card__status--active{background:var(--green-500);color:var(--green-900)}
-.ticket-list-card__status--ended{background:var(--ground-200);color:#625F5B}
+.ticket-list-card__status--ended{background:var(--bg);color:var(--grey)}
 .ticket-list-card__title{max-width:100%;margin-top:10px;font-size:var(--fs-body-lg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ticket-list-card__schedule{margin-top:5px;color:var(--grey);font-size:var(--fs-label)}
 .ticket-list-card__meta{margin-top:12px;font-size:var(--fs-caption);font-weight:var(--fw-bold)}
@@ -113,16 +113,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__status{position:relative;z-index:2;min-height:290px;padding:34px 38px;border-radius:28px;overflow:hidden;background:var(--ink);color:var(--white);transition:background-color .3s,box-shadow .3s}
 .entry-ticket__status-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
 .entry-ticket__indicators{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.entry-ticket__badge{height:40px;padding-inline:16px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);font-size:var(--fs-body-sm)}
+.entry-ticket__badge{height:40px;padding-inline:16px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:9px;background:var(--white);color:var(--ink);font-size:var(--fs-body-sm)}
 .entry-ticket__badge i{width:9px;height:9px;border-radius:50%;background:var(--yellow-500)}
 .entry-ticket__clock{text-align:right}
 .entry-ticket__clock small,.entry-ticket__clock strong{display:block}
-.entry-ticket__clock small{color:rgba(255,255,255,.65);font-size:var(--fs-caption)}
+.entry-ticket__clock small{color:var(--line);font-size:var(--fs-caption)}
 .entry-ticket__clock strong{margin-top:3px;font-size:28px;font-variant-numeric:tabular-nums}
-.entry-ticket__status>p{margin:66px 0 8px;color:rgba(255,255,255,.72);font-size:var(--fs-label);font-weight:var(--fw-bold)}
+.entry-ticket__status>p{margin:66px 0 8px;color:var(--line);font-size:var(--fs-label);font-weight:var(--fw-bold)}
 .entry-ticket__status>h1{margin:0 0 12px;font-size:38px;line-height:1.14;letter-spacing:-.04em;word-break:keep-all}
 .entry-ticket__status>strong{font-size:var(--fs-body-lg)}
-.entry-ticket__pass{margin-top:-16px;padding:48px 38px 34px;border:1px solid #F1E6C6;border-top:0;border-radius:0 0 30px 30px;background:linear-gradient(180deg,#FFFDF8 0%,#FFF9E9 100%);box-shadow:0 20px 50px rgba(87,55,18,.1)}
+.entry-ticket__pass{margin-top:-16px;padding:48px 38px 34px;border:1px solid var(--line);border-top:0;border-radius:0 0 30px 30px;background:var(--bg)}
 .entry-ticket__pass>header{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .entry-ticket__brand{display:flex;align-items:center;gap:14px}
 .entry-ticket__brand img{width:124px;height:124px;object-fit:contain}
@@ -131,12 +131,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__brand strong{margin-top:4px;font-size:var(--fs-body-lg)}
 .entry-ticket__pass>header>b{padding:8px 14px;border-radius:var(--r-full);background:var(--yellow-500);color:var(--ink);font-size:26px;line-height:1}
 .entry-ticket__meta{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:12px;margin-top:26px}
-.entry-ticket__meta>div{min-width:0;padding:18px;border:1px solid #F0E9D7;border-radius:var(--r-lg);background:var(--white);box-shadow:0 8px 20px rgba(87,55,18,.05)}
+.entry-ticket__meta>div{min-width:0;padding:18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--white)}
 .entry-ticket__meta small,.entry-ticket__meta strong{display:block}
-.entry-ticket__meta small{color:var(--soft);font-size:var(--fs-caption)}
+.entry-ticket__meta small{color:var(--grey);font-size:var(--fs-caption)}
 .entry-ticket__meta strong{margin-top:7px;font-size:var(--fs-body-lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.entry-ticket__live{min-height:180px;margin-top:22px;padding:24px 30px;border:1px solid #C7C3BD;border-radius:24px;display:flex;align-items:center;justify-content:center;gap:32px;background:#D8D5D0;color:#625F5B;text-align:center}
-.entry-ticket__live>span{position:relative;flex:0 0 auto;width:180px;height:180px;border:5px dashed #B7B3AD;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.35)}
+.entry-ticket__live{min-height:180px;margin-top:22px;padding:24px 30px;border:1px solid var(--line);border-radius:24px;display:flex;align-items:center;justify-content:center;gap:32px;background:var(--white);color:var(--grey);text-align:center}
+.entry-ticket__live>span{position:relative;flex:0 0 auto;width:180px;height:180px;border:5px dashed var(--soft);border-radius:50%;display:grid;place-items:center;background:var(--bg)}
 .entry-ticket__live img{width:156px;height:156px;object-fit:contain;filter:grayscale(1);opacity:.45}
 .entry-ticket__live>strong{max-width:260px;font-size:var(--fs-body-lg);line-height:1.5}
 .entry-ticket__discount{width:fit-content;height:26px;padding:0 12px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:6px;background:var(--coral-500);color:var(--ink);font-size:var(--fs-label);line-height:1;white-space:nowrap}
@@ -145,11 +145,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__discount>span{font-weight:var(--fw-medium)}
 .entry-ticket__pass>dl{margin:24px 0 0;display:grid;gap:12px}
 .entry-ticket__pass>dl div{display:flex;justify-content:space-between;gap:20px}
-.entry-ticket__pass dt{color:var(--soft);font-size:var(--fs-label)}
+.entry-ticket__pass dt{color:var(--grey);font-size:var(--fs-label)}
 .entry-ticket__pass dd{margin:0;font-size:var(--fs-label);font-weight:var(--fw-bold)}
-.entry-ticket__window{margin-top:22px;padding:20px 28px;border:1px solid var(--yellow-300);border-radius:22px;display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;align-items:center;background:linear-gradient(135deg,var(--white),var(--yellow-100));box-shadow:0 10px 28px rgba(162,148,29,.08);text-align:center}
+.entry-ticket__window{margin-top:22px;padding:20px 28px;border:1px solid var(--yellow-300);border-radius:22px;display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;align-items:center;background:var(--yellow-100);text-align:center}
 .entry-ticket__window div small,.entry-ticket__window div strong{display:block}
-.entry-ticket__window small{color:var(--soft);font-size:var(--fs-caption)}
+.entry-ticket__window small{color:var(--grey);font-size:var(--fs-caption)}
 .entry-ticket__window strong{margin-top:5px;font-size:var(--fs-body-lg)}
 .entry-ticket__window div:nth-of-type(2) strong{color:var(--coral-700)}
 .entry-ticket__window i{height:1px;background:var(--line)}
@@ -158,23 +158,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__footer>span{font-size:var(--fs-label);font-weight:var(--fw-bold)}
 .entry-ticket__footer div{text-align:right}
 .entry-ticket__footer small,.entry-ticket__footer strong{display:block}
-.entry-ticket__footer small{color:var(--soft);font-size:var(--fs-caption)}
+.entry-ticket__footer small{color:var(--grey);font-size:var(--fs-caption)}
 .entry-ticket__footer strong{margin-top:4px;font-size:24px}
-.entry-ticket[data-access-state="active"] .entry-ticket__status{border:1px solid var(--green-400);background:linear-gradient(135deg,#E7FFE2 0%,#C7F7BF 62%,#FFF1A8 100%);color:var(--green-900);box-shadow:0 18px 48px rgba(67,143,57,.18)}
-.entry-ticket[data-access-state="active"] .entry-ticket__status::before{content:"";position:absolute;right:-70px;top:-105px;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none}
+.entry-ticket[data-access-state="active"] .entry-ticket__status{border:1px solid var(--green-300);background:var(--green-100);color:var(--green-900)}
+.entry-ticket[data-access-state="active"] .entry-ticket__status::before{content:"";position:absolute;right:-70px;top:-105px;width:250px;height:250px;border-radius:50%;background:var(--green-200);opacity:.55;pointer-events:none}
 .entry-ticket[data-access-state="active"] .entry-ticket__status>*{position:relative;z-index:1}
-.entry-ticket[data-access-state="active"] .entry-ticket__badge{background:var(--green-700);color:var(--white);box-shadow:0 6px 16px rgba(67,143,57,.2)}
+.entry-ticket[data-access-state="active"] .entry-ticket__badge{background:var(--green-700);color:var(--white)}
 .entry-ticket[data-access-state="active"] .entry-ticket__badge i{background:var(--yellow-500)}
 .entry-ticket[data-access-state="active"] .entry-ticket__clock small,.entry-ticket[data-access-state="active"] .entry-ticket__status>p{color:var(--green-800)}
-.entry-ticket[data-access-state="active"] .entry-ticket__live{border-color:var(--green-300);background:linear-gradient(135deg,var(--green-100),var(--yellow-100));color:var(--green-900);box-shadow:0 10px 28px rgba(67,143,57,.08)}
-.entry-ticket[data-access-state="active"] .entry-ticket__live>span{border-style:solid;border-color:var(--green-500);background:var(--white);box-shadow:0 10px 30px rgba(67,143,57,.12);animation:ticketPulse 1.8s ease-in-out infinite}
+.entry-ticket[data-access-state="active"] .entry-ticket__live{border-color:var(--green-300);background:var(--green-100);color:var(--green-900)}
+.entry-ticket[data-access-state="active"] .entry-ticket__live>span{border-style:solid;border-color:var(--green-500);background:var(--white);animation:ticketPulse 1.8s ease-in-out infinite}
 .entry-ticket[data-access-state="active"] .entry-ticket__live img{filter:none;opacity:1}
 .entry-ticket[data-access-state="active"] .entry-ticket__footer strong{color:var(--green-800)}
-.entry-ticket[data-access-state="ended"] .entry-ticket__status{background:#64615D}
+.entry-ticket[data-access-state="ended"] .entry-ticket__status{background:var(--grey)}
 .entry-ticket[data-access-state="ended"] .entry-ticket__badge i{background:var(--ground-200)}
 .booking-slots .chip.is-booked{border-color:var(--coral-300);background:var(--coral-100);color:var(--coral-800);box-shadow:none}
 .booking-slots .chip.is-booked small{color:var(--coral-700)}
-@keyframes ticketPulse{0%,100%{box-shadow:0 0 0 0 rgba(137,234,122,.45)}50%{box-shadow:0 0 0 12px rgba(137,234,122,0)}}
+@keyframes ticketPulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 12px var(--green-200)}}
 @media(max-width:997px){.reservation-header{height:60px}.reservation-brand img{height:50px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
 @media(max-width:560px){.login-dialog__body{padding:30px 22px 24px}.login-dialog h2{font-size:24px}}
 @media(max-width:700px){.reservation-complete{padding-top:42px}.complete-booking-card{grid-template-columns:1fr}.complete-booking-card>img{height:190px;min-height:0}.reservation-complete .complete-actions{grid-template-columns:1fr}.my-tickets-screen{padding:32px 16px 64px}.my-tickets-head{align-items:flex-start;flex-direction:column}.my-tickets-head h1{font-size:32px}.ticket-list-card{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:12px;border-radius:var(--r-lg)}.ticket-list-card>img{width:100px;height:112px}.ticket-list-card__arrow{display:none}.ticket-list-card__title{font-size:var(--fs-body)}.ticket-list-card__schedule{line-height:1.45}.ticket-detail-view>.back-link{margin-left:0}}

@@ -7,6 +7,7 @@ const BookingRules = require('../booking-rules.js');
 
 const source = readFileSync(resolve(__dirname, '../app.js'), 'utf8');
 const ticketHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+const componentCss = readFileSync(resolve(__dirname, '../components.css'), 'utf8');
 const programSource = source.slice(source.indexOf('  var programs ='), source.indexOf('  var query ='));
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
@@ -130,6 +131,17 @@ test('staff discount notice is a compact design-system badge beside the ticket s
   assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
   assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 확인<\/span>/);
   assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
+});
+
+test('ticket colors use only design-system tokens instead of one-off color values', () => {
+  const start = componentCss.indexOf('.ticket-list-card__status');
+  const end = componentCss.indexOf('@media(max-width:997px)', start);
+  const ticketCss = componentCss.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.doesNotMatch(ticketCss, /#[0-9a-f]{3,8}|rgba?\(/i);
+  assert.match(ticketCss, /\.entry-ticket__discount\{[^}]*background:var\(--coral-500\);color:var\(--ink\)/);
+  assert.match(ticketCss, /data-access-state="active"[^}]*background:var\(--green-100\)/);
+  assert.match(ticketCss, /data-access-state="ended"[^}]*background:var\(--grey\)/);
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
