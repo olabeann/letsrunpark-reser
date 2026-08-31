@@ -2,38 +2,59 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>예약하기 | 서울 렛츠런파크</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260827-9"><link rel="stylesheet" href="styles.css">
+  <title>체험 상품 | 포니랜드</title>
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260831-ds1"><link rel="stylesheet" href="styles.css?v=20260828-shop2">
 </head>
-<body data-page="booking">
-  <header class="reservation-header"><a class="reservation-brand" href="index.html?program=pony" aria-label="포니랜드 홈"><img src="assets/logo/pony-land.png" alt="Pony Land"></a><div class="reservation-header__actions"><button class="header-login" id="reservation-login" type="button">예약 조회</button></div></header>
-  <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-dialog-title"><div class="login-dialog__body"><button class="login-dialog__close" id="login-dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">RESERVATION LOGIN</span><h2 id="login-dialog-title">간편 로그인</h2><p id="login-dialog-description">예약 내역을 확인하려면 로그인해주세요.</p><div class="login-providers"><button class="login-provider login-provider--kakao" type="button" data-login-provider="카카오"><span aria-hidden="true">K</span>카카오로 계속하기</button><button class="login-provider login-provider--naver" type="button" data-login-provider="네이버"><span aria-hidden="true">N</span>네이버로 계속하기</button></div><small id="login-dialog-note">로그인 후 예약 내역을 확인하고 취소할 수 있습니다.</small></div></dialog>
+<body data-page="booking" class="shop-page">
+  <header class="reservation-header shop-header">
+    <a class="reservation-brand" href="index.html" aria-label="포니랜드 홈"><img src="assets/logo/pony-land.png" alt="Pony Land"><span>포니랜드<small>서울 렛츠런파크</small></span></a>
+    <nav class="shop-nav" aria-label="주요 메뉴"><button type="button" data-shop-home>체험 상품</button><button id="view-cart" type="button">장바구니 <b id="header-cart-count">0</b></button><button id="reservation-login" type="button">예약 조회</button></nav>
+    <div class="reservation-header__actions"><span id="account-label" class="account-label">로그인 전</span><button id="switch-account" type="button">로그인</button><button id="logout" type="button" hidden>로그아웃</button></div>
+  </header>
+  <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-dialog-title"><div class="login-dialog__body"><button class="login-dialog__close" id="login-dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">PONYLAND</span><h2 id="login-dialog-title">시연 계정 로그인</h2><p id="login-dialog-description">계정별로 장바구니와 예약 내역을 확인해요.</p><label class="demo-account-select" for="demo-member">시연 회원 선택<select id="demo-member"><option value="1">회원 1</option><option value="2">회원 2</option></select></label><div class="login-providers"><button class="login-provider login-provider--kakao" type="button" data-login-provider="카카오"><span aria-hidden="true">K</span>카카오로 계속하기</button><button class="login-provider login-provider--naver" type="button" data-login-provider="네이버"><span aria-hidden="true">N</span>네이버로 계속하기</button></div><small id="login-dialog-note">실제 소셜 계정과 연결되지 않는 시연입니다.</small></div></dialog>
+  <dialog class="cart-added-dialog" id="cart-added-dialog" aria-labelledby="cart-added-title"><button type="button" id="close-cart-added" class="dialog-close" aria-label="담기 안내 닫기">×</button><span class="added-check" aria-hidden="true">✓</span><h2 id="cart-added-title">장바구니에 담았어요</h2><p id="cart-added-description"></p><div class="added-actions"><button class="btn ds-btn-outline" type="button" id="keep-shopping">쇼핑 계속하기</button><button class="btn btn--cta" type="button" id="added-view-cart">장바구니 보기</button></div></dialog>
   <main>
-    <div class="reservation-steps"><span class="is-current" data-step-label="1"><i>1</i>일정·인원</span><b></b><span data-step-label="2"><i>2</i>예약 확인</span><b></b><span data-step-label="3"><i>3</i>예약 완료</span></div>
-    <section class="booking-stage is-visible" data-booking-step="1">
-      <div class="booking-layout container">
-        <div class="booking-main"><button type="button" class="back-link" onclick="history.back()">← LetsrunPlay로 돌아가기</button><span class="eyebrow">SEOUL RESERVATION</span><h1>방문 일정과 인원을 선택해주세요</h1><p class="booking-program"><strong id="booking-program-name">포니 승마체험</strong><span id="booking-program-meta">서울 렛츠런파크 · 1인 5,000원</span></p>
-          <article class="booking-panel" id="pony-experience-panel"><div class="panel-title"><h2>체험 선택</h2><small>원하는 체험을 선택해주세요.</small></div><div class="experience-options">
-            <button type="button" class="experience-card is-selected" data-experience="ride" aria-pressed="true"><div class="experience-card__icon">♞</div><div class="experience-card__head"><div><small>어린이 전용</small><strong>어린이 포니타기</strong></div><b>5,000원</b></div><ul><li>키 100cm 이상 · 몸무게 75kg 이하</li><li>초등학생까지 체험 가능</li><li>안전모와 안전조끼 필수 착용</li><li>치마·샌들보다 활동하기 편한 복장 권장</li></ul></button>
-            <button type="button" class="experience-card" data-experience="play" aria-pressed="false"><div class="experience-card__icon">♟</div><div class="experience-card__head"><div><small>성인도 가능</small><strong>포니랑 놀기</strong></div><b>4,000원</b></div><ul><li>연령 제한 없이 누구나 체험 가능</li><li>어린이는 보호자 동반을 권장</li><li>포니와 걷기·먹이주기·사진 촬영</li><li>카우보이 의상 무료 이용 가능</li></ul></button>
-          </div><div class="citizen-banner"><strong><span class="citizen-banner__rate">50%</span>과천시민 할인</strong><span>본인 확인 후 1인 최대 2매까지 적용됩니다.</span></div><p class="experience-overlap">두 체험을 모두 구매할 수 있지만 같은 시간대 예약은 불가합니다.</p></article>
-          <article class="booking-panel"><div class="panel-title"><h2>날짜 선택</h2><small>오늘부터 2주 이내 토·일요일만 예약 가능</small></div><div class="calendar-legend" aria-label="달력 상태 안내"><span><i class="legend-dot legend-dot--available"></i>예약 가능</span><span><i class="legend-dot legend-dot--disabled"></i>예약 불가</span></div><div class="month-title"><button type="button" id="calendar-prev" aria-label="이전 달">‹</button><strong id="calendar-title" aria-live="polite"></strong><button type="button" id="calendar-next" aria-label="다음 달">›</button></div><div class="calendar-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendar-grid" aria-label="예약 날짜 선택"></div></article>
-          <article class="booking-panel"><div class="panel-title"><h2>회차 선택</h2><small>토·일요일 동일하게 운영합니다.</small></div><div class="slot-guide" id="pony-slot-guide"><span><b>운영시간</b>10:00~16:45</span><span><b>점심시간</b>11:45~13:00</span><span><b>회차 운영</b>매시간 00~20분, 20~45분</span><span><b>포니 휴식</b>매시각 15분</span></div><div class="booking-slots chips" id="booking-slots" data-component-id="COMP-CHIP-01"></div><p class="weather-note" id="pony-weather-note">야간 경마기간에는 운영시간이 변경될 수 있으며 홈페이지에 별도 공지됩니다.</p></article>
-          <article class="booking-panel"><div class="panel-title"><h2>인원 선택</h2><small>1인 최대 4매</small></div><div class="quantity-row"><div><strong>일반</strong><small id="booking-unit-price">1인 5,000원</small></div><div class="quantity-control"><button type="button" id="qty-minus" aria-label="인원 줄이기">−</button><strong id="booking-qty">2</strong><button type="button" id="qty-plus" aria-label="인원 늘리기">＋</button></div></div><label class="discount-check"><input type="checkbox" id="citizen-discount"> 과천시민 할인 적용 <span>50% 할인 · 최대 2매</span></label></article>
+    <div class="reservation-steps shop-steps" hidden><span data-step-label="1"><i>1</i>장바구니</span><b></b><span data-step-label="2"><i>2</i>주문·결제</span><b></b><span data-step-label="3"><i>3</i>예약 완료</span></div>
+    <section class="booking-stage is-visible" data-booking-step="0" aria-labelledby="shop-title">
+      <div class="shop-container storefront">
+        <div class="storefront-heading"><div><span class="shop-kicker">PONYLAND EXPERIENCE</span><h1 id="shop-title">포니와 함께하는 즐거운 하루</h1><p>마음에 드는 체험을 고르고, 우리 가족의 시간을 예약해요.</p></div><span class="location-label">서울 렛츠런파크 · 포니랜드</span></div>
+        <div class="shop-service-note"><span><b>주말 체험</b> 토·일요일 운영</span><span><b>사전 예약</b> 오늘부터 2주 이내</span><span><b>모바일 티켓</b> 예약 후 바로 확인</span></div>
+        <div class="product-list-title"><h2>체험 상품 <span>2</span></h2><span>상품을 선택해 날짜와 시간을 확인하세요.</span></div>
+        <div class="shop-product-grid">
+          <a class="shop-product-card" href="?product=ride" data-product="ride" aria-label="포니 타기 상품 선택"><div class="shop-product-photo"><img src="assets/pony/cover.jpg" alt="포니와 함께하는 어린이 체험 현장"><span class="product-badge">어린이 체험</span></div><div class="shop-product-body"><small>서울 렛츠런파크 · 포니랜드</small><h3>포니 타기</h3><p>작은 포니와 함께하는 어린이 승마 체험</p><div class="shop-product-price"><strong>5,000<span>원</span></strong><small>/ 1인</small><span class="product-link-label">옵션 선택 <b aria-hidden="true">↗</b></span></div></div></a>
+          <a class="shop-product-card" href="?product=play" data-product="play" aria-label="포니랑 놀기 상품 선택"><div class="shop-product-photo"><img src="assets/pony/gallery-02.jpg" alt="포니와 가까이에서 교감하는 어린이"><span class="product-badge product-badge--green">누구나 체험</span></div><div class="shop-product-body"><small>서울 렛츠런파크 · 포니랜드</small><h3>포니랑 놀기</h3><p>함께 걷고 먹이를 주며 포니와 친해지는 시간</p><div class="shop-product-price"><strong>4,000<span>원</span></strong><small>/ 1인</small><span class="product-link-label">옵션 선택 <b aria-hidden="true">↗</b></span></div></div></a>
         </div>
-        <aside class="booking-summary"><img id="summary-image" src="assets/pony/cover.jpg" alt=""><span class="tag--cat tag--exp" id="summary-tag">승마체험</span><h2 id="summary-name">포니 승마체험</h2><dl><div><dt>이용일</dt><dd id="summary-date">2026.08.30 (일)</dd></div><div><dt>회차</dt><dd id="summary-time">10:00</dd></div><div><dt>인원</dt><dd id="summary-people">2명</dd></div></dl><div class="summary-price"><span>결제 예정 금액</span><strong id="summary-price">10,000원</strong></div><button class="btn btn--cta btn--full" id="to-confirm" data-component-id="COMP-BUTTON-01">예약하기</button><small>동일 시간대 프로그램은 중복 예약할 수 없습니다.</small></aside>
+        <div class="shop-benefit"><div><b>과천시민은 50% 할인</b><p>상품 옵션에서 할인을 선택해주세요. 현장에서 증빙을 확인합니다.</p></div><span>최대 2매 적용</span></div>
+        <p class="shop-demo-note">시연용 쇼핑몰입니다. 실제 로그인·결제는 연결되지 않으며, 예약은 이 브라우저에만 저장됩니다.</p>
       </div>
     </section>
-    <section class="booking-stage" data-booking-step="2"><div class="confirm-wrap"><button class="back-link" id="back-to-select">← 일정 변경</button><span class="eyebrow">BOOKING CONFIRM</span><h1>예약 내용을 확인해주세요</h1><article class="confirm-program"><img id="confirm-image" src="assets/pony/cover.jpg" alt=""><div><small>서울 렛츠런파크</small><h2 id="confirm-name">포니 승마체험</h2><p><span id="confirm-date">2026.08.30 (일)</span> · <span id="confirm-time">10:00</span> · <span id="confirm-people">2명</span></p></div><strong id="confirm-price">10,000원</strong></article><div class="confirm-section"><h2>결제 수단</h2><div class="payment-options"><button class="is-selected" type="button" data-payment-method="card" aria-pressed="true">신용카드</button><button type="button" data-payment-method="transfer" aria-pressed="false">계좌이체</button></div></div><label class="terms"><input type="checkbox" id="terms" checked> 예약 및 취소 규정에 동의합니다.</label><div class="confirm-bottom"><button class="btn btn--payment btn--full" id="complete-payment"><span id="final-price">10,000원</span> 결제하기</button></div></div></section>
+    <section class="booking-stage" data-booking-step="1" aria-labelledby="product-title">
+      <div class="shop-container product-detail-wrap">
+        <button class="back-link" type="button" data-shop-home>← 전체 상품</button>
+        <div class="product-detail-layout">
+          <div class="product-visual"><img id="product-image" src="assets/pony/cover.jpg" alt="포니 타기 체험 현장"><div class="product-description"><h2>체험 안내</h2><p id="product-description"></p><ul id="product-notes"></ul><div class="product-operation"><span>운영 요일<b>토·일요일</b></span><span>예약 기간<b>오늘부터 2주 이내</b></span></div><p class="product-small-print">야간 경마기간에는 운영시간이 변경될 수 있으며 홈페이지에 별도 공지됩니다.</p></div></div>
+          <div class="product-options">
+            <small class="product-location">서울 렛츠런파크 · 포니랜드</small><h1 id="product-title">포니 타기</h1><p id="product-subtitle"></p><div class="product-detail-price"><strong id="product-unit-price">5,000원</strong><span>/ 1인</span></div>
+            <div class="product-discount-note">과천시민 50% 할인 <span>· 최대 2매</span></div>
+            <div class="option-field"><h2>이용 날짜</h2><details class="date-picker" id="date-picker"><summary><span id="selected-date-label">날짜를 선택해주세요</span><span aria-hidden="true">⌄</span></summary><div class="date-picker-content"><p>오늘부터 2주 이내 토·일요일만 예약 가능</p><div class="month-title"><button type="button" id="calendar-prev" aria-label="이전 달">‹</button><strong id="calendar-title" aria-live="polite"></strong><button type="button" id="calendar-next" aria-label="다음 달">›</button></div><div class="calendar-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendar-grid" aria-label="예약 날짜 선택"></div></div></details></div>
+            <div class="option-field"><h2>이용 시간</h2><p class="option-placeholder" id="slot-placeholder">날짜를 선택하면 예약 가능한 시간을 확인할 수 있어요.</p><div class="booking-slots chips" id="booking-slots" aria-label="예약 회차 선택"></div><p class="session-duration-note">같은 계정의 예약·장바구니와 겹치는 시간은 선택할 수 없어요.</p></div>
+            <div class="option-field"><div class="quantity-row"><div><h2>인원</h2><small id="booking-unit-price">1인 5,000원</small></div><div class="quantity-control"><button type="button" id="qty-minus" aria-label="인원 줄이기">−</button><strong id="booking-qty">1</strong><button type="button" id="qty-plus" aria-label="인원 늘리기">＋</button></div></div><small class="quantity-limit">한 회차 최대 4명 · 과천시민 할인 최대 2명</small><label class="discount-check"><input type="checkbox" id="citizen-discount"> 과천시민 할인 적용 <span>50%</span></label></div>
+            <div class="product-purchase"><p id="selected-option-summary">날짜와 시간을 선택해주세요.</p><div class="summary-price"><span>상품 금액</span><strong id="summary-price">5,000원</strong></div><button class="btn btn--cta btn--full" id="to-confirm" type="button" disabled>장바구니 담기</button><small>여러 상품·회차를 담아 한 번에 결제할 수 있어요.</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="booking-stage" data-booking-step="4" aria-labelledby="cart-title">
+      <div class="shop-container shop-cart-wrap"><div class="shop-page-heading"><h1 id="cart-title">장바구니 <span id="cart-count">0</span></h1><button class="text-button" type="button" data-shop-home>쇼핑 계속하기 →</button></div>
+        <div class="shop-cart-layout"><div class="shop-cart-content"><div class="shop-cart-empty" id="cart-empty"><span aria-hidden="true">＋</span><h2>장바구니가 비어 있어요</h2><p id="cart-empty-message">마음에 드는 체험을 담아보세요.</p><button class="btn ds-btn-outline" type="button" data-shop-home>체험 상품 보러가기</button></div><div id="cart-items" class="shop-cart-items"></div><p id="cart-page-error" class="cart-error" role="alert" hidden></p><div class="cart-notice"><b>예약 전 확인해주세요</b><p>상품마다 날짜와 회차를 확인해주세요. 같은 계정으로 이용 시간이 겹치는 상품은 예약할 수 없습니다.</p><p>장바구니에 담는 것만으로 예약이 확정되지는 않습니다.</p></div></div>
+        <aside class="cart-order-summary" aria-label="결제 예정 금액"><h2>결제 금액</h2><dl><div><dt>상품 금액</dt><dd id="cart-subtotal">0원</dd></div><div><dt>할인 금액</dt><dd id="cart-discount">0원</dd></div></dl><div class="summary-price"><span>총 결제 예정 금액</span><strong id="cart-total">0원</strong></div><button class="btn btn--cta btn--full" id="to-checkout" type="button" disabled><span id="cart-checkout-count">0</span>개 상품 주문하기</button><small>프로그램·날짜·회차별로 티켓이 발급됩니다.</small></aside></div>
+      </div>
+    </section>
+    <section class="booking-stage" data-booking-step="2"><div class="confirm-wrap shop-checkout"><button class="back-link" id="back-to-select" type="button">← 장바구니로</button><h1>주문·결제</h1><section class="checkout-section"><h2>주문 상품</h2><div id="confirm-items" class="checkout-items"></div></section><p id="cart-error" class="cart-error" role="alert" hidden></p><section class="checkout-section"><h2>예약 계정</h2><p id="checkout-account" class="checkout-account"></p><p class="checkout-help">이 계정의 예약 조회에서 모든 티켓을 확인할 수 있어요.</p></section><div class="confirm-section"><h2>결제 수단</h2><div class="payment-options"><button class="is-selected" type="button" data-payment-method="card" aria-pressed="true">신용카드 · 시연</button></div><p class="prototype-notice">실제 결제나 카드 정보 입력 없이 예약 흐름을 확인하는 시연입니다.</p></div><label class="terms"><input type="checkbox" id="terms"> 예약 및 취소 규정에 동의합니다.</label><div class="confirm-bottom"><button class="btn btn--payment btn--full" id="complete-payment"><span id="final-price">0원</span> 시연 결제하기</button></div></div></section>
     <section class="booking-stage" data-booking-step="3">
       <div class="complete-wrap reservation-complete">
-        <div class="complete-check" aria-hidden="true">✓</div><span class="eyebrow">BOOKING COMPLETE</span>
-        <h1>예약 완료!</h1><p>결제가 완료되었어요. 입장권은 예약 조회의 내 티켓에서 언제든 확인할 수 있습니다.</p>
-        <article class="complete-booking-card">
-          <img id="complete-image" src="assets/pony/cover.jpg" alt="">
-          <div class="complete-booking-card__body"><small>서울 렛츠런파크</small><h2 id="complete-name">어린이 포니타기</h2><dl><div><dt>이용일</dt><dd id="complete-date">2026.08.30 (일)</dd></div><div><dt>회차</dt><dd id="complete-time">10:00~10:20</dd></div><div><dt>인원</dt><dd id="complete-people">2명</dd></div><div><dt>결제 금액</dt><dd id="complete-price">10,000원</dd></div></dl></div>
-        </article>
-        <div class="complete-actions"><button class="btn btn--cta" id="view-my-tickets" type="button">내 티켓 보기</button><button class="btn ds-btn-outline" id="new-booking" type="button">새 예약하기</button></div>
+        <div class="complete-check" aria-hidden="true">✓</div><h1>예약이 완료되었어요</h1><p id="complete-count"></p><p>실제 금액은 청구되지 않았습니다. 예약 조회에서 회차별 티켓을 확인하세요.</p><div class="completed-order"><small>통합 결제번호</small><strong id="complete-order-id"></strong><div class="summary-price"><span>전체 결제 금액</span><strong id="complete-total"></strong></div></div><div id="complete-items" class="checkout-items"></div>
+        <div class="complete-actions"><button class="btn btn--cta" id="view-my-tickets" type="button">내 티켓 보기</button><button class="btn ds-btn-outline" id="new-booking" type="button">쇼핑 계속하기</button></div>
       </div>
     </section>
     <section class="my-tickets-screen" id="my-tickets-screen" hidden>
@@ -41,16 +62,13 @@
         <div id="my-tickets-list-view">
           <button class="back-link" id="back-from-tickets" type="button">← 예약 화면으로</button><span class="eyebrow">MY TICKETS</span>
           <div class="my-tickets-head"><div><h1>내 티켓</h1><p>예약한 티켓을 선택하면 실시간 입장 상태를 확인할 수 있어요.</p></div><span id="ticket-count">0개의 티켓</span></div>
-          <div class="ticket-list" id="ticket-list"></div>
+          <label class="ticket-examples-toggle"><input type="checkbox" id="ticket-examples"> 입장 상태 예시 보기 <small>실제 예약과 분리된 시연 티켓입니다.</small></label><div class="ticket-list" id="ticket-list"></div>
         </div>
         <div class="ticket-detail-view" id="ticket-detail-view" hidden>
-          <button class="back-link" id="back-to-ticket-list" type="button">← 내 티켓 목록</button>
-          <article class="entry-ticket" id="entry-ticket" data-access-state="upcoming">
+            <button class="back-link" id="back-to-ticket-list" type="button">← 내 티켓 목록</button>
+            <article class="entry-ticket" id="entry-ticket" data-access-state="upcoming">
             <section class="entry-ticket__status">
-              <aside class="entry-ticket__discount" id="ticket-citizen-discount" role="note" aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요." hidden>
-                <strong>과천시민 50% 할인</strong><span>증빙 확인</span>
-              </aside>
-              <div class="entry-ticket__status-top"><span class="entry-ticket__badge"><i></i><b id="ticket-status-label">입장 대기</b></span><span class="entry-ticket__clock"><small>현재 시간</small><strong id="ticket-current-time">--:--:--</strong></span></div>
+              <div class="entry-ticket__status-top"><div class="entry-ticket__indicators"><span class="entry-ticket__badge"><i></i><b id="ticket-status-label">입장 대기</b></span><aside class="entry-ticket__discount" id="ticket-citizen-discount" role="note" aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요." hidden><strong>과천시민 50%</strong><span>증빙 확인</span></aside></div><span class="entry-ticket__clock"><small>현재 시간</small><strong id="ticket-current-time">--:--:--</strong></span></div>
               <p id="ticket-session-summary">이용 예정 · 포니 승마체험</p><h1 id="ticket-access-title" aria-live="polite">입장 가능 시간이 아닙니다.</h1><strong id="ticket-access-detail">입장 가능 시간에 자동으로 활성화됩니다.</strong>
             </section>
             <section class="entry-ticket__pass">
@@ -67,6 +85,6 @@
       </div>
     </section>
   </main>
-  <div class="toast" role="status"></div><script src="app.js?v=20260827-5"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260828-shop2"></script><script src="app.js?v=20260828-shop2"></script>
 </body>
 </html>

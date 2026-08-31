@@ -9,7 +9,7 @@
     toast.textContent = message;
     toast.classList.add("is-on");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove("is-on"); }, 1800);
+    toastTimer = setTimeout(function () { toast.classList.remove("is-on"); }, 4500);
   }
 
   document.querySelectorAll("[data-toast]").forEach(function (button) {
@@ -26,15 +26,16 @@
 
   function openLoginDialog(intent) {
     loginIntent = intent;
-    var isBooking = intent === "booking";
-    loginDialogTitle.textContent = isBooking ? "간편 로그인 후 예약하기" : "간편 로그인";
-    loginDialogDescription.textContent = isBooking ? "로그인하면 선택한 일정으로 예약을 계속할 수 있어요." : "예약 내역을 확인하려면 로그인해주세요.";
-    loginDialogNote.textContent = isBooking ? "로그인 후 예약 확인과 결제를 진행합니다." : "로그인 후 예약 내역을 확인하고 취소할 수 있습니다.";
+    loginDialogTitle.textContent = "시연 계정 로그인";
+    loginDialogDescription.textContent = "선택한 계정의 장바구니와 예약 시간을 함께 확인합니다.";
+    loginDialogNote.textContent = "실제 간편 로그인은 연결되지 않습니다. 같은 제공자·회원 번호는 같은 시연 계정입니다.";
     loginDialog.showModal();
   }
 
   if (loginDialog && reservationLogin) {
-    reservationLogin.addEventListener("click", function () { openLoginDialog("lookup"); });
+    reservationLogin.addEventListener("click", function () {
+      if (currentMember) showMyTickets(); else openLoginDialog("lookup");
+    });
     loginDialogClose.addEventListener("click", function () { loginDialog.close(); });
     loginDialog.addEventListener("click", function (event) {
       if (event.target === loginDialog) loginDialog.close();
@@ -42,15 +43,25 @@
     loginDialog.querySelectorAll("[data-login-provider]").forEach(function (button) {
       button.addEventListener("click", function () {
         var provider = button.getAttribute("data-login-provider");
-        var shouldContinueBooking = loginIntent === "booking";
+        var memberNumber = document.getElementById("demo-member").value;
+        var nextMember = { id: "demo:" + provider + ":" + memberNumber, label: provider + " · 회원 " + memberNumber };
+        try { window.sessionStorage.setItem("ponylandDemoMember", JSON.stringify(nextMember)); }
+        catch (error) { notify("계정을 저장할 수 없습니다. 브라우저 저장 공간을 확인해주세요."); return; }
+        currentMember = nextMember;
+        checkoutSnapshot = "";
+        showTicketExamples = false;
+        byId("ticket-examples").checked = false;
+        completedOrder = null;
+        ticketReservation = null;
         loginDialog.close();
-        if (shouldContinueBooking) {
-          goToStep(2);
-          notify(provider + " 간편 로그인을 선택했습니다.");
-        } else {
-          showMyTickets();
-          notify(provider + " 로그인으로 내 티켓을 불러왔습니다.");
-        }
+        updateAccount();
+        // Do not silently change the user's selected session before checking it for the new account.
+        if (loginIntent === "add") { addToCart(); return; }
+        renderSlots(); update(); renderCart();
+        if (loginIntent === "lookup") showMyTickets();
+        else if (loginIntent === "checkout") startCheckout();
+        else goToStep(state.step === 2 ? 4 : state.step === 3 ? 0 : state.step);
+        notify(nextMember.label + " 계정으로 전환했습니다.");
       });
     });
   }
@@ -68,8 +79,18 @@
       image: "assets/pony/cover.jpg",
       detail: "pony.html",
       experiences: {
-        ride: { name: "어린이 포니타기", price: 5000, tag: "어린이 전용" },
-        play: { name: "포니랑 놀기", price: 4000, tag: "누구나 체험" }
+        ride: {
+          name: "포니 타기", price: 5000, tag: "어린이 전용", image: "assets/pony/cover.jpg",
+          subtitle: "작은 포니와 함께하는 어린이 승마 체험",
+          description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
+          notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"]
+        },
+        play: {
+          name: "포니랑 놀기", price: 4000, tag: "누구나 체험", image: "assets/pony/gallery-02.jpg",
+          subtitle: "함께 걷고 먹이를 주며 포니와 친해지는 시간",
+          description: "포니와 함께 걷고, 먹이를 주고, 사진을 찍으며 가까이에서 교감해보세요.",
+          notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니와 걷기·먹이주기·사진 촬영", "카우보이 의상 무료 이용 가능"]
+        }
       },
       slots: [
         { time: "10:00~10:20", stock: "1회차 · 8자리" },
@@ -79,7 +100,7 @@
         { time: "13:00~13:20", stock: "5회차 · 8자리" },
         { time: "13:20~13:45", stock: "6회차 · 5자리" },
         { time: "14:00~14:20", stock: "7회차 · 6자리" },
-        { time: "14:20~14:45", stock: "8회차 · 3자리" },
+        { time: "14:20~14:45", stock: "8회차 · 3자리", capacity: 3 },
         { time: "15:00~15:20", stock: "9회차 · 8자리" },
         { time: "15:20~15:45", stock: "10회차 · 6자리" },
         { time: "16:00~16:20", stock: "11회차 · 4자리" },
@@ -96,15 +117,16 @@
       image: "assets/tour/cover.jpg",
       detail: "tour.html",
       slots: [
-        { time: "11:00", stock: "12자리 남음" },
-        { time: "14:00", stock: "5자리 남음" },
-        { time: "15:30", stock: "마감", disabled: true }
+        { time: "11:00~12:20", stock: "12자리 · 80분" },
+        { time: "14:00~15:20", stock: "5자리 · 80분" },
+        { time: "15:30~16:50", stock: "마감", disabled: true }
       ]
     }
   };
 
   var query = new URLSearchParams(window.location.search);
-  var program = programs[query.get("program")] || programs.pony;
+  // Only the two pony products are sold here. Tour data is retained for existing tickets/conflicts.
+  var program = programs.pony;
   var weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
   var bookingStart = new Date();
   bookingStart.setHours(0, 0, 0, 0);
@@ -132,10 +154,8 @@
   }
 
   function ticketSessionEnd(reservation, sessionStart) {
-    var endText = reservation.time.split("~")[1];
-    if (!endText) return new Date(sessionStart.getTime() + 10 * 60 * 1000);
-    var endParts = endText.split(":");
-    return new Date(sessionStart.getFullYear(), sessionStart.getMonth(), sessionStart.getDate(), Number(endParts[0]), Number(endParts[1]), 0, 0);
+    var range = BookingRules.interval(reservation);
+    return new Date(range ? range.end : sessionStart.getTime());
   }
 
   function ticketTiming(reservation, now) {
@@ -183,67 +203,239 @@
     return date.getDay() === 0 || date.getDay() === 6;
   }
 
-  function firstAvailableDate() {
-    var date = new Date(bookingStart);
-    while (date <= bookingEnd && !isWeekend(date)) {
-      date.setDate(date.getDate() + 1);
-    }
-    return date;
-  }
-
-  var initialDate = firstAvailableDate();
-  var state = { date: formatBookingDate(initialDate), dateKey: dateKey(initialDate), time: program.slots[0].time, qty: 2, discount: false, experience: "ride", paymentMethod: "card", step: 1 };
+  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, experience: "ride", paymentMethod: "card", step: 0 };
   var byId = function (id) { return document.getElementById(id); };
   var money = function (value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; };
   var currentExperience = function () { return program.experiences ? program.experiences[state.experience] : null; };
   var currentName = function () { return currentExperience() ? currentExperience().name : program.name; };
   var currentPrice = function () { return currentExperience() ? currentExperience().price : program.price; };
   var amount = function () { return Math.round(currentPrice() * state.qty * (state.discount ? 0.5 : 1)); };
-  var reservationStorageKey = "ponylandReservations";
+  var reservationStorageKey = "ponylandBookingStoreV2";
+  var currentMember = readMember();
+  var showTicketExamples = false;
+  var checkoutSnapshot = "";
+  var completedOrder = null;
+  var isPaying = false;
   var ticketReservation = null;
   var ticketReservations = readReservations();
 
+  function readMember() {
+    try {
+      var member = JSON.parse(window.sessionStorage.getItem("ponylandDemoMember") || "null");
+      return member && /^demo:(카카오|네이버):[12]$/.test(member.id) ? member : null;
+    } catch (error) { return null; }
+  }
+
+  function readStore() {
+    try {
+      var raw = window.localStorage.getItem(reservationStorageKey);
+      if (raw === null) return { revision: 0, reservations: [], carts: {} };
+      var store = JSON.parse(raw);
+      if (!store || !Number.isInteger(store.revision) || !Array.isArray(store.reservations) || !store.carts || typeof store.carts !== "object" || Array.isArray(store.carts)) throw new Error("Invalid store");
+      if (!store.reservations.every(function (item) { return item && typeof item === "object"; })) throw new Error("Invalid reservation");
+      if (!Object.keys(store.carts).every(function (key) { return Array.isArray(store.carts[key]) && store.carts[key].every(function (item) { return item && typeof item === "object"; }); })) throw new Error("Invalid cart");
+      return store;
+    } catch (error) {
+      notify("저장된 예약 정보를 읽을 수 없습니다. 데이터를 덮어쓰지 않고 작업을 중단합니다.");
+      return null;
+    }
+  }
+
   function readReservations() {
+    var store = readStore();
+    return currentMember && store ? store.reservations.filter(function (item) { return item && item.memberId === currentMember.id && BookingRules.isActive(item); }) : [];
+  }
+
+  function writeStore(store) {
     try {
-      var saved = JSON.parse(window.localStorage.getItem(reservationStorageKey) || "[]");
-      return Array.isArray(saved) ? saved : [];
+      window.localStorage.setItem(reservationStorageKey, JSON.stringify(store));
+      return true;
     } catch (error) {
-      return [];
+      notify("저장하지 못했습니다. 결제는 완료되지 않았으며 장바구니는 유지됩니다.");
+      return false;
     }
   }
 
-  function writeReservations(reservations) {
-    try {
-      window.localStorage.setItem(reservationStorageKey, JSON.stringify(reservations));
-    } catch (error) {
-      notify("이 브라우저에서는 티켓을 저장할 수 없습니다.");
-    }
+  function withStoreLock(action) {
+    // Serialize read/validate/write across same-origin tabs when Web Locks are available.
+    if (navigator.locks) return navigator.locks.request(reservationStorageKey, action);
+    return Promise.resolve().then(action);
   }
 
-  function makeReservation() {
-    var createdAt = new Date();
-    var sessionCode = state.dateKey.slice(2).replace(/-/g, "") + "-" + state.time.split("~")[0].replace(":", "");
+  function newId(prefix) {
+    return prefix + "-" + (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
+  }
+
+  function ownCart(store) {
+    return currentMember && store ? store.carts[currentMember.id] || [] : [];
+  }
+
+  function makeCartItem() {
     return {
-      id: "GP-" + sessionCode + "-" + String(createdAt.getTime()).slice(-4),
+      id: newId("CART"), memberId: currentMember.id,
       programKey: program.key,
+      experience: state.experience,
       name: currentName(),
       dateKey: state.dateKey,
       date: state.date,
       time: state.time,
       qty: state.qty,
       price: amount(),
-      discount: state.discount,
-      paymentMethod: state.paymentMethod,
-      createdAt: createdAt.toISOString()
+      discount: state.discount
     };
   }
 
-  function saveCurrentReservation() {
-    var reservation = makeReservation();
-    ticketReservations = readReservations();
-    ticketReservations.unshift(reservation);
-    writeReservations(ticketReservations);
-    return reservation;
+  async function addToCart() {
+    if (!currentMember) { openLoginDialog("add"); return; }
+    var item = makeCartItem();
+    var added = false;
+    try { await withStoreLock(function () {
+      if (!currentMember || currentMember.id !== item.memberId) return;
+      var store = readStore(); if (!store) return;
+      var cart = ownCart(store);
+      var error = BookingRules.validationError(cart.concat(item), store.reservations, currentMember.id, programs, new Date());
+      if (error) { notify(error); return; }
+      store.carts[currentMember.id] = cart.concat(BookingRules.quoteItem(item, programs));
+      store.revision += 1;
+      added = writeStore(store);
+    }); } catch (error) { notify("장바구니에 담지 못했습니다. 다시 시도해주세요."); }
+    renderSlots(); update(); renderCart();
+    if (added) {
+      byId("cart-added-description").textContent = item.name + " · " + item.date + " · " + item.time + " · " + item.qty + "명";
+      if (!byId("cart-added-dialog").open) byId("cart-added-dialog").showModal();
+    }
+  }
+
+  async function changeCartItem(id, delta) {
+    if (!currentMember) return;
+    var memberId = currentMember.id;
+    await withStoreLock(function () {
+      if (!currentMember || memberId !== currentMember.id) return;
+      var store = readStore(); if (!store) return;
+      var cart = ownCart(store), item = cart.find(function (entry) { return entry.id === id; });
+      if (!item) return;
+      if (delta === null) cart = cart.filter(function (entry) { return entry.id !== id; });
+      else {
+        var changed = Object.assign({}, item, { qty: item.qty + delta });
+        try { changed = BookingRules.quoteItem(changed, programs); }
+        catch (error) { notify(error.message); return; }
+        cart = cart.map(function (entry) { return entry.id === id ? changed : entry; });
+      }
+      store.carts[memberId] = cart; store.revision += 1;
+      if (writeStore(store)) { checkoutSnapshot = state.step === 2 ? JSON.stringify(cart) : ""; byId("terms").checked = false; }
+    });
+    renderSlots(); update(); renderCart();
+  }
+
+  function updateAccount() {
+    byId("account-label").textContent = currentMember ? currentMember.label + " (시연)" : "로그인 전";
+    byId("switch-account").textContent = currentMember ? "계정 변경" : "로그인";
+    byId("logout").hidden = !currentMember;
+  }
+
+  function renderBookingItems(container, items, editable) {
+    container.replaceChildren();
+    items.forEach(function (item) {
+      var card = document.createElement("article"); card.className = "cart-item";
+      var thumbnail = document.createElement("img"); thumbnail.className = "cart-item__image";
+      var itemProgram = programs[item.programKey] || programs.pony;
+      var itemProduct = itemProgram.experiences && itemProgram.experiences[item.experience];
+      thumbnail.src = itemProduct ? itemProduct.image : itemProgram.image;
+      thumbnail.alt = "";
+      var body = document.createElement("div"); body.className = "cart-item__body";
+      body.append(createTextElement("strong", "", item.name));
+      body.append(createTextElement("p", "", item.date + " · " + item.time));
+      body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · 과천시민 할인" : "")));
+      card.append(thumbnail, body, createTextElement("strong", "cart-item__price", money(item.price)));
+      if (editable) {
+        var actions = document.createElement("div"); actions.className = "cart-item__actions";
+        [["−", -1, "인원 줄이기"], ["＋", 1, "인원 늘리기"], ["삭제", null, "삭제"]].forEach(function (control) {
+          var button = createTextElement("button", "", control[0]); button.type = "button";
+          button.setAttribute("aria-label", item.name + " " + item.dateKey + " " + item.time + " " + control[2]);
+          button.disabled = control[1] === -1 && item.qty <= 1;
+          if (control[1] === 1) {
+            try { BookingRules.quoteItem(Object.assign({}, item, { qty: item.qty + 1 }), programs); }
+            catch (error) { button.disabled = true; }
+          }
+          button.addEventListener("click", function () { changeCartItem(item.id, control[1]); });
+          actions.append(button);
+          if (control[1] === -1) actions.append(createTextElement("span", "cart-item__quantity", item.qty + "명"));
+        });
+        card.append(actions);
+      }
+      container.append(card);
+    });
+  }
+
+  function renderCart() {
+    var store = readStore(), cart = ownCart(store);
+    var pricedCart = cart.map(function (item) {
+      try { return BookingRules.quoteItem(item, programs); } catch (error) { return item; }
+    });
+    var total = pricedCart.reduce(function (sum, item) { return sum + item.price; }, 0);
+    var subtotal = pricedCart.reduce(function (sum, item) {
+      try { return sum + BookingRules.quoteItem(Object.assign({}, item, { discount: false }), programs).price; }
+      catch (error) { return sum + item.price; }
+    }, 0);
+    byId("cart-count").textContent = cart.length;
+    byId("header-cart-count").textContent = cart.length;
+    byId("cart-total").textContent = money(total);
+    byId("cart-subtotal").textContent = money(subtotal);
+    byId("cart-discount").textContent = (subtotal > total ? "−" : "") + money(subtotal - total);
+    byId("cart-checkout-count").textContent = cart.length;
+    byId("cart-empty").hidden = cart.length > 0;
+    byId("cart-empty-message").textContent = currentMember ? "마음에 드는 체험을 담아보세요." : "로그인하면 계정에 담아둔 상품을 확인할 수 있어요.";
+    byId("to-checkout").disabled = !cart.length || !store;
+    renderBookingItems(byId("cart-items"), pricedCart, true);
+    renderBookingItems(byId("confirm-items"), pricedCart, false);
+    byId("final-price").textContent = money(total);
+    byId("checkout-account").textContent = currentMember ? currentMember.label + " · " + cart.length + "개 회차 일괄결제" : "";
+    var error = store && cart.length ? BookingRules.validationError(cart, store.reservations, currentMember.id, programs, new Date()) : "";
+    byId("cart-error").textContent = error;
+    byId("cart-error").hidden = !error;
+    byId("cart-page-error").textContent = error;
+    byId("cart-page-error").hidden = !error;
+    byId("to-checkout").disabled = !cart.length || !store || !!error;
+    byId("complete-payment").disabled = isPaying || !cart.length || !!error;
+  }
+
+  function startCheckout() {
+    if (!currentMember) { openLoginDialog("checkout"); return; }
+    var store = readStore(); if (!store) return;
+    var cart = ownCart(store);
+    var error = BookingRules.validationError(cart, store.reservations, currentMember.id, programs, new Date());
+    if (error) { notify(error); renderCart(); return; }
+    checkoutSnapshot = JSON.stringify(cart);
+    byId("terms").checked = false;
+    renderCart(); goToStep(2);
+  }
+
+  async function completePayment() {
+    if (isPaying || state.step !== 2) return;
+    if (!currentMember) { openLoginDialog("checkout"); return; }
+    if (!byId("terms").checked) { notify("필수 약관에 동의해주세요."); return; }
+    isPaying = true; byId("complete-payment").disabled = true;
+    var memberId = currentMember.id;
+    try {
+      await withStoreLock(function () {
+        if (!currentMember || currentMember.id !== memberId) return;
+        var store = readStore(); if (!store) return;
+        if (JSON.stringify(ownCart(store)) !== checkoutSnapshot) {
+          checkoutSnapshot = JSON.stringify(ownCart(store)); byId("terms").checked = false;
+          notify("장바구니가 변경되었습니다. 금액과 일정을 다시 확인하고 동의해주세요."); return;
+        }
+        var order = BookingRules.buildOrder(store, memberId, programs, new Date(), newId("GP"));
+        // One storage write commits all session tickets and clears the cart together.
+        if (!writeStore(order.store)) return;
+        completedOrder = order; ticketReservation = null;
+        renderBookingItems(byId("complete-items"), order.tickets, false);
+        byId("complete-order-id").textContent = order.orderId;
+        byId("complete-total").textContent = money(order.total);
+        byId("complete-count").textContent = order.tickets.length + "개 회차의 예약이 완료되었어요.";
+        goToStep(3); notify("시연 결제가 완료되었습니다. 실제 금액은 청구되지 않습니다.");
+      });
+    } catch (error) { notify(error.message || "결제 처리 중 문제가 생겼습니다. 다시 시도해주세요."); }
+    finally { isPaying = false; renderSlots(); update(); renderCart(); }
   }
 
   function createTextElement(tagName, className, textContent) {
@@ -300,41 +492,19 @@
     ];
   }
 
-  function uniqueReservations(reservations) {
-    var seen = {};
-    return reservations.filter(function (reservation) {
-      var key = reservation.dateKey + "|" + reservation.time.split("~")[0];
-      if (seen[key]) return false;
-      seen[key] = true;
-      return true;
-    });
-  }
-
-  function allReservations() {
-    return uniqueReservations(readReservations().concat(stateExampleReservations()));
-  }
-
   function ticketListReservations(now) {
-    now = now || new Date();
-    var examples = stateExampleReservations(now);
-    var candidates = uniqueReservations([examples[0]].concat(readReservations(), examples.slice(1)));
-    // Keep one ticket per state; saved bookings must not displace the ended example.
-    return ["active", "upcoming", "ended"].map(function (accessState, index) {
-      return candidates.find(function (reservation) {
-        return ticketTiming(reservation, now).accessState === accessState;
-      }) || examples[index];
-    });
+    if (showTicketExamples) return stateExampleReservations(now).map(function (item) { return Object.assign({}, item, { isExample: true }); });
+    return readReservations();
   }
 
   function hasTimeConflict(dateValue, timeValue) {
-    var startTime = timeValue.split("~")[0];
-    return allReservations().some(function (reservation) {
-      return reservation.dateKey === dateValue && reservation.time.split("~")[0] === startTime;
-    });
+    if (!currentMember) return false;
+    var store = readStore(); if (!store) return true;
+    return !!BookingRules.findConflict({ dateKey: dateValue, time: timeValue, programKey: program.key }, store.reservations.concat(ownCart(store)), currentMember.id);
   }
 
   function notifyTimeConflict() {
-    notify("이미 같은 시간대에 예약된 티켓이 있습니다. 다른 회차를 선택해주세요.");
+    notify("이 계정의 기존 예약 또는 장바구니와 시간이 겹칩니다. 다른 회차를 선택해주세요.");
   }
 
   function renderTicketList() {
@@ -350,7 +520,7 @@
       empty.append(createTextElement("p", "", "예약을 완료하면 이곳에서 입장권을 확인할 수 있습니다."));
       var reserveButton = createTextElement("button", "btn btn--cta", "예약하러 가기");
       reserveButton.type = "button";
-      reserveButton.addEventListener("click", function () { goToStep(1); });
+      reserveButton.addEventListener("click", function () { goToStep(0); });
       empty.append(reserveButton);
       list.append(empty);
       return;
@@ -372,6 +542,8 @@
       body.className = "ticket-list-card__body";
       var status = createTextElement("small", "ticket-list-card__status ticket-list-card__status--" + timing.accessState, timing.status.label);
       status.setAttribute("data-ticket-status", "");
+      card.setAttribute("data-access-state", timing.accessState);
+      if (reservation.isExample) body.append(createTextElement("small", "", "예시 티켓 · 실제 예약 아님"));
       body.append(status);
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
@@ -387,17 +559,11 @@
   function updateTicketListStatuses() {
     if (byId("my-tickets-screen").hidden || byId("my-tickets-list-view").hidden) return;
     var now = new Date();
-    var expectedStates = ["active", "upcoming", "ended"];
-    if (ticketReservations.some(function (reservation, index) {
-      return ticketTiming(reservation, now).accessState !== expectedStates[index];
-    })) {
-      renderTicketList();
-      return;
-    }
     document.querySelectorAll(".ticket-list-card").forEach(function (card) {
       var reservation = ticketReservations.find(function (item) { return item.id === card.getAttribute("data-reservation-id"); });
       if (!reservation) return;
       var timing = ticketTiming(reservation, now);
+      card.setAttribute("data-access-state", timing.accessState);
       var badge = card.querySelector("[data-ticket-status]");
       badge.className = "ticket-list-card__status ticket-list-card__status--" + timing.accessState;
       badge.textContent = timing.status.label;
@@ -405,6 +571,7 @@
   }
 
   function showMyTickets() {
+    if (!currentMember) { openLoginDialog("lookup"); return; }
     document.querySelector(".reservation-steps").hidden = true;
     document.querySelectorAll("[data-booking-step]").forEach(function (section) { section.hidden = true; });
     byId("my-tickets-screen").hidden = false;
@@ -426,24 +593,25 @@
   }
 
   function renderSlots() {
-    var selectableSlots = program.slots.filter(function (slot) {
-      return !slot.disabled && !hasTimeConflict(state.dateKey, slot.time);
-    });
+    byId("slot-placeholder").hidden = !!state.dateKey;
+    byId("booking-slots").hidden = !state.dateKey;
+    if (!state.dateKey) { byId("booking-slots").replaceChildren(); return; }
     var selectedSlot = program.slots.find(function (slot) { return slot.time === state.time; });
-    if (!selectedSlot || selectedSlot.disabled || hasTimeConflict(state.dateKey, selectedSlot.time)) {
-      state.time = selectableSlots.length ? selectableSlots[0].time : "";
+    if (!selectedSlot || selectedSlot.disabled || slotHasStarted(selectedSlot) || hasTimeConflict(state.dateKey, selectedSlot.time)) {
+      state.time = "";
     }
     byId("booking-slots").innerHTML = program.slots.map(function (slot, index) {
       var booked = hasTimeConflict(state.dateKey, slot.time);
       var selected = slot.time === state.time;
       var className = "chip chip--slots" + (selected ? " is-selected" : "") + (booked ? " is-booked" : "");
-      var stockText = booked ? "이미 예약됨" : slot.stock;
-      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" data-booked="' + booked + '" aria-pressed="' + selected + '"' + (slot.disabled ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
+      var stockText = booked ? "내 예약·장바구니와 겹침" : slotHasStarted(slot) ? "시작된 회차" : slot.stock;
+      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" data-booked="' + booked + '" aria-pressed="' + selected + '"' + (slot.disabled || booked || slotHasStarted(slot) ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
     }).join("");
     document.querySelectorAll("#booking-slots button:not([disabled])").forEach(function (button) {
       button.addEventListener("click", function () {
         if (button.getAttribute("data-booked") === "true") { notifyTimeConflict(); return; }
         state.time = button.getAttribute("data-time");
+        state.qty = Math.min(state.qty, selectedMaxQty());
         document.querySelectorAll("#booking-slots button").forEach(function (item) {
           var selected = item === button;
           item.classList.toggle("is-selected", selected);
@@ -452,6 +620,32 @@
         update();
       });
     });
+  }
+
+  function slotHasStarted(slot) {
+    var range = BookingRules.interval({ dateKey: state.dateKey, time: slot.time, programKey: program.key });
+    return !range || range.start <= Date.now();
+  }
+
+  function selectProduct(key, reset) {
+    program = programs.pony;
+    state.experience = ["ride", "play"].includes(key) ? key : "ride";
+    if (reset !== false) {
+      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false;
+      calendarMonth = new Date(bookingStart.getFullYear(), bookingStart.getMonth(), 1);
+    }
+    byId("citizen-discount").checked = state.discount;
+    byId("date-picker").open = false;
+    var product = currentExperience();
+    byId("product-title").textContent = product.name;
+    byId("product-subtitle").textContent = product.subtitle;
+    byId("product-unit-price").textContent = money(product.price);
+    byId("product-image").src = product.image;
+    byId("product-image").alt = product.name + " 체험 현장";
+    byId("product-description").textContent = product.description;
+    byId("product-notes").replaceChildren();
+    product.notes.forEach(function (note) { byId("product-notes").append(createTextElement("li", "", note)); });
+    renderCalendar(); renderSlots(); update();
   }
 
   function renderCalendar() {
@@ -494,6 +688,9 @@
         var selectedDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
         state.dateKey = button.getAttribute("data-date-key");
         state.date = formatBookingDate(selectedDate);
+        state.time = "";
+        byId("date-picker").open = false;
+        byId("date-picker").querySelector("summary").focus();
         renderCalendar();
         renderSlots();
         update();
@@ -503,63 +700,83 @@
 
   function update() {
     var price = amount();
-    var displayName = currentName();
     var unitPrice = currentPrice();
-    byId("booking-program-name").textContent = displayName;
-    byId("booking-program-meta").textContent = "서울 렛츠런파크 · 1인 " + money(unitPrice);
     byId("booking-unit-price").textContent = "1인 " + money(unitPrice);
     byId("booking-qty").textContent = state.qty;
-    byId("summary-image").src = program.image;
-    byId("summary-tag").textContent = currentExperience() ? currentExperience().tag : program.tag;
-    byId("summary-tag").className = "tag--cat " + program.tagClass;
-    byId("summary-name").textContent = displayName;
-    byId("summary-date").textContent = state.date;
-    byId("summary-time").textContent = state.time;
-    byId("summary-people").textContent = state.qty + "명";
+    byId("selected-date-label").textContent = state.date || "날짜를 선택해주세요";
+    byId("selected-option-summary").textContent = state.dateKey && state.time ? state.date + " · " + state.time + " · " + state.qty + "명" : "날짜와 시간을 선택해주세요.";
     byId("summary-price").textContent = money(price);
-    byId("confirm-image").src = program.image;
-    byId("confirm-name").textContent = displayName;
-    byId("confirm-date").textContent = state.date;
-    byId("confirm-time").textContent = state.time;
-    byId("confirm-people").textContent = state.qty + "명";
-    byId("confirm-price").textContent = money(price);
-    byId("final-price").textContent = money(price);
-    byId("complete-image").src = program.image;
-    byId("complete-name").textContent = displayName;
-    byId("complete-date").textContent = state.date;
-    byId("complete-time").textContent = state.time;
-    byId("complete-people").textContent = state.qty + "명";
-    byId("complete-price").textContent = money(price);
+    byId("to-confirm").disabled = !state.dateKey || !state.time;
+    byId("qty-minus").disabled = state.qty <= 1;
+    byId("qty-plus").disabled = state.qty >= selectedMaxQty();
   }
 
-  function goToStep(step) {
+  function selectedMaxQty() {
+    var slot = program.slots.find(function (entry) { return entry.time === state.time; });
+    return Math.min(state.discount ? 2 : 4, slot && slot.capacity || 4);
+  }
+
+  function goToStep(step, options) {
+    options = options || {};
     state.step = step;
     byId("my-tickets-screen").hidden = true;
-    document.querySelector(".reservation-steps").hidden = false;
+    document.querySelector(".reservation-steps").hidden = step === 0 || step === 1;
     document.querySelectorAll("[data-booking-step]").forEach(function (section) {
-      section.hidden = false;
-      section.classList.toggle("is-visible", Number(section.getAttribute("data-booking-step")) === step);
+      var visible = Number(section.getAttribute("data-booking-step")) === step;
+      section.hidden = !visible;
+      section.classList.toggle("is-visible", visible);
     });
+    var progress = step === 4 ? 1 : step;
     document.querySelectorAll("[data-step-label]").forEach(function (label) {
       var labelStep = Number(label.getAttribute("data-step-label"));
-      label.classList.toggle("is-current", labelStep === step);
-      label.classList.toggle("is-done", labelStep < step);
-      label.querySelector("i").textContent = labelStep < step ? "✓" : labelStep;
+      label.classList.toggle("is-current", labelStep === progress);
+      label.classList.toggle("is-done", labelStep < progress);
+      label.querySelector("i").textContent = labelStep < progress ? "✓" : labelStep;
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.title = (step === 0 ? "체험 상품" : step === 1 ? currentName() : step === 4 ? "장바구니" : step === 2 ? "주문·결제" : "예약 완료") + " | 포니랜드";
+    if (options.history !== false) {
+      var url = new URL(window.location.href);
+      url.searchParams.delete("program"); url.searchParams.delete("product"); url.searchParams.delete("view");
+      if (step === 1) url.searchParams.set("product", state.experience);
+      else if (step === 4) url.searchParams.set("view", "cart");
+      else if (step === 2) url.searchParams.set("view", "checkout");
+      else if (step === 3) url.searchParams.set("view", "complete");
+      if (url.href !== window.location.href) window.history[options.replace ? "replaceState" : "pushState"](null, "", url);
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  document.querySelectorAll("[data-experience]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      state.experience = button.getAttribute("data-experience");
-      document.querySelectorAll("[data-experience]").forEach(function (item) {
-        var selected = item === button;
-        item.classList.toggle("is-selected", selected);
-        item.setAttribute("aria-pressed", String(selected));
-      });
-      update();
+  function restoreShopRoute() {
+    var route = new URLSearchParams(window.location.search);
+    if (["ride", "play"].includes(route.get("product"))) {
+      selectProduct(route.get("product"), state.experience !== route.get("product"));
+      goToStep(1, { history: false });
+    } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
+    else if (["cart", "checkout", "complete"].includes(route.get("view"))) {
+      // Returning to checkout always requires a fresh review from the cart.
+      renderCart(); goToStep(4, { replace: true });
+    } else goToStep(0, { replace: true });
+  }
+
+  document.querySelectorAll("[data-product]").forEach(function (link) {
+    link.addEventListener("click", function (event) {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault(); selectProduct(link.getAttribute("data-product")); goToStep(1);
     });
   });
+  document.querySelectorAll("[data-shop-home]").forEach(function (button) {
+    button.addEventListener("click", function () { goToStep(0); });
+  });
+  byId("switch-account").addEventListener("click", function () { openLoginDialog("switch"); });
+  byId("logout").addEventListener("click", function () {
+    try { window.sessionStorage.removeItem("ponylandDemoMember"); }
+    catch (error) { notify("로그아웃을 저장하지 못했습니다. 다시 시도해주세요."); return; }
+    currentMember = null; ticketReservation = null; completedOrder = null; checkoutSnapshot = "";
+    showTicketExamples = false; byId("ticket-examples").checked = false;
+    byId("complete-items").replaceChildren(); byId("confirm-items").replaceChildren(); byId("ticket-list").replaceChildren();
+    goToStep(0); updateAccount(); renderSlots(); update(); renderCart();
+  });
+  byId("ticket-examples").addEventListener("change", function (event) { showTicketExamples = event.target.checked; renderTicketList(); });
 
   byId("calendar-prev").addEventListener("click", function () {
     calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
@@ -571,26 +788,23 @@
   });
 
   byId("qty-minus").addEventListener("click", function () { state.qty = Math.max(1, state.qty - 1); update(); });
-  byId("qty-plus").addEventListener("click", function () { state.qty = Math.min(state.discount ? 2 : 4, state.qty + 1); update(); });
+  byId("qty-plus").addEventListener("click", function () { state.qty = Math.min(selectedMaxQty(), state.qty + 1); update(); });
   byId("citizen-discount").addEventListener("change", function (event) { state.discount = event.target.checked; if (state.discount && state.qty > 2) state.qty = 2; update(); });
-  byId("to-confirm").addEventListener("click", function () {
-    if (!state.time || hasTimeConflict(state.dateKey, state.time)) { notifyTimeConflict(); return; }
-    openLoginDialog("booking");
+  byId("to-confirm").addEventListener("click", addToCart);
+  byId("to-checkout").addEventListener("click", startCheckout);
+  byId("view-cart").addEventListener("click", function () {
+    renderCart(); goToStep(4);
   });
-  byId("back-to-select").addEventListener("click", function () { goToStep(1); });
-  byId("complete-payment").addEventListener("click", function () {
-    if (!byId("terms").checked) { notify("필수 약관에 동의해주세요."); return; }
-    if (!state.time || hasTimeConflict(state.dateKey, state.time)) { notifyTimeConflict(); return; }
-    ticketReservation = saveCurrentReservation();
-    goToStep(3);
-    notify("예약이 완료되었습니다.");
-  });
+  byId("close-cart-added").addEventListener("click", function () { byId("cart-added-dialog").close(); });
+  byId("keep-shopping").addEventListener("click", function () { byId("cart-added-dialog").close(); goToStep(0); });
+  byId("added-view-cart").addEventListener("click", function () { byId("cart-added-dialog").close(); renderCart(); goToStep(4); });
+  byId("back-to-select").addEventListener("click", function () { renderCart(); goToStep(4); });
+  byId("complete-payment").addEventListener("click", completePayment);
   byId("view-my-tickets").addEventListener("click", function () {
     showMyTickets();
-    if (ticketReservation) showTicketDetail(ticketReservation.id);
   });
-  byId("new-booking").addEventListener("click", function () { goToStep(1); renderSlots(); update(); });
-  byId("back-from-tickets").addEventListener("click", function () { goToStep(1); });
+  byId("new-booking").addEventListener("click", function () { goToStep(0); });
+  byId("back-from-tickets").addEventListener("click", function () { goToStep(0); });
   byId("back-to-ticket-list").addEventListener("click", function () {
     byId("ticket-detail-view").hidden = true;
     byId("my-tickets-list-view").hidden = false;
@@ -608,12 +822,22 @@
     });
   });
 
-  byId("pony-experience-panel").hidden = !program.experiences;
-  byId("pony-slot-guide").hidden = !program.experiences;
-  byId("pony-weather-note").hidden = !program.experiences;
-  document.querySelector(".discount-check").hidden = !program.experiences;
-  renderCalendar();
-  renderSlots();
-  update();
+  window.addEventListener("storage", function (event) {
+    if (event.key !== reservationStorageKey && event.key !== null) return;
+    var store = readStore();
+    var latestCart = JSON.stringify(ownCart(store));
+    if (state.step === 2 && latestCart !== checkoutSnapshot) {
+      byId("terms").checked = false; checkoutSnapshot = latestCart;
+      notify("다른 창에서 장바구니가 변경되었습니다. 변경된 금액과 일정을 확인해주세요.");
+    }
+    renderSlots(); update(); renderCart();
+    if (!byId("my-tickets-screen").hidden && !byId("my-tickets-list-view").hidden) renderTicketList();
+  });
+  updateAccount();
+  selectProduct("ride");
+  renderCart();
+  restoreShopRoute();
+  window.addEventListener("popstate", restoreShopRoute);
   setInterval(function () { updateTicketAccess(); updateTicketListStatuses(); }, 1000);
+  setInterval(function () { renderSlots(); update(); renderCart(); }, 30000);
 })();

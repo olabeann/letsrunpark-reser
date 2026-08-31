@@ -3,6 +3,7 @@ const { readFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
+const BookingRules = require('../booking-rules.js');
 
 const source = readFileSync(resolve(__dirname, '../app.js'), 'utf8');
 const ticketHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
@@ -10,7 +11,7 @@ const programSource = source.slice(source.indexOf('  var programs ='), source.in
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
   'ticketTiming', 'isWeekend', 'demoReservationId', 'slotDateTime', 'activeSlotForNow',
-  'stateExampleReservations', 'uniqueReservations', 'allReservations', 'hasTimeConflict',
+  'stateExampleReservations', 'hasTimeConflict',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
 const functions = names.map(name => {
@@ -19,13 +20,14 @@ const functions = names.map(name => {
   return source.slice(start, source.indexOf('\n  }', start) + 4);
 }).join('\n');
 
-function runtime(now, saved = []) {
+function runtime(now, saved = [], examples = false) {
   let clock = now.getTime();
   let renders = 0;
   const elements = {
     'my-tickets-screen': { hidden: false },
     'my-tickets-list-view': { hidden: false },
   };
+  const cards = [];
   for (const [, id] of ticketHtml.matchAll(/id="([^"]+)"/g)) {
     if (!elements[id]) elements[id] = { hidden: true, textContent: '', setAttribute(name, value) { this[name] = value; } };
   }
@@ -36,13 +38,19 @@ function runtime(now, saved = []) {
     Date: ClockDate,
     weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
     readReservations: () => saved,
+    readStore: () => ({ reservations: saved, carts: {} }),
+    ownCart: () => [],
+    currentMember: { id: 'member-1' },
+    program: { key: 'pony' },
+    showTicketExamples: examples,
+    BookingRules,
     money: value => value + '원',
     byId: id => elements[id],
-    document: { querySelectorAll: () => [] },
+    document: { querySelectorAll: () => cards },
     renderTicketList: () => { renders += 1; },
   });
   vm.runInContext(programSource + '\n' + functions, context);
-  return { context, elements, setNow: date => { clock = date.getTime(); }, renders: () => renders };
+  return { context, elements, cards, setNow: date => { clock = date.getTime(); }, renders: () => renders };
 }
 
 function assertStates(context, tickets, now) {
@@ -54,16 +62,15 @@ function assertStates(context, tickets, now) {
 
 const now = new Date(2026, 7, 27, 11, 23);
 for (const count of [0, 1, 2, 8, 20]) {
-  test('keeps all three states with ' + count + ' stored upcoming reservations', () => {
+  test('shows all ' + count + ' stored reservations without adding examples or hiding tickets', () => {
     const saved = Array.from({ length: count }, (_, i) => ({
       id: 'saved-' + i, dateKey: '2026-09-' + String(i + 1).padStart(2, '0'),
-      time: '10:00~10:20', discount: false,
+      time: '10:00~10:20', discount: false, memberId: 'member-1',
     }));
     const before = JSON.stringify(saved);
     const { context } = runtime(now, saved);
     const tickets = context.ticketListReservations();
-    assertStates(context, tickets, now);
-    if (count) assert.equal(tickets[1].id, 'saved-0');
+    assert.deepEqual(Array.from(tickets, item => item.id), saved.map(item => item.id));
     if (count > 3) assert.equal(context.hasTimeConflict(saved[count - 1].dateKey, saved[count - 1].time), true);
     assert.equal(JSON.stringify(saved), before, 'Stored reservations must remain untouched');
   });
@@ -76,15 +83,15 @@ test('uses a saved ended ticket when one exists', () => {
   ];
   const { context } = runtime(now, saved);
   const tickets = context.ticketListReservations();
-  assertStates(context, tickets, now);
-  assert.equal(tickets[2].id, 'ended');
+  assert.equal(tickets.length, 2);
+  assert.equal(tickets[1].id, 'ended');
 });
 
 test('example states remain distinct across a full week and month boundary', () => {
   for (let day = 27; day <= 34; day += 1) {
     for (const [hour, minute] of [[0, 0], [9, 50], [11, 45], [11, 46], [13, 9], [13, 10], [13, 45], [17, 0], [23, 59]]) {
       const time = new Date(2026, 7, day, hour, minute);
-      const { context } = runtime(time);
+      const { context } = runtime(time, [], true);
       const tickets = context.ticketListReservations();
       assertStates(context, tickets, time);
       assert.ok(context.ticketTiming(tickets[1], time).entryOpen > time);
@@ -94,28 +101,34 @@ test('example states remain distinct across a full week and month boundary', () 
   }
 });
 
-test('refreshes the visible list at a status boundary without replacing open details', () => {
-  const fixture = runtime(now);
+test('updates ticket badges at a status boundary without replacing the list or open details', () => {
+  const fixture = runtime(now, [{ id: 'test', dateKey: '2026-08-27', time: '11:20~11:45' }]);
+  const badge = {};
+  fixture.cards.push({ getAttribute: () => 'test', setAttribute() {}, querySelector: () => badge });
   fixture.context.ticketReservations = fixture.context.ticketListReservations();
   fixture.context.updateTicketListStatuses();
   assert.equal(fixture.renders(), 0);
+  assert.equal(badge.textContent, '입장 가능');
   fixture.setNow(new Date(2026, 7, 27, 11, 46));
   fixture.context.updateTicketListStatuses();
-  assert.equal(fixture.renders(), 1);
+  assert.equal(badge.textContent, '입장 종료');
+  assert.equal(fixture.renders(), 0);
   fixture.elements['my-tickets-list-view'].hidden = true;
   fixture.context.updateTicketListStatuses();
-  assert.equal(fixture.renders(), 1);
+  assert.equal(fixture.renders(), 0);
 });
 
-test('staff discount notice is an integrated strip at the top of the status card', () => {
+test('staff discount notice is a compact design-system badge beside the ticket status', () => {
   const statusStart = ticketHtml.indexOf('<section class="entry-ticket__status">');
   const statusEnd = ticketHtml.indexOf('</section>', statusStart);
+  const indicators = ticketHtml.indexOf('class="entry-ticket__indicators"');
+  const statusBadge = ticketHtml.indexOf('class="entry-ticket__badge"');
   const notice = ticketHtml.indexOf('id="ticket-citizen-discount"');
-  const statusTop = ticketHtml.indexOf('class="entry-ticket__status-top"');
+  const clock = ticketHtml.indexOf('class="entry-ticket__clock"');
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
-  assert.ok(statusStart < notice && notice < statusTop && statusTop < sessionSummary && sessionSummary < statusEnd);
+  assert.ok(statusStart < indicators && indicators < statusBadge && statusBadge < notice && notice < clock && clock < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
-  assert.match(ticketHtml, /<strong>과천시민 50% 할인<\/strong><span>증빙 확인<\/span>/);
+  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 확인<\/span>/);
   assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
 });
 
