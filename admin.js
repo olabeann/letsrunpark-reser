@@ -253,5 +253,6 @@
   byId("download-settlement").addEventListener("click", function () { downloadCsv("포니랜드_정산자료_2026-09.csv", [["귀속", "프로그램", "결제건수", "결제액", "환불액", "수수료", "정산대상"], ["서울·공원지원부", "포니 타기", 982, 5210000, -210000, -150000, 4850000], ["서울·공원지원부", "포니랑 놀기", 604, 3210000, -116000, -92820, 3001180]]); });
 
   var requestedView = location.hash.replace("#", "");
-  if (["reservations", "programs", "settlement", "permissions"].includes(requestedView)) showView(requestedView);
+  if (["dashboard", "reservations", "programs", "settlement", "permissions"].includes(requestedView)) showView(requestedView);
+  else showView("reservations");
 })();

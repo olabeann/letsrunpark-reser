@@ -1,0 +1,230 @@
+/* Light, table-first admin direction based on the supplied visual reference. */
+.admin-page {
+  --admin-blue:#1769ff;
+  --admin-blue-soft:#eef5ff;
+  --admin-ink:#17191c;
+  --admin-dark:#fff;
+  --admin-green:#1769ff;
+  --admin-mint:#eef5ff;
+  --admin-line:#e7e9ec;
+  --admin-muted:#858a91;
+  --admin-yellow:#1769ff;
+  background:#fff;
+  color:#25282c;
+}
+
+.admin-sidebar {
+  width:250px;
+  padding:0 24px 24px;
+  background:#fff;
+  color:#25282c;
+  border-right:1px solid #e8eaed;
+}
+.admin-brand {
+  height:54px;
+  margin:0 -24px 28px;
+  padding:0 24px;
+  border-bottom:1px solid #e8eaed;
+  gap:9px;
+}
+.admin-brand img {width:26px;height:26px;filter:none}
+.admin-brand small {display:none}
+.admin-brand strong {margin:0;font-size:14px;letter-spacing:-.02em}
+.admin-scope {margin:0 0 20px}
+.admin-scope>span {display:none}
+.admin-scope button {
+  min-height:46px;
+  justify-content:center;
+  background:#fff;
+  border:1px solid var(--admin-blue);
+  color:var(--admin-blue);
+  border-radius:10px;
+  font-size:13px;
+}
+.admin-scope button b {display:none}
+.admin-menu {gap:2px}
+.admin-menu:before {
+  content:"운영 관리";
+  padding:7px 2px 8px;
+  color:#767b82;
+  font-size:10px;
+  font-weight:700;
+}
+.admin-menu button {
+  min-height:40px;
+  padding:0 2px;
+  color:#454a50;
+  border-radius:6px;
+  gap:9px;
+}
+.admin-menu button:hover {background:#f6f8fb;color:#17191c}
+.admin-menu button.is-active {background:#edf4ff;color:var(--admin-blue)}
+.admin-menu button.is-active:before {display:none}
+.admin-menu button i {width:20px;font-size:15px;color:#6c7279}
+.admin-menu button.is-active i {color:var(--admin-blue)}
+.admin-menu button span {font-size:12px;font-weight:600}
+.admin-menu button>b {background:#f1f3f5;color:#71767d}
+.admin-sidebar__footer>a {
+  border-top:1px solid #eceef0;
+  margin:0 0 15px;
+  padding:18px 2px 12px;
+  color:#60666d;
+}
+.admin-user {border-top:1px solid #eceef0;padding:16px 0 0}
+.admin-user>span {background:#eef4ff;color:var(--admin-blue)}
+.admin-user strong {color:#26292e}
+.admin-user small,.admin-user button {color:#8b9096}
+
+.admin-shell {margin-left:250px;background:#fff}
+.admin-topbar {
+  height:54px;
+  padding:0 24px;
+  background:#fff;
+  border-bottom:1px solid #e8eaed;
+  backdrop-filter:none;
+}
+.topbar-path {font-size:11px}
+.topbar-actions button {border-color:#e3e6e9;background:#fff}
+.topbar-actions>a {background:#fff;border:1px solid #e1e4e8;color:#33383e}
+.system-state i {background:var(--admin-blue);box-shadow:none}
+.admin-shell main {max-width:none;padding:30px 38px 70px}
+
+.page-head {align-items:center;margin-bottom:26px}
+.page-kicker {display:none}
+.page-head h1 {margin:0 0 7px;font-size:23px;color:#17191c}
+.page-head p {font-size:11px;color:#858a91}
+.admin-button {height:38px;border-radius:8px;font-size:11px}
+.admin-button--ghost {border-color:#e2e5e8}
+.admin-button--primary {background:var(--admin-blue)}
+
+.admin-panel,
+.metric-grid article,
+.filter-panel,
+.program-tabs button,
+.settlement-metrics article {
+  border-color:#e6e8eb;
+  border-radius:10px;
+  box-shadow:none;
+}
+.admin-panel>header {padding:17px 20px}
+.admin-panel h2 {color:#22252a}
+
+/* The reservation screen is the primary working surface, like the reference. */
+[data-view="reservations"] .page-head {margin-bottom:20px}
+[data-view="reservations"] .page-head:after {
+  content:"서울  ·  판매중  ·  온라인 예약";
+  position:absolute;
+  right:39px;
+  top:90px;
+  padding:8px 12px;
+  border-radius:8px;
+  background:#f7f8fa;
+  color:#72777e;
+  font-size:10px;
+}
+[data-view="reservations"]:before {
+  content:"운영 알림    오늘 14:20 포니 타기 회차 잔여 1석   ·   과천시민 증빙 확인 6명";
+  display:block;
+  margin:0 0 24px;
+  padding:16px 20px;
+  color:#38527b;
+  background:#f5f8ff;
+  border:1px solid #dce7ff;
+  border-radius:10px;
+  font-size:11px;
+}
+[data-view="reservations"] .filter-panel:before {
+  content:"예약 접수  10      입장 예정  68      입장 완료  16      취소 요청  3      환불 확인  1      취소 완료  24";
+  grid-column:1/-1;
+  display:block;
+  margin:-12px -15px 12px;
+  padding:18px 0 15px;
+  border-bottom:1px solid #e6e8eb;
+  color:#686e75;
+  font-size:12px;
+  font-weight:600;
+  word-spacing:7px;
+}
+.filter-panel {
+  grid-template-columns:1.2fr .8fr .8fr .8fr 64px;
+  padding:15px;
+  margin-bottom:14px;
+  background:#fff;
+}
+.filter-panel input,.filter-panel select {
+  height:42px;
+  border-color:#e4e7ea;
+  border-radius:9px;
+  font-size:11px;
+}
+.filter-panel>button {height:42px;background:#f6f7f8}
+.search-field input {background:#fff}
+.reservation-panel>header {background:#fff}
+.reservation-panel>header p {display:none}
+.legend {color:#90959b}
+.table-scroll {background:#fff}
+th {
+  padding:13px 16px;
+  background:#fafbfc;
+  color:#646a71;
+  font-size:10px;
+  border-color:#e6e8eb;
+}
+td {
+  height:58px;
+  padding:10px 16px;
+  color:#4d5359;
+  font-size:11px;
+  border-color:#e8eaed;
+}
+td strong {color:#24272b;font-size:11px}
+tbody tr[data-reservation-id]:hover td {background:#f7faff}
+.table-program img {display:none}
+.table-status {background:#eaf3ff;color:#1769ff}
+.table-status.is-partial {background:#fff3dd;color:#a26912}
+.table-status.is-review {background:#fff0f2;color:#d64e62}
+.table-status.is-cancelled {background:#f1f2f4;color:#747980}
+.reservation-table input {accent-color:var(--admin-blue)}
+.table-pagination {justify-content:center}
+.table-pagination>span {position:absolute;left:calc(250px + 55px)}
+.table-pagination button.is-current {background:#f3f4f6;color:#202328;border-color:#f3f4f6}
+
+/* Secondary sections inherit the same restrained visual language. */
+.metric-grid {gap:12px}
+.metric-grid article {padding:18px}
+.metric-icon {border-radius:9px}
+.metric-icon--yellow,.metric-icon--green,.metric-icon--blue {background:#edf4ff;color:#1769ff}
+.metric-icon--coral {background:#fff0f2;color:#d64e62}
+.metric-grid strong {color:#202328}
+.metric-grid p b {color:#1769ff}
+.dashboard-grid {gap:14px}
+.segmented button.is-selected {color:#1769ff}
+.capacity-bar i {background:#1769ff}
+.status-chip {background:#eaf3ff;color:#1769ff}
+.attention-icon--green {background:#eaf3ff;color:#1769ff}
+.program-tabs button.is-active {border-color:#1769ff;box-shadow:0 0 0 2px #e5efff}
+.switch-label input:checked+i {background:#1769ff}
+.day-checks input:checked+span {background:#edf4ff;border-color:#9fc0ff;color:#1769ff}
+.policy-check input {accent-color:#1769ff}
+.settlement-metrics article.is-emphasis {background:#1769ff}
+.organization-tree button:hover,.organization-tree button.is-selected {background:#edf4ff}
+.role-members article>span {background:#edf4ff;color:#1769ff}
+.permission-table td:not(:first-child) {color:#1769ff}
+.reservation-drawer {background:#fafbfc}
+.individual-ticket:has(input:checked) {border-color:#8cb3ff;background:#f3f7ff}
+.individual-ticket input {accent-color:#1769ff}
+.individual-ticket>span:last-child {background:#eaf3ff;color:#1769ff}
+.admin-button--danger {background:#e05263}
+.toast {background:#24272b}
+
+@media(max-width:820px) {
+  .admin-sidebar {transform:translateX(-100%)}
+  .admin-shell {margin-left:0}
+  .admin-shell main {padding:24px 16px 60px}
+  [data-view="reservations"] .page-head:after {display:none}
+  .table-pagination>span {left:18px}
+}
+@media(max-width:560px) {
+  [data-view="reservations"]:before {line-height:1.7}
+  [data-view="reservations"] .filter-panel:before {line-height:2;word-spacing:2px}
+}
