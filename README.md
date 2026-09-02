@@ -12,6 +12,7 @@
 | 장바구니 | [장바구니 열기](https://olabeann.github.io/letsrunpark-reser/?view=cart) |
 | 포니 체험 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/pony.html) |
 | 렛츠런파크 투어 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/tour.html) |
+| 운영 관리자 | [관리자 화면 열기](https://olabeann.github.io/letsrunpark-reser/admin.html) |
 | GitHub 저장소 | [코드 보기](https://github.com/olabeann/letsrunpark-reser) |
 
 티켓 목록과 상세 화면은 **예약 조회 → 카카오로 계속하기 또는 네이버로 계속하기 → 티켓 선택** 순서로 확인할 수 있습니다.

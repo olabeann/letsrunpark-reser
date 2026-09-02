@@ -6,9 +6,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = join(root, 'docs');
 // Publish only these browser assets, never repository metadata or internal notes.
 const files = [
-  'index.html', 'pony.html', 'tour.html', 'app.js', 'booking-rules.js',
-  'tokens.css', 'components.css', 'styles.css', '.nojekyll',
+  'index.html', 'pony.html', 'tour.html', 'admin.html', 'app.js', 'admin.js', 'booking-rules.js',
+  'tokens.css', 'components.css', 'styles.css', 'admin.css', '.nojekyll',
   'assets/logo/mascot.png', 'assets/logo/pony-land.png', 'assets/logo/logo_color.svg',
+  'assets/characters/pony-rider.png', 'assets/characters/cowboy-child.png',
   'assets/pony/cover.jpg', 'assets/pony/gallery-01.jpg', 'assets/pony/gallery-02.jpg',
   'assets/tour/cover.jpg', 'assets/tour/gallery-01.jpg', 'assets/tour/gallery-02.jpg',
 ];

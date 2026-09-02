@@ -676,7 +676,9 @@
     byId("booking-page-description").textContent = program.subtitle;
     byId("booking-program-character").src = program.character;
     byId("booking-animal-note").hidden = program.key !== "play";
-    byId("back-to-experience").textContent = "← " + program.name + " 상세";
+    var experienceLink = byId("back-to-experience");
+    experienceLink.innerHTML = '<span aria-hidden="true">←</span> 포니 체험 소개 보기';
+    if (typeof experienceLink.setAttribute === "function") experienceLink.setAttribute("href", program.detail || "pony.html");
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;
     byId("product-unit-price").textContent = money(program.price);
@@ -802,7 +804,6 @@
   document.querySelectorAll("[data-shop-home]").forEach(function (button) {
     button.addEventListener("click", function () { goToStep(1); });
   });
-  byId("back-to-experience").addEventListener("click", function () { window.history.back(); });
   byId("calendar-prev").addEventListener("click", function () {
     calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
     renderCalendar();
