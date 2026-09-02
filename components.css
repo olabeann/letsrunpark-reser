@@ -38,8 +38,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .reservation-header__actions{display:flex;align-items:center;gap:8px}.reservation-header__actions button{height:40px;padding-inline:14px;border-radius:var(--r-md);font-size:var(--fs-label)}
 .reservation-header__actions .header-login{background:var(--ink);color:var(--white);font-weight:700}
 .ticket-brand{font-size:var(--fs-body-sm)}
-.experience-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.experience-card{position:relative;text-align:left;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;background:var(--white);transition:border-color .18s,background-color .18s,box-shadow .18s,transform .18s}.experience-card:hover{border-color:var(--soft);transform:translateY(-1px)}.experience-card:focus-visible{outline:3px solid rgba(103,200,90,.35);outline-offset:2px}.experience-card.is-selected{border-color:var(--green-600);background:var(--green-100);box-shadow:0 8px 24px rgba(67,143,57,.1)}.experience-card__icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--ground-200);font-size:29px;margin-bottom:14px}.experience-card:nth-child(2) .experience-card__icon{background:var(--green-200)}.experience-card__head{display:flex;justify-content:space-between;align-items:end;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line)}.experience-card__head small,.experience-card__head strong{display:block}.experience-card__head small{font-size:10px;font-weight:var(--fw-bold);color:var(--coral-700);margin-bottom:4px}.experience-card:first-child .experience-card__head small{display:inline-flex;align-items:center;width:max-content;padding:7px 13px;border-radius:var(--r-full);background:var(--ground-500);color:var(--ink);font-size:var(--fs-caption);line-height:1;margin-bottom:9px}.experience-card__head strong{font-size:var(--fs-body-lg)}.experience-card__head>b{font-size:var(--fs-h3)}.experience-card ul{margin:14px 0 0;padding:0;list-style:none}.experience-card li{position:relative;padding-left:14px;margin-top:7px;color:var(--grey);font-size:var(--fs-caption);line-height:1.45}.experience-card li:before{content:"✓";position:absolute;left:0;color:var(--green-700);font-weight:700}.citizen-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:14px 16px;border:1px solid var(--yellow-500);border-radius:var(--r-md);background:var(--yellow-100)}.citizen-banner strong{font-size:var(--fs-body-sm)}.citizen-banner span{color:var(--grey);font-size:var(--fs-caption)}.experience-overlap,.weather-note{margin:12px 0 0;color:var(--coral-700);font-size:var(--fs-caption)}.slot-guide{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--line);margin-bottom:16px}.slot-guide span{display:flex;gap:10px;background:var(--green-100);padding:11px 12px;color:var(--grey);font-size:var(--fs-caption)}.slot-guide b{min-width:60px;color:var(--green-900)}
-.experience-card:first-child .experience-card__head small{display:block;width:auto;padding:0;border-radius:0;background:transparent;color:var(--coral-700);font-size:10px;line-height:normal;margin-bottom:4px}
+.experience-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.experience-card{position:relative;text-align:left;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;background:var(--white);transition:border-color .18s,background-color .18s,transform .18s}.experience-card:hover{border-color:var(--ground-400);transform:translateY(-1px)}.experience-card:focus-visible{outline:3px solid var(--green-300);outline-offset:2px}.experience-card.is-selected{border-color:var(--green-400);background:var(--green-100)}.experience-card__icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--ground-200);font-size:29px;margin-bottom:14px}.experience-card:nth-child(2) .experience-card__icon{background:var(--green-200)}.experience-card__head{display:flex;justify-content:space-between;align-items:end;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line)}.experience-card__head small,.experience-card__head strong{display:block}.experience-card__head small{font-size:10px;font-weight:var(--fw-bold);color:var(--grey);margin-bottom:4px}.experience-card:first-child .experience-card__head small{display:inline-flex;align-items:center;width:max-content;padding:7px 13px;border-radius:var(--r-full);background:var(--ground-500);color:var(--ink);font-size:var(--fs-caption);line-height:1;margin-bottom:9px}.experience-card__head strong{font-size:var(--fs-body-lg)}.experience-card__head>b{font-size:var(--fs-h3)}.experience-card ul{margin:14px 0 0;padding:0;list-style:none}.experience-card li{position:relative;padding-left:14px;margin-top:7px;color:var(--grey);font-size:var(--fs-caption);line-height:1.45}.experience-card li:before{content:"✓";position:absolute;left:0;color:var(--ink);font-weight:700}.citizen-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:14px 16px;border:1px solid var(--yellow-300);border-radius:var(--r-md);background:var(--yellow-100)}.citizen-banner strong{font-size:var(--fs-body-sm)}.citizen-banner span{color:var(--grey);font-size:var(--fs-caption)}.experience-overlap,.weather-note{margin:12px 0 0;color:var(--grey);font-size:var(--fs-caption)}.slot-guide{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:var(--line);margin-bottom:16px}.slot-guide span{display:flex;gap:10px;background:var(--green-100);padding:11px 12px;color:var(--grey);font-size:var(--fs-caption)}.slot-guide b{min-width:60px;color:var(--ink)}
+.experience-card:first-child .experience-card__head small{display:block;width:auto;padding:0;border-radius:0;background:transparent;color:var(--grey);font-size:10px;line-height:normal;margin-bottom:4px}
 .citizen-banner{margin-top:18px;padding:0 2px;border:0;border-radius:0;background:transparent}.citizen-banner strong{display:flex;align-items:center;gap:8px}.citizen-banner .citizen-banner__rate{height:28px;padding:0 10px;border-radius:var(--r-full);display:inline-flex;align-items:center;background:var(--yellow-500);color:var(--ink);font-size:var(--fs-caption);font-weight:800}.experience-overlap{margin-top:10px;padding-left:2px}
 .booking-summary .tag--exp{background:var(--green-500);color:var(--ink);font-weight:var(--fw-bold)}
 .login-dialog{width:min(420px,calc(100% - 32px));padding:0;border:1px solid var(--line);border-radius:var(--r-hero);background:var(--white);color:var(--ink)}
@@ -59,15 +59,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .login-dialog__body>small{display:block;margin-top:18px;color:var(--grey);font-size:10px;text-align:center}
 .confirm-section .payment-options{grid-template-columns:repeat(2,1fr);gap:12px}
 .confirm-section .payment-options button{height:64px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--white);font-size:var(--fs-body-lg);font-weight:var(--fw-bold);transition:border-color .18s,box-shadow .18s,background-color .18s}
-.confirm-section .payment-options button:hover{border-color:var(--yellow-600);background:var(--yellow-100)}
-.confirm-section .payment-options button.is-selected{border:1px solid var(--yellow-600);background:var(--yellow-100);box-shadow:0 0 0 5px rgba(255,236,88,.3)}
+.confirm-section .payment-options button:hover{border-color:var(--yellow-400);background:var(--yellow-100)}
+.confirm-section .payment-options button.is-selected{border:1px solid var(--yellow-400);background:var(--yellow-100);box-shadow:0 0 0 4px var(--yellow-200)}
 .confirm-wrap .confirm-bottom{display:block;margin-top:24px}
 .confirm-bottom .btn--payment{width:100%;height:58px;background:var(--yellow-500);color:var(--ink);font-size:20px;box-shadow:0 6px 16px rgba(162,148,29,.22);transition:background-color .18s,box-shadow .18s,transform .18s}
 .confirm-bottom .btn--payment:hover{background:var(--yellow-400);box-shadow:0 8px 20px rgba(162,148,29,.28);transform:translateY(-1px)}
 .confirm-bottom .btn--payment:active{box-shadow:none;transform:translateY(0)}
 .confirm-bottom .btn--payment span{font-weight:800}
 .terms input{accent-color:var(--ink)}
-.reservation-steps span[data-step-label] i{background:var(--ground-200);color:var(--ground-800)}
+.reservation-steps span[data-step-label] i{background:var(--ground-200);color:var(--ink)}
 .reservation-steps span[data-step-label].is-current i{background:var(--yellow-500);color:var(--ink)}
 .reservation-steps span[data-step-label].is-done i{background:var(--green-500);color:var(--ink)}
 [hidden]{display:none!important}
@@ -84,26 +84,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .complete-booking-card__body dd{margin:0;font-size:var(--fs-label);font-weight:var(--fw-bold);text-align:right}
 .reservation-complete .complete-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .reservation-complete .complete-actions .btn{height:54px}
-.my-tickets-screen{min-height:calc(100vh - 72px);padding:46px var(--pad-page) 88px;background:linear-gradient(180deg,var(--yellow-100) 0,var(--bg) 300px)}
+.my-tickets-screen{min-height:calc(100vh - 72px);padding:46px var(--pad-page) 88px;background:linear-gradient(180deg,var(--yellow-100) 0,var(--ground-100) 300px)}
 .my-tickets-wrap{width:min(900px,100%);margin:0 auto}
 .my-tickets-wrap>.ticket-detail-view{padding-top:2px}
 .my-tickets-head{margin:8px 0 28px;display:flex;align-items:end;justify-content:space-between;gap:24px}
 .my-tickets-head h1{margin:0 0 8px;font-size:38px;letter-spacing:-.04em}
 .my-tickets-head p{margin:0;color:var(--grey);font-size:var(--fs-label)}
-.my-tickets-head>span{flex:0 0 auto;padding:9px 14px;border-radius:var(--r-full);background:var(--yellow-100);color:var(--ground-800);font-size:var(--fs-caption);font-weight:var(--fw-bold)}
+.my-tickets-head>span{flex:0 0 auto;padding:9px 14px;border-radius:var(--r-full);background:var(--yellow-100);color:var(--ink);font-size:var(--fs-caption);font-weight:var(--fw-bold)}
 .ticket-list{display:grid;gap:14px}
-.ticket-list-card{width:100%;min-height:150px;padding:16px;border:1px solid var(--line);border-radius:var(--r-hero);display:grid;grid-template-columns:170px minmax(0,1fr) auto;align-items:center;gap:22px;background:var(--white);text-align:left;transition:border-color .18s,box-shadow .18s,transform .18s}
-.ticket-list-card:hover{border-color:var(--yellow-600);transform:translateY(-2px)}
+.ticket-list-card{width:100%;min-height:150px;padding:16px;border:1px solid var(--line);border-radius:var(--r-hero);display:grid;grid-template-columns:170px minmax(0,1fr) auto;align-items:center;gap:22px;background:var(--white);box-shadow:0 8px 24px rgba(24,24,28,.04);text-align:left;transition:border-color .18s,box-shadow .18s,transform .18s}
+.ticket-list-card:hover{border-color:var(--yellow-400);transform:translateY(-2px)}
 .ticket-list-card>img{width:170px;height:116px;border-radius:var(--r-lg);object-fit:cover}
 .ticket-list-card__body{min-width:0;display:flex;align-items:flex-start;flex-direction:column}
-.ticket-list-card__status{display:inline-flex;width:max-content;padding:6px 11px;border-radius:var(--r-full);font-size:10px;font-weight:var(--fw-bold)}
-.ticket-list-card__status--upcoming{background:var(--yellow-100);color:var(--ground-800)}
-.ticket-list-card__status--active{background:var(--green-500);color:var(--green-900)}
-.ticket-list-card__status--ended{background:var(--bg);color:var(--grey)}
+.ticket-list-card__status{display:inline-flex;align-items:center;gap:7px;width:max-content;height:26px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-full);font-size:var(--fs-badge);font-weight:var(--fw-semibold);line-height:1}
+.ticket-list-card__status::before{content:"";width:6px;height:6px;border-radius:var(--r-full);background:currentColor;flex:0 0 auto}
+.ticket-list-card__status--upcoming{border-color:var(--yellow-300);background:var(--yellow-100);color:var(--ink)}
+.ticket-list-card__status--upcoming::before{background:var(--yellow-500)}
+.ticket-list-card__status--active{border-color:var(--green-300);background:var(--green-100);color:var(--ink)}
+.ticket-list-card__status--active::before{background:var(--green-500)}
+.ticket-list-card__status--ended{border-color:var(--line);background:var(--white);color:var(--grey)}
+.ticket-list-card__status--ended::before{background:var(--soft)}
 .ticket-list-card__title{max-width:100%;margin-top:10px;font-size:var(--fs-body-lg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ticket-list-card__schedule{margin-top:5px;color:var(--grey);font-size:var(--fs-label)}
 .ticket-list-card__meta{margin-top:12px;font-size:var(--fs-caption);font-weight:var(--fw-bold)}
-.ticket-list-card__arrow{padding-right:8px;color:var(--ground-700);font-size:var(--fs-label);font-weight:var(--fw-bold)}
+.ticket-list-card__arrow{padding-right:8px;color:var(--ink);font-size:var(--fs-label);font-weight:var(--fw-bold)}
 .ticket-list-empty{padding:70px 24px;border:1px dashed var(--line);border-radius:var(--r-hero);background:var(--white);text-align:center}
 .ticket-list-empty strong{font-size:var(--fs-body-lg)}
 .ticket-list-empty p{margin:8px 0 24px;color:var(--grey);font-size:var(--fs-label)}
@@ -113,8 +117,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__status{position:relative;z-index:2;min-height:290px;padding:34px 38px;border-radius:28px;overflow:hidden;background:var(--ink);color:var(--white);transition:background-color .3s,box-shadow .3s}
 .entry-ticket__status-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
 .entry-ticket__indicators{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.entry-ticket__badge{height:40px;padding-inline:16px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:9px;background:var(--white);color:var(--ink);font-size:var(--fs-body-sm)}
-.entry-ticket__badge i{width:9px;height:9px;border-radius:50%;background:var(--yellow-500)}
+.entry-ticket__badge,.entry-ticket__discount{height:30px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-badge);font-weight:var(--fw-semibold);line-height:1;white-space:nowrap}
+.entry-ticket__badge{border-color:var(--yellow-300);background:var(--yellow-100);color:var(--ink)}
+.entry-ticket__badge i{width:6px;height:6px;border-radius:var(--r-full);background:var(--yellow-500);flex:0 0 auto}
 .entry-ticket__clock{text-align:right}
 .entry-ticket__clock small,.entry-ticket__clock strong{display:block}
 .entry-ticket__clock small{color:var(--line);font-size:var(--fs-caption)}
@@ -122,12 +127,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__status>p{margin:66px 0 8px;color:var(--line);font-size:var(--fs-label);font-weight:var(--fw-bold)}
 .entry-ticket__status>h1{margin:0 0 12px;font-size:38px;line-height:1.14;letter-spacing:-.04em;word-break:keep-all}
 .entry-ticket__status>strong{font-size:var(--fs-body-lg)}
-.entry-ticket__pass{margin-top:-16px;padding:48px 38px 34px;border:1px solid var(--line);border-top:0;border-radius:0 0 30px 30px;background:var(--bg)}
+.entry-ticket__pass{margin-top:-16px;padding:48px 38px 34px;border:1px solid var(--line);border-top:0;border-radius:0 0 30px 30px;background:var(--white);box-shadow:0 18px 44px rgba(24,24,28,.08)}
 .entry-ticket__pass>header{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .entry-ticket__brand{display:flex;align-items:center;gap:14px}
 .entry-ticket__brand img{width:124px;height:124px;object-fit:contain}
 .entry-ticket__brand small,.entry-ticket__brand strong{display:block}
-.entry-ticket__brand small{color:var(--ground-700);font-size:var(--fs-badge);font-weight:var(--fw-bold);letter-spacing:.12em}
+.entry-ticket__brand small{color:var(--grey);font-size:var(--fs-badge);font-weight:var(--fw-bold);letter-spacing:.12em}
 .entry-ticket__brand strong{margin-top:4px;font-size:var(--fs-body-lg)}
 .entry-ticket__pass>header>b{padding:8px 14px;border-radius:var(--r-full);background:var(--yellow-500);color:var(--ink);font-size:26px;line-height:1}
 .entry-ticket__meta{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:12px;margin-top:26px}
@@ -139,10 +144,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__live>span{position:relative;flex:0 0 auto;width:180px;height:180px;border:5px dashed var(--soft);border-radius:50%;display:grid;place-items:center;background:var(--bg)}
 .entry-ticket__live img{width:156px;height:156px;object-fit:contain;filter:grayscale(1);opacity:.45}
 .entry-ticket__live>strong{max-width:260px;font-size:var(--fs-body-lg);line-height:1.5}
-.entry-ticket__discount{width:fit-content;height:26px;padding:0 12px;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:6px;background:var(--coral-500);color:var(--ink);font-size:var(--fs-label);line-height:1;white-space:nowrap}
+.entry-ticket__discount{width:fit-content;height:32px;padding:0 12px 0 8px;border:2px solid var(--coral-500);background:var(--coral-100);color:var(--ink);box-shadow:0 0 0 3px var(--coral-200)}
+.entry-ticket__discount::before{content:"!";width:18px;height:18px;border-radius:var(--r-full);display:grid;place-items:center;background:var(--coral-500);color:var(--ink);font-size:var(--fs-badge);font-weight:var(--fw-bold);flex:0 0 auto}
 .entry-ticket__discount[hidden]{display:none}
 .entry-ticket__discount strong{font-weight:var(--fw-bold)}
-.entry-ticket__discount>span{font-weight:var(--fw-medium)}
+.entry-ticket__discount>span{font-weight:var(--fw-bold)}
 .entry-ticket__pass>dl{margin:24px 0 0;display:grid;gap:12px}
 .entry-ticket__pass>dl div{display:flex;justify-content:space-between;gap:20px}
 .entry-ticket__pass dt{color:var(--grey);font-size:var(--fs-label)}
@@ -151,7 +157,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__window div small,.entry-ticket__window div strong{display:block}
 .entry-ticket__window small{color:var(--grey);font-size:var(--fs-caption)}
 .entry-ticket__window strong{margin-top:5px;font-size:var(--fs-body-lg)}
-.entry-ticket__window div:nth-of-type(2) strong{color:var(--coral-700)}
+.entry-ticket__window div:nth-of-type(2) strong{color:var(--ink)}
 .entry-ticket__window i{height:1px;background:var(--line)}
 .entry-ticket__note{margin:14px 20px 0;color:var(--grey);font-size:var(--fs-caption);line-height:1.6;text-align:center}
 .entry-ticket__footer{margin-top:28px;padding:22px 8px 0;border-top:1px solid var(--line);display:flex;align-items:end;justify-content:space-between;gap:20px}
@@ -160,45 +166,45 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .entry-ticket__footer small,.entry-ticket__footer strong{display:block}
 .entry-ticket__footer small{color:var(--grey);font-size:var(--fs-caption)}
 .entry-ticket__footer strong{margin-top:4px;font-size:24px}
-.entry-ticket[data-access-state="active"] .entry-ticket__status{border:1px solid var(--green-300);background:var(--green-100);color:var(--green-900)}
+.entry-ticket[data-access-state="active"] .entry-ticket__status{border:1px solid var(--green-300);background:var(--green-100);color:var(--ink)}
 .entry-ticket[data-access-state="active"] .entry-ticket__status::before{content:"";position:absolute;right:-70px;top:-105px;width:250px;height:250px;border-radius:50%;background:var(--green-200);opacity:.55;pointer-events:none}
 .entry-ticket[data-access-state="active"] .entry-ticket__status>*{position:relative;z-index:1}
-.entry-ticket[data-access-state="active"] .entry-ticket__badge{background:var(--green-700);color:var(--white)}
-.entry-ticket[data-access-state="active"] .entry-ticket__badge i{background:var(--yellow-500)}
-.entry-ticket[data-access-state="active"] .entry-ticket__clock small,.entry-ticket[data-access-state="active"] .entry-ticket__status>p{color:var(--green-800)}
-.entry-ticket[data-access-state="active"] .entry-ticket__live{border-color:var(--green-300);background:var(--green-100);color:var(--green-900)}
+.entry-ticket[data-access-state="active"] .entry-ticket__badge{border-color:var(--green-500);background:var(--white);color:var(--ink);box-shadow:0 0 0 2px var(--green-200)}
+.entry-ticket[data-access-state="active"] .entry-ticket__badge i{background:var(--green-500)}
+.entry-ticket[data-access-state="active"] .entry-ticket__clock small,.entry-ticket[data-access-state="active"] .entry-ticket__status>p{color:var(--grey)}
+.entry-ticket[data-access-state="active"] .entry-ticket__live{border-color:var(--green-300);background:var(--green-100);color:var(--ink)}
 .entry-ticket[data-access-state="active"] .entry-ticket__live>span{border-style:solid;border-color:var(--green-500);background:var(--white);animation:ticketPulse 1.8s ease-in-out infinite}
 .entry-ticket[data-access-state="active"] .entry-ticket__live img{filter:none;opacity:1}
-.entry-ticket[data-access-state="active"] .entry-ticket__footer strong{color:var(--green-800)}
+.entry-ticket[data-access-state="active"] .entry-ticket__footer strong{color:var(--ink)}
 .entry-ticket[data-access-state="ended"] .entry-ticket__status{background:var(--grey)}
-.entry-ticket[data-access-state="ended"] .entry-ticket__badge i{background:var(--ground-200)}
-.booking-slots .chip.is-booked{border-color:var(--coral-300);background:var(--coral-100);color:var(--coral-800);box-shadow:none}
-.booking-slots .chip.is-booked small{color:var(--coral-700)}
+.entry-ticket[data-access-state="ended"] .entry-ticket__badge{border-color:var(--line);background:var(--white);color:var(--grey)}
+.entry-ticket[data-access-state="ended"] .entry-ticket__badge i{background:var(--soft)}
+.booking-slots .chip.is-booked{border-color:var(--coral-300);background:var(--coral-100);color:var(--ink);box-shadow:none}
+.booking-slots .chip.is-booked small{color:var(--grey)}
 @keyframes ticketPulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 12px var(--green-200)}}
 @media(max-width:997px){.reservation-header{height:60px}.reservation-brand img{height:50px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
 @media(max-width:560px){.login-dialog__body{padding:30px 22px 24px}.login-dialog h2{font-size:24px}}
 @media(max-width:700px){.reservation-complete{padding-top:42px}.complete-booking-card{grid-template-columns:1fr}.complete-booking-card>img{height:190px;min-height:0}.reservation-complete .complete-actions{grid-template-columns:1fr}.my-tickets-screen{padding:32px 16px 64px}.my-tickets-head{align-items:flex-start;flex-direction:column}.my-tickets-head h1{font-size:32px}.ticket-list-card{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:12px;border-radius:var(--r-lg)}.ticket-list-card>img{width:100px;height:112px}.ticket-list-card__arrow{display:none}.ticket-list-card__title{font-size:var(--fs-body)}.ticket-list-card__schedule{line-height:1.45}.ticket-detail-view>.back-link{margin-left:0}}
-@media(max-width:600px){.ticket-screen{padding-top:20px}.entry-ticket__status{min-height:260px;padding:28px 24px;border-radius:22px}.entry-ticket__status-top{gap:12px}.entry-ticket__indicators{max-width:170px}.entry-ticket__discount{height:24px;padding-inline:10px;font-size:var(--fs-badge)}.entry-ticket__clock strong{font-size:23px}.entry-ticket__status>p{margin-top:52px}.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:24px}.entry-ticket__status>h1{font-size:30px}.entry-ticket__pass{padding:42px 22px 28px;border-radius:0 0 24px 24px}.entry-ticket__brand img{width:104px;height:104px}.entry-ticket__pass>header>b{font-size:28px}.entry-ticket__meta{grid-template-columns:1fr 1fr}.entry-ticket__meta>div:first-child{grid-column:1/-1}.entry-ticket__live{min-height:220px;padding:22px 18px;gap:18px}.entry-ticket__live>span{width:144px;height:144px}.entry-ticket__live img{width:124px;height:124px}.entry-ticket__window{grid-template-columns:1fr 20px 1fr 20px 1fr;padding:18px 10px}.entry-ticket__window strong{font-size:var(--fs-label)}.entry-ticket__footer{align-items:center}.entry-ticket__footer>span{max-width:150px}}
+@media(max-width:600px){.ticket-screen{padding-top:20px}.entry-ticket__status{min-height:260px;padding:28px 24px;border-radius:22px}.entry-ticket__status-top{gap:12px}.entry-ticket__indicators{max-width:200px}.entry-ticket__badge{height:28px;padding-inline:10px}.entry-ticket__discount{height:30px;padding:0 9px 0 7px}.entry-ticket__discount::before{width:16px;height:16px}.entry-ticket__clock strong{font-size:23px}.entry-ticket__status>p{margin-top:52px}.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:24px}.entry-ticket__status>h1{font-size:30px}.entry-ticket__pass{padding:42px 22px 28px;border-radius:0 0 24px 24px}.entry-ticket__brand img{width:104px;height:104px}.entry-ticket__pass>header>b{font-size:28px}.entry-ticket__meta{grid-template-columns:1fr 1fr}.entry-ticket__meta>div:first-child{grid-column:1/-1}.entry-ticket__live{min-height:220px;padding:22px 18px;gap:18px}.entry-ticket__live>span{width:144px;height:144px}.entry-ticket__live img{width:124px;height:124px}.entry-ticket__window{grid-template-columns:1fr 20px 1fr 20px 1fr;padding:18px 10px}.entry-ticket__window strong{font-size:var(--fs-label)}.entry-ticket__footer{align-items:center}.entry-ticket__footer>span{max-width:150px}}
 @media(max-width:600px){.entry-ticket{width:100%}.entry-ticket__status{padding:26px 22px}.entry-ticket__status>p{margin-top:46px}.entry-ticket__status>h1{font-size:28px;line-height:1.18}.entry-ticket__pass{padding:42px 18px 28px}.entry-ticket__pass>header{gap:12px}.entry-ticket__brand{min-width:0;gap:10px}.entry-ticket__brand img{width:84px;height:84px}.entry-ticket__brand span{min-width:0}.entry-ticket__brand strong{font-size:var(--fs-body-sm);white-space:nowrap}.entry-ticket__pass>header>b{flex:0 0 auto;padding:8px 11px;font-size:22px;white-space:nowrap}.entry-ticket__meta{grid-template-columns:1fr;gap:10px}.entry-ticket__meta>div{padding:15px}.entry-ticket__meta strong{font-size:var(--fs-body-sm)}.entry-ticket__live{min-height:0;flex-direction:column;padding:22px 18px;gap:14px}.entry-ticket__live>span{width:128px;height:128px}.entry-ticket__live img{width:110px;height:110px}.entry-ticket__live>strong{max-width:none;font-size:var(--fs-body-sm);word-break:keep-all}.entry-ticket__footer{padding-inline:2px}}
 @media(max-width:700px){.experience-options{grid-template-columns:1fr}.experience-card__head{align-items:center}.citizen-banner{align-items:flex-start;flex-direction:column}.slot-guide{grid-template-columns:1fr}}
 @media(max-width:997px){.panel-title{gap:6px;margin-bottom:18px}.booking-panel .panel-title h2{margin:0}}
 .calendar-legend{display:flex;justify-content:flex-end;gap:14px;margin-top:2px;color:var(--grey);font-size:var(--fs-caption)}
 .calendar-legend span{display:inline-flex;align-items:center;gap:6px}
 .legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
-.legend-dot--available{background:var(--green-700)}
+.legend-dot--available{background:var(--green-500)}
 .legend-dot--disabled{background:var(--line)}
 .month-title strong{min-width:104px;text-align:center}
 .month-title button:hover:not(:disabled){border-color:var(--ink);background:var(--bg)}
 .month-title button:disabled{opacity:.28;cursor:not-allowed}
-.calendar-head span:first-child{color:var(--coral-700)}
+.calendar-head span:first-child{color:var(--ink)}
 .calendar-grid .calendar-empty{height:58px}
 .calendar-grid button{border:1px solid transparent;transition:background-color .18s,border-color .18s,box-shadow .18s,transform .18s}
-.calendar-grid button:hover:not(:disabled){border-color:var(--green-700)}
+.calendar-grid button:hover:not(:disabled){border-color:var(--green-400)}
 .calendar-grid button:disabled{background:var(--bg)}
 .calendar-grid button.is-available{color:var(--ink);font-weight:var(--fw-semibold)}
-.calendar-grid button.is-available:before{content:"";position:absolute;left:50%;bottom:7px;width:4px;height:4px;border-radius:50%;background:var(--green-700);transform:translateX(-50%)}
-.calendar-grid button[data-weekday="0"].is-available{color:var(--coral-700)}
-.calendar-grid button[data-weekday="6"].is-available{color:#2f65b9}
+.calendar-grid button.is-available:before{content:"";position:absolute;left:50%;bottom:7px;width:4px;height:4px;border-radius:50%;background:var(--green-500);transform:translateX(-50%)}
+.calendar-grid button[data-weekday="0"].is-available,.calendar-grid button[data-weekday="6"].is-available{color:var(--ink)}
 .calendar-grid button.is-today{border-color:var(--yellow-500)}
 .calendar-grid button.is-available.is-selected{border-color:var(--ink);background:var(--ink);color:var(--white);box-shadow:0 6px 14px rgba(24,24,28,.18);transform:translateY(-2px)}
 .calendar-grid button.is-available.is-selected:hover{border-color:var(--ink);background:var(--ink)}

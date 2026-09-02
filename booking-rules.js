@@ -44,14 +44,17 @@
     if (!program) throw new Error("프로그램을 다시 선택해주세요.");
     var experience = program.experiences ? program.experiences[item.experience] : null;
     if (program.experiences && !experience) throw new Error("체험을 다시 선택해주세요.");
+    var product = experience || program;
+    var discountPolicy = product.discountPolicy || program.discountPolicy;
     var slot = program.slots.find(function (candidate) { return candidate.time === item.time; });
     if (!slot || slot.disabled || !interval(item)) throw new Error("예약 가능한 날짜와 회차를 다시 선택해주세요.");
-    if (typeof item.discount !== "boolean" || (item.discount && !program.experiences)) throw new Error("할인 정보를 다시 확인해주세요.");
-    var maxQty = Math.min(item.discount ? 2 : 4, slot.capacity || 4);
+    if (typeof item.discount !== "boolean" || (item.discount && !discountPolicy)) throw new Error("할인 정보를 다시 확인해주세요.");
+    var maxQty = Math.min(item.discount ? discountPolicy.maxQty : 4, slot.capacity || 4);
+    var discountRate = item.discount ? discountPolicy.rate : 0;
     if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > maxQty) throw new Error("회차별 인원과 할인 적용 수량을 확인해주세요.");
     return Object.assign({}, item, {
-      name: experience ? experience.name : program.name,
-      price: Math.round((experience ? experience.price : program.price) * item.qty * (item.discount ? 0.5 : 1))
+      name: product.name,
+      price: Math.round(product.price * item.qty * (1 - discountRate))
     });
   }
 

@@ -6,16 +6,16 @@ const rules = require('../booking-rules.js');
 
 const source = readFileSync(require.resolve('../app.js'), 'utf8');
 const context = vm.createContext({});
-vm.runInContext(source.slice(source.indexOf('  var programs ='), source.indexOf('  var query =')), context);
+vm.runInContext(source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query =')), context);
 const programs = context.programs;
 const now = new Date(2026, 7, 28, 9);
 const memberId = 'demo:카카오:1';
 const item = (overrides = {}) => ({
-  id: 'cart-pony', memberId, programKey: 'pony', experience: 'ride', name: '어린이 포니타기',
+  id: 'cart-ride', memberId, programKey: 'ride', name: '포니 타기',
   dateKey: '2026-08-29', date: '2026.08.29 (토)', time: '10:00~10:20', qty: 2, discount: false, price: 10000,
   ...overrides,
 });
-const tour = (overrides = {}) => item({ id: 'cart-tour', programKey: 'tour', experience: 'ride', name: '렛츠런파크 투어', time: '14:00~15:20', price: 16000, ...overrides });
+const tour = (overrides = {}) => item({ id: 'cart-tour', programKey: 'tour', name: '렛츠런파크 투어', time: '14:00~15:20', price: 16000, ...overrides });
 const error = (items, saved = [], clock = now) => rules.validationError(items, saved, memberId, programs, clock);
 const store = (cart = [item(), tour()], saved = []) => ({ revision: 3, reservations: saved, carts: { [memberId]: cart, other: [item({ memberId: 'other' })] } });
 
@@ -54,7 +54,7 @@ test('checks the entire cart and all persisted reservations, not only visible ti
   saved.push(tour());
   assert.match(error([item({ time: '15:00~15:20' })], saved), /겹칩니다/);
   assert.match(error([item(), item({ id: 'duplicate' })]), /겹칩니다/);
-  assert.match(error([item(), item({ experience: 'play', name: '포니랑 놀기' })]), /겹칩니다/);
+  assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), /겹칩니다/);
 });
 
 test('rejects logged-out, empty or foreign-member carts', () => {
@@ -70,13 +70,21 @@ test('rejects stale dates, already-started slots, weekdays, invalid dates and so
   assert.notEqual(error([item({ time: '10:00~10:21' })]), '');
 });
 
-test('validates headcount, configured remaining places, experience and discount eligibility', () => {
+test('validates headcount, configured remaining places, program and discount eligibility', () => {
   for (const qty of [0, -1, 1.5, 5]) assert.notEqual(error([item({ qty })]), '');
   assert.notEqual(error([item({ qty: 3, discount: true })]), '');
   assert.notEqual(error([item({ qty: 4, time: '14:20~14:45' })]), '');
   assert.notEqual(error([tour({ discount: true })]), '');
-  assert.notEqual(error([item({ experience: 'missing' })]), '');
+  assert.notEqual(error([item({ programKey: 'missing' })]), '');
   assert.equal(error([item({ qty: 2, discount: true })]), '');
+});
+
+test('keeps ride and play as independent sellable programs in one cart', () => {
+  const ride = rules.quoteItem(item({ qty: 1 }), programs);
+  const play = rules.quoteItem(item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1, price: 4000 }), programs);
+  assert.equal(ride.name, '포니 타기');
+  assert.equal(play.name, '포니랑 놀기');
+  assert.equal(error([ride, play]), '');
 });
 
 test('checkout recalculates prices and atomically produces one order with separate session tickets', () => {
@@ -169,21 +177,21 @@ test('app reads only the signed-in member cart and active reservations', () => {
   assert.equal(runtime.ownCart(saved).length, 0);
 });
 
-test('opening another product resets date, session, headcount and discount options', () => {
+test('opening another program resets date, session, headcount and discount options', () => {
   const elements = new Map();
-  const state = { experience: 'ride', date: '2026.08.29 (토)', dateKey: '2026-08-29', time: '10:00~10:20', qty: 2, discount: true };
+  const state = { programKey: 'ride', date: '2026.08.29 (토)', dateKey: '2026-08-29', time: '10:00~10:20', qty: 2, discount: true };
   const runtime = vm.createContext({
-    programs, program: programs.pony, state, bookingStart: now,
-    currentExperience: () => programs.pony.experiences[state.experience], money: value => value + '원',
+    programs, program: programs.ride, state, bookingStart: now, calendarFirstMonth: now, calendarMonth: now,
+    money: value => value + '원',
     byId: id => {
       if (!elements.has(id)) elements.set(id, { replaceChildren() {}, append() {} });
       return elements.get(id);
     },
     createTextElement: () => ({}), renderCalendar() {}, renderSlots() {}, update() {},
   });
-  vm.runInContext(appFunction('selectProduct'), runtime);
-  runtime.selectProduct('play');
-  assert.equal(state.experience, 'play');
+  vm.runInContext(appFunction('selectProgram'), runtime);
+  runtime.selectProgram('play');
+  assert.equal(state.programKey, 'play');
   assert.equal(state.dateKey, '');
   assert.equal(state.time, '');
   assert.equal(state.qty, 1);
@@ -197,7 +205,7 @@ test('slot refresh requires explicit selection and never silently picks a replac
   const state = { dateKey: '', time: '' };
   const elements = { 'slot-placeholder': {}, 'booking-slots': { replaceChildren() { this.innerHTML = ''; } } };
   const runtime = vm.createContext({
-    state, program: programs.pony, byId: id => elements[id],
+    state, program: programs.ride, byId: id => elements[id],
     hasTimeConflict: (_date, time) => time === '10:00~10:20', slotHasStarted: () => false,
     document: { querySelectorAll: () => [] },
   });
@@ -215,13 +223,13 @@ test('slot refresh requires explicit selection and never silently picks a replac
   assert.equal(state.time, '', 'A newly conflicting choice must be cleared, not replaced');
 });
 
-test('shop routes restore product options and send stale checkout links back to the cart', () => {
+test('shop routes restore independent programs and send stale checkout links back to the cart', () => {
   const visited = [];
   const products = [];
   const runtime = vm.createContext({
-    URLSearchParams, programs, state: { experience: 'ride' }, completedOrder: null,
+    URLSearchParams, programs, state: { programKey: 'ride' }, completedOrder: null,
     window: { location: { search: '?product=play' } },
-    selectProduct: (key, reset) => products.push({ key, reset }),
+    selectProgram: (key, reset) => products.push({ key, reset }),
     goToStep: (step, options) => visited.push({ step, options }), renderCart() {},
   });
   vm.runInContext(appFunction('restoreShopRoute'), runtime);
@@ -238,6 +246,6 @@ test('shop routes restore product options and send stale checkout links back to 
   for (const route of ['', '?program=tour', '?product=unknown', '?product=__proto__']) {
     runtime.window.location.search = route;
     runtime.restoreShopRoute();
-    assert.equal(visited.at(-1).step, 0);
+    assert.equal(visited.at(-1).step, 1);
   }
 });

@@ -13,6 +13,8 @@ test('storefront uses design-system colors, radii and category tags', () => {
   assert.match(shopCss, /\.shop-page\{background:var\(--white\)!important\}/);
   assert.match(shopCss, /\.shop-page \.btn--cta\{[^}]*background:var\(--ground-500\)/);
   assert.match(shopCss, /\.product-options \.booking-slots \.chip\.is-selected\{[^}]*background:var\(--ink\)/);
-  assert.equal([...html.matchAll(/class="product-badge tag--cat tag--exp"/g)].length, 2);
-  assert.match(html, /styles\.css\?v=20260831-shopds2/);
+  assert.doesNotMatch(html, /data-booking-product/);
+  assert.equal([...html.matchAll(/href="index\.html\?product=(ride|play)"/g)].length, 2);
+  assert.match(html, /class="booking-program-head"/);
+  assert.match(html, /styles\.css\?v=20260901-booking14/);
 });
