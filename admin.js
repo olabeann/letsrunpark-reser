@@ -7,12 +7,12 @@
   var activeReservation = null;
 
   var demoReservations = [
-    { id: "GP-260902-1042", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", customer: "김하늘", contact: "010-42**-18**", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
-    { id: "GP-260902-1036", orderId: "PAY-260902-3012", memberId: "demo:네이버:2", customer: "이유진", contact: "010-73**-02**", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:20~10:45", qty: 2, price: 4000, discount: true, status: "부분 취소", createdAt: "2026-09-02 10:36", method: "신용카드", tickets: ["confirmed", "cancelled"] },
-    { id: "GP-260902-1019", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", customer: "최서준", contact: "010-11**-63**", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, status: "환불 확인", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["review"] },
-    { id: "GP-260902-0951", orderId: "PAY-260902-2971", memberId: "demo:네이버:1", customer: "박도윤", contact: "010-89**-25**", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "13:20~13:45", qty: 4, price: 16000, discount: false, status: "예약 확정", createdAt: "2026-09-02 09:51", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed", "confirmed"] },
-    { id: "GP-260902-0927", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", customer: "정지아", contact: "010-54**-70**", programKey: "ride", program: "포니 타기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "14:20~14:45", qty: 2, price: 5000, discount: true, status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed", "confirmed"] },
-    { id: "GP-260901-1844", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", customer: "한예린", contact: "010-90**-13**", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"] }
+    { id: "GP-260902-1042", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
+    { id: "GP-260902-1036", orderId: "PAY-260902-3012", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:20~10:45", qty: 2, price: 4000, discount: true, status: "부분 취소", createdAt: "2026-09-02 10:36", method: "신용카드", tickets: ["confirmed", "cancelled"] },
+    { id: "GP-260902-1019", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, status: "환불 확인", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["review"] },
+    { id: "GP-260902-0951", orderId: "PAY-260902-2971", memberId: "demo:네이버:1", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "13:20~13:45", qty: 4, price: 16000, discount: false, status: "예약 확정", createdAt: "2026-09-02 09:51", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed", "confirmed"] },
+    { id: "GP-260902-0927", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "14:20~14:45", qty: 2, price: 5000, discount: true, status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed", "confirmed"] },
+    { id: "GP-260901-1844", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"] }
   ];
 
   var sessionData = {
@@ -67,11 +67,9 @@
       var store = JSON.parse(localStorage.getItem(reservationStoreKey) || "null");
       if (!store || !Array.isArray(store.reservations)) return [];
       return store.reservations.filter(function (item) { return item && item.id && item.qty; }).map(function (item, index) {
-        var memberBits = String(item.memberId || "demo:카카오:1").split(":");
-        var customer = (memberBits[1] || "시연") + " 회원 " + (memberBits[2] || "1");
         return {
           id: item.id, orderId: item.orderId || "PAY-DEMO-" + (index + 1), memberId: item.memberId,
-          customer: customer, contact: "간편로그인 계정", programKey: item.programKey === "play" ? "play" : "ride",
+          programKey: item.programKey === "play" ? "play" : "ride",
           program: item.name || (item.programKey === "play" ? "포니랑 놀기" : "포니 타기"), dateKey: item.dateKey,
           date: item.date || item.dateKey, time: item.time, qty: item.qty, price: item.price || 0, discount: !!item.discount,
           status: item.status === "cancelled" ? "취소 완료" : "예약 확정", createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("ko-KR") : "시연 예약",
@@ -98,7 +96,6 @@
     row.dataset.reservationId = item.id;
     row.innerHTML = (selectable ? '<td><input type="checkbox" aria-label="' + escapeHtml(item.id) + ' 선택"></td>' : "") +
       '<td><strong>' + escapeHtml(item.id) + '</strong><br><small>' + escapeHtml(item.createdAt) + '</small></td>' +
-      '<td><strong>' + escapeHtml(item.customer) + '</strong><br><small>' + escapeHtml(item.contact) + '</small></td>' +
       '<td><span class="table-program"><img src="' + programs[item.programKey].image + '" alt=""><strong>' + escapeHtml(item.program) + '</strong></span></td>' +
       '<td><strong>' + escapeHtml(item.date) + '</strong><br><small>' + escapeHtml(item.time) + '</small></td>' +
       '<td>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + ' / ' + item.qty + '명</td>' +
@@ -119,14 +116,14 @@
     var program = byId("reservation-program").value;
     var status = byId("reservation-status").value;
     return allReservations().filter(function (item) {
-      return (!search || (item.id + " " + item.customer).toLowerCase().includes(search)) && (!date || item.dateKey === date) && (!program || item.program === program) && (!status || item.status === status);
+      return (!search || item.id.toLowerCase().includes(search)) && (!date || item.dateKey === date) && (!program || item.program === program) && (!status || item.status === status);
     });
   }
 
   function renderReservations() {
     var items = filteredReservations(); var body = byId("reservation-table-body"); body.replaceChildren();
     items.forEach(function (item) { body.append(reservationRow(item, true)); });
-    if (!items.length) { var row = document.createElement("tr"); row.innerHTML = '<td colspan="9" style="padding:42px;text-align:center;color:#78847e">조건에 맞는 예약이 없습니다.</td>'; body.append(row); }
+    if (!items.length) { var row = document.createElement("tr"); row.innerHTML = '<td colspan="8" style="padding:42px;text-align:center;color:#78847e">조건에 맞는 예약이 없습니다.</td>'; body.append(row); }
     byId("reservation-count").textContent = items.length;
     byId("reservation-range").textContent = items.length ? "1–" + items.length + " / " + items.length + "건" : "0건";
   }
@@ -161,6 +158,51 @@
     });
   }
 
+  function kioskProducts() {
+    var rows = [];
+    Object.keys(sessionData).forEach(function (programKey) {
+      sessionData[programKey].forEach(function (session, index) {
+        rows.push({
+          key: programKey + "-" + index,
+          programKey: programKey,
+          category: (Number(session[1].split(":")[0]) < 12 ? "오전 · " : "오후 · ") + programs[programKey].name,
+          name: session[0] + " (" + session[1] + "~" + session[2] + ")",
+          price: programs[programKey].price,
+          soldOut: session[3] >= session[4] || session[5] === "마감",
+          active: session[5] !== "운영 마감",
+          capacity: session[4], start: session[1], end: session[2]
+        });
+      });
+    });
+    return rows;
+  }
+
+  function renderKioskProducts() {
+    var body = byId("kiosk-product-body"); if (!body) return;
+    var search = byId("kiosk-product-search").value.trim().toLowerCase();
+    var category = byId("kiosk-category-filter").value;
+    body.replaceChildren();
+    kioskProducts().filter(function (item) { return (!category || item.category === category) && (!search || (item.category + " " + item.name).toLowerCase().includes(search)); }).forEach(function (item) {
+      var row = document.createElement("tr"); row.dataset.productKey = item.key;
+      row.innerHTML = '<td><input type="checkbox" aria-label="' + escapeHtml(item.name) + ' 선택"></td><td><select aria-label="카테고리"><option>' + escapeHtml(item.category) + '</option></select></td><td><input class="product-name-input" value="' + escapeHtml(item.name) + '" aria-label="상품명"></td><td><strong>' + money(item.price) + '</strong></td><td>온라인 · 현장</td><td>과천시민</td><td><button class="row-state ' + (item.soldOut ? 'is-off' : '') + '" type="button">' + (item.soldOut ? '품절' : '판매중') + '</button></td><td><button class="row-state ' + (item.active ? '' : 'is-off') + '" type="button">' + (item.active ? '활성' : '숨김') + '</button></td><td><button class="row-save" type="button">저장</button></td><td><button class="row-detail" type="button">상세</button></td>';
+      row.querySelectorAll(".row-state").forEach(function (button) { button.addEventListener("click", function () { button.classList.toggle("is-off"); button.textContent = button.textContent === "판매중" ? "품절" : button.textContent === "품절" ? "판매중" : button.textContent === "활성" ? "숨김" : "활성"; }); });
+      row.querySelector(".row-save").addEventListener("click", function () { notify(item.name + " 변경사항을 저장했습니다."); });
+      row.querySelector(".row-detail").addEventListener("click", function () { openProductDialog(item); });
+      body.append(row);
+    });
+  }
+
+  function openProductDialog(item) {
+    byId("product-dialog-title").textContent = item.name + " 수정";
+    byId("detail-category").value = item.category;
+    byId("detail-name").value = item.name;
+    byId("detail-price").value = item.price;
+    byId("detail-capacity").value = item.capacity;
+    byId("detail-start").value = item.start;
+    byId("detail-end").value = item.end;
+    byId("product-dialog").showModal();
+  }
+
   function selectProgram(programKey) {
     document.querySelectorAll("[data-program-tab]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.programTab === programKey); });
     byId("program-settings-title").textContent = programs[programKey].name + " 운영 설정";
@@ -173,7 +215,7 @@
     activeReservation = allReservations().find(function (item) { return item.id === reservationId; });
     if (!activeReservation) return;
     byId("drawer-title").textContent = activeReservation.id;
-    byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약자</dt><dd>' + escapeHtml(activeReservation.customer) + ' · ' + escapeHtml(activeReservation.contact) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일</dt><dd>' + escapeHtml(activeReservation.date) + '</dd></div><div><dt>회차</dt><dd>' + escapeHtml(activeReservation.time) + '</dd></div></dl>';
+    byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약 식별</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일</dt><dd>' + escapeHtml(activeReservation.date) + '</dd></div><div><dt>회차</dt><dd>' + escapeHtml(activeReservation.time) + '</dd></div></dl>';
     renderDrawerTickets();
     byId("payment-detail").innerHTML = '<div><dt>통합 결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>결제 수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>원 결제금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불 누계</dt><dd>' + money(ticketRefundTotal(activeReservation)) + '</dd></div><div><dt>남은 결제금액</dt><dd>' + money(activeReservation.price - ticketRefundTotal(activeReservation)) + '</dd></div>';
     byId("history-list").innerHTML = '<li><strong>결제 및 예약 확정</strong><small>' + escapeHtml(activeReservation.createdAt) + ' · 시스템</small></li>' + (activeReservation.tickets.some(function (ticket) { return ticket === "cancelled"; }) ? '<li><strong>개별 티켓 취소 · 부분환불 완료</strong><small>관리자 처리 · 시연 이력</small></li>' : "");
@@ -229,7 +271,7 @@
   }
 
   loadSavedDemoState();
-  renderSessions("ride"); renderRecent(); renderReservations(); selectProgram("ride");
+  renderSessions("ride"); renderRecent(); renderReservations(); selectProgram("ride"); renderKioskProducts();
   byId("today-label").textContent = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(new Date());
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
@@ -244,15 +286,24 @@
   byId("save-programs").addEventListener("click", function () { notify("프로그램과 회차 변경사항을 저장했습니다."); });
   byId("add-session").addEventListener("click", function () { var key = byId("session-editor").dataset.program; sessionData[key].push([sessionData[key].length + 1 + "회차", "17:00", "17:20", 0, 8, "판매중"]); renderSessionEditor(key); notify("새 회차를 추가했습니다."); });
   byId("copy-sessions").addEventListener("click", function () { notify("현재 회차 구성을 다음 운영일에 복사했습니다."); });
+  byId("kiosk-product-search").addEventListener("input", renderKioskProducts);
+  byId("kiosk-category-filter").addEventListener("change", renderKioskProducts);
+  byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; byId("kiosk-category-filter").value = ""; renderKioskProducts(); notify("상품 목록을 새로고침했습니다."); });
+  byId("open-category-manager").addEventListener("click", function () { byId("category-dialog").showModal(); });
+  byId("add-category").addEventListener("click", function () { var label = document.createElement("label"); label.innerHTML = '<i>↕</i><input value="새 카테고리"><button type="button">수정</button>'; byId("category-sort-list").append(label); });
+  byId("category-dialog").addEventListener("close", function () { if (byId("category-dialog").returnValue === "save") notify("카테고리 이름과 순서를 저장했습니다."); });
+  byId("add-product").addEventListener("click", function () { openProductDialog({ category: "오전 · 포니 타기", name: "새 회차", price: 5000, capacity: 8, start: "10:00", end: "10:20" }); });
+  byId("discount-settings").addEventListener("click", function () { notify("현재 할인은 과천시민 50% · 최대 2명으로 설정되어 있습니다."); });
+  byId("product-dialog").addEventListener("close", function () { if (byId("product-dialog").returnValue === "save") notify("상품 상세 정보를 저장했습니다."); });
   byId("scope-button").addEventListener("click", function () { notify("현재 시연에서는 서울 · 공원지원부 범위로 고정되어 있습니다."); });
   byId("notice-button").addEventListener("click", function () { notify("환불 확인 1건과 잔여 수량 주의 1건이 있습니다."); });
   byId("bulk-cancel").addEventListener("click", function () { notify("운영 취소는 날짜와 회차를 선택한 뒤 대상 예약을 확인하도록 설계되어 있습니다."); });
   byId("invite-admin").addEventListener("click", function () { notify("관리자 초대와 실제 권한 부여는 인증 연동 후 제공됩니다."); });
   byId("apply-settlement").addEventListener("click", function () { notify("선택한 기간의 정산 내역을 조회했습니다."); });
-  byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "예약자", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.customer, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("포니랜드_예약목록.csv", rows); });
+  byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("포니랜드_예약목록.csv", rows); });
   byId("download-settlement").addEventListener("click", function () { downloadCsv("포니랜드_정산자료_2026-09.csv", [["귀속", "프로그램", "결제건수", "결제액", "환불액", "수수료", "정산대상"], ["서울·공원지원부", "포니 타기", 982, 5210000, -210000, -150000, 4850000], ["서울·공원지원부", "포니랑 놀기", 604, 3210000, -116000, -92820, 3001180]]); });
 
   var requestedView = location.hash.replace("#", "");
   if (["dashboard", "reservations", "programs", "settlement", "permissions"].includes(requestedView)) showView(requestedView);
-  else showView("reservations");
+  else showView("programs");
 })();
