@@ -5,6 +5,13 @@
   var adminStateKey = "ponylandAdminDemoV1";
   var toastTimer;
   var activeReservation = null;
+  var activeProductKey = null;
+  var policySettings = {
+    maxPurchaseQty: 4, purchaseScope: "pending", combinePrograms: true, includeCart: true,
+    discountRate: 50, discountMaxQty: 2, discountScope: "lifetime", proofOnsite: true,
+    bookingWindow: 14, cancelMinutes: 10, onlineRatio: 50, onsiteRatio: 50
+  };
+  var productState = { overrides: {}, added: [] };
 
   var demoReservations = [
     { id: "GP-260902-1042", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
@@ -49,16 +56,23 @@
   function loadSavedDemoState() {
     try {
       var state = JSON.parse(localStorage.getItem(adminStateKey) || "null");
-      if (!state || !Array.isArray(state.reservations)) return;
-      state.reservations.forEach(function (saved) {
-        var target = demoReservations.find(function (item) { return item.id === saved.id; });
-        if (target && Array.isArray(saved.tickets)) { target.tickets = saved.tickets; target.status = saved.status; }
-      });
+      if (!state) return;
+      if (Array.isArray(state.reservations)) {
+        state.reservations.forEach(function (saved) {
+          var target = demoReservations.find(function (item) { return item.id === saved.id; });
+          if (target && Array.isArray(saved.tickets)) { target.tickets = saved.tickets; target.status = saved.status; }
+        });
+      }
+      if (state.policy && typeof state.policy === "object") policySettings = Object.assign(policySettings, state.policy);
+      if (state.products && typeof state.products === "object") {
+        productState.overrides = state.products.overrides || {};
+        productState.added = Array.isArray(state.products.added) ? state.products.added : [];
+      }
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }) })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), policy: policySettings, products: productState })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -162,7 +176,7 @@
     var rows = [];
     Object.keys(sessionData).forEach(function (programKey) {
       sessionData[programKey].forEach(function (session, index) {
-        rows.push({
+        var base = {
           key: programKey + "-" + index,
           programKey: programKey,
           category: (Number(session[1].split(":")[0]) < 12 ? "오전 · " : "오후 · ") + programs[programKey].name,
@@ -170,11 +184,14 @@
           price: programs[programKey].price,
           soldOut: session[3] >= session[4] || session[5] === "마감",
           active: session[5] !== "운영 마감",
-          capacity: session[4], start: session[1], end: session[2]
-        });
+          capacity: session[4], onsiteCapacity: session[4], start: session[1], end: session[2],
+          description: programs[programKey].name + " 체험 회차입니다.", image: programs[programKey].image,
+          channels: ["online", "onsite"], discountEnabled: true
+        };
+        rows.push(Object.assign(base, productState.overrides[base.key] || {}));
       });
     });
-    return rows;
+    return rows.concat(productState.added);
   }
 
   function renderKioskProducts() {
@@ -184,23 +201,111 @@
     body.replaceChildren();
     kioskProducts().filter(function (item) { return (!category || item.category === category) && (!search || (item.category + " " + item.name).toLowerCase().includes(search)); }).forEach(function (item) {
       var row = document.createElement("tr"); row.dataset.productKey = item.key;
-      row.innerHTML = '<td><input type="checkbox" aria-label="' + escapeHtml(item.name) + ' 선택"></td><td><select aria-label="카테고리"><option>' + escapeHtml(item.category) + '</option></select></td><td><input class="product-name-input" value="' + escapeHtml(item.name) + '" aria-label="상품명"></td><td><strong>' + money(item.price) + '</strong></td><td>온라인 · 현장</td><td>과천시민</td><td><button class="row-state ' + (item.soldOut ? 'is-off' : '') + '" type="button">' + (item.soldOut ? '품절' : '판매중') + '</button></td><td><button class="row-state ' + (item.active ? '' : 'is-off') + '" type="button">' + (item.active ? '활성' : '숨김') + '</button></td><td><button class="row-save" type="button">저장</button></td><td><button class="row-detail" type="button">상세</button></td>';
+      var channelText = item.channels.length === 2 ? "온라인 · 현장" : item.channels[0] === "online" ? "온라인" : "현장";
+      row.innerHTML = '<td><input type="checkbox" aria-label="' + escapeHtml(item.name) + ' 선택"></td><td><select aria-label="카테고리"><option>' + escapeHtml(item.category) + '</option></select></td><td><input class="product-name-input" value="' + escapeHtml(item.name) + '" aria-label="상품명"></td><td><strong>' + money(item.price) + '</strong></td><td>' + channelText + '</td><td>' + (item.discountEnabled ? '과천시민 ' + policySettings.discountRate + '%' : '미적용') + '</td><td><button class="row-state ' + (item.soldOut ? 'is-off' : '') + '" type="button">' + (item.soldOut ? '품절' : '판매중') + '</button></td><td><button class="row-state ' + (item.active ? '' : 'is-off') + '" type="button">' + (item.active ? '활성' : '숨김') + '</button></td><td><button class="row-save" type="button">저장</button></td><td><button class="row-detail" type="button">상세</button></td>';
       row.querySelectorAll(".row-state").forEach(function (button) { button.addEventListener("click", function () { button.classList.toggle("is-off"); button.textContent = button.textContent === "판매중" ? "품절" : button.textContent === "품절" ? "판매중" : button.textContent === "활성" ? "숨김" : "활성"; }); });
-      row.querySelector(".row-save").addEventListener("click", function () { notify(item.name + " 변경사항을 저장했습니다."); });
+      row.querySelector(".row-save").addEventListener("click", function () {
+        var saved = Object.assign({}, item, { category: row.querySelector("select").value, name: row.querySelector(".product-name-input").value.trim(), soldOut: row.querySelectorAll(".row-state")[0].textContent === "품절", active: row.querySelectorAll(".row-state")[1].textContent === "활성" });
+        persistProduct(saved); notify(saved.name + " 변경사항을 저장했습니다.");
+      });
       row.querySelector(".row-detail").addEventListener("click", function () { openProductDialog(item); });
       body.append(row);
     });
   }
 
   function openProductDialog(item) {
-    byId("product-dialog-title").textContent = item.name + " 수정";
+    activeProductKey = item.key || null;
+    byId("product-dialog-title").textContent = activeProductKey ? item.name + " 수정" : "새 상품 등록";
     byId("detail-category").value = item.category;
     byId("detail-name").value = item.name;
+    byId("detail-description").value = item.description || "";
     byId("detail-price").value = item.price;
+    byId("detail-image").value = item.image || "assets/pony/cover.jpg";
     byId("detail-capacity").value = item.capacity;
+    byId("detail-onsite-capacity").value = item.onsiteCapacity == null ? item.capacity : item.onsiteCapacity;
     byId("detail-start").value = item.start;
     byId("detail-end").value = item.end;
+    byId("detail-channel-online").checked = !item.channels || item.channels.includes("online");
+    byId("detail-channel-onsite").checked = !item.channels || item.channels.includes("onsite");
+    byId("detail-discount-enabled").checked = item.discountEnabled !== false;
+    byId("detail-discount-copy").textContent = policySettings.discountRate + "% 할인 · 계정당 평생 최대 " + policySettings.discountMaxQty + "매 · 현장 증빙";
     byId("product-dialog").showModal();
+  }
+
+  function persistProduct(product) {
+    if (product.key.indexOf("custom-") === 0) {
+      var addedIndex = productState.added.findIndex(function (item) { return item.key === product.key; });
+      if (addedIndex === -1) productState.added.push(product); else productState.added[addedIndex] = product;
+    } else productState.overrides[product.key] = product;
+    saveDemoState(); renderKioskProducts();
+  }
+
+  function saveProductDetail(event) {
+    var name = byId("detail-name").value.trim();
+    var channels = [];
+    if (byId("detail-channel-online").checked) channels.push("online");
+    if (byId("detail-channel-onsite").checked) channels.push("onsite");
+    if (!name || !channels.length) { event.preventDefault(); notify(!name ? "상품 제목을 입력해주세요." : "판매 채널을 하나 이상 선택해주세요."); return; }
+    var existing = activeProductKey ? kioskProducts().find(function (item) { return item.key === activeProductKey; }) : null;
+    var category = byId("detail-category").value;
+    var product = Object.assign({}, existing || {}, {
+      key: activeProductKey || "custom-" + Date.now(),
+      programKey: category.includes("놀기") ? "play" : "ride",
+      category: category, name: name, description: byId("detail-description").value.trim(),
+      price: Number(byId("detail-price").value) || 0, image: byId("detail-image").value.trim(),
+      capacity: Number(byId("detail-capacity").value) || 0, onsiteCapacity: Number(byId("detail-onsite-capacity").value) || 0,
+      start: byId("detail-start").value, end: byId("detail-end").value, channels: channels,
+      discountEnabled: byId("detail-discount-enabled").checked, soldOut: false, active: true
+    });
+    persistProduct(product); activeProductKey = product.key; notify(name + " 상품을 저장했습니다.");
+  }
+
+  function policyScopeLabel(scope) {
+    return scope === "day" ? "이용일 하루 단위" : scope === "visit" ? "이용 완료 전까지" : scope === "lifetime" ? "계정 평생" : "집계 기간 협의 중";
+  }
+
+  function renderPolicySettings() {
+    byId("policy-max-summary").textContent = policySettings.maxPurchaseQty;
+    byId("policy-scope-summary").textContent = policyScopeLabel(policySettings.purchaseScope);
+    byId("policy-rate-summary").textContent = policySettings.discountRate;
+    byId("policy-discount-summary").textContent = policySettings.discountMaxQty;
+    byId("policy-booking-window-summary").textContent = policySettings.bookingWindow;
+    byId("policy-cancel-summary").textContent = policySettings.cancelMinutes;
+    byId("policy-online-summary").textContent = policySettings.onlineRatio;
+    byId("policy-onsite-summary").textContent = policySettings.onsiteRatio;
+    byId("booking-window").value = policySettings.bookingWindow;
+    byId("policy-max-purchase").value = policySettings.maxPurchaseQty;
+    byId("policy-purchase-scope").value = policySettings.purchaseScope;
+    byId("policy-combine-programs").checked = policySettings.combinePrograms;
+    byId("policy-include-cart").checked = policySettings.includeCart;
+    byId("policy-discount-rate").value = policySettings.discountRate;
+    byId("policy-discount-max").value = policySettings.discountMaxQty;
+    byId("policy-discount-scope").value = policySettings.discountScope;
+    byId("policy-proof-onsite").checked = policySettings.proofOnsite;
+    byId("policy-booking-window").value = policySettings.bookingWindow;
+    byId("policy-cancel-minutes").value = policySettings.cancelMinutes;
+    byId("policy-online-ratio").value = policySettings.onlineRatio;
+    byId("policy-onsite-ratio").value = policySettings.onsiteRatio;
+  }
+
+  function savePolicySettings(event) {
+    var onlineRatio = Number(byId("policy-online-ratio").value);
+    var onsiteRatio = Number(byId("policy-onsite-ratio").value);
+    if (onlineRatio + onsiteRatio !== 100) { event.preventDefault(); notify("온라인과 현장 배정 비율의 합계를 100%로 맞춰주세요."); return; }
+    policySettings = {
+      maxPurchaseQty: Number(byId("policy-max-purchase").value) || 1,
+      purchaseScope: byId("policy-purchase-scope").value,
+      combinePrograms: byId("policy-combine-programs").checked,
+      includeCart: byId("policy-include-cart").checked,
+      discountRate: Number(byId("policy-discount-rate").value) || 0,
+      discountMaxQty: Number(byId("policy-discount-max").value) || 0,
+      discountScope: byId("policy-discount-scope").value,
+      proofOnsite: byId("policy-proof-onsite").checked,
+      bookingWindow: Number(byId("policy-booking-window").value) || 1,
+      cancelMinutes: Number(byId("policy-cancel-minutes").value) || 0,
+      onlineRatio: onlineRatio, onsiteRatio: onsiteRatio
+    };
+    saveDemoState(); renderPolicySettings(); renderKioskProducts(); notify("예약 · 할인 정책을 저장했습니다.");
   }
 
   function selectProgram(programKey) {
@@ -271,7 +376,7 @@
   }
 
   loadSavedDemoState();
-  renderSessions("ride"); renderRecent(); renderReservations(); selectProgram("ride"); renderKioskProducts();
+  renderSessions("ride"); renderRecent(); renderReservations(); selectProgram("ride"); renderPolicySettings(); renderKioskProducts();
   byId("today-label").textContent = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(new Date());
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
@@ -292,9 +397,11 @@
   byId("open-category-manager").addEventListener("click", function () { byId("category-dialog").showModal(); });
   byId("add-category").addEventListener("click", function () { var label = document.createElement("label"); label.innerHTML = '<i>↕</i><input value="새 카테고리"><button type="button">수정</button>'; byId("category-sort-list").append(label); });
   byId("category-dialog").addEventListener("close", function () { if (byId("category-dialog").returnValue === "save") notify("카테고리 이름과 순서를 저장했습니다."); });
-  byId("add-product").addEventListener("click", function () { openProductDialog({ category: "오전 · 포니 타기", name: "새 회차", price: 5000, capacity: 8, start: "10:00", end: "10:20" }); });
-  byId("discount-settings").addEventListener("click", function () { notify("현재 할인은 과천시민 50% · 최대 2명으로 설정되어 있습니다."); });
-  byId("product-dialog").addEventListener("close", function () { if (byId("product-dialog").returnValue === "save") notify("상품 상세 정보를 저장했습니다."); });
+  byId("add-product").addEventListener("click", function () { openProductDialog({ category: "오전 · 포니 타기", name: "", description: "", price: 5000, image: "assets/pony/cover.jpg", capacity: 8, onsiteCapacity: 8, start: "10:00", end: "10:20", channels: ["online", "onsite"], discountEnabled: true }); });
+  byId("discount-settings").addEventListener("click", function () { renderPolicySettings(); byId("policy-dialog").showModal(); });
+  document.querySelectorAll("[data-open-policy]").forEach(function (button) { button.addEventListener("click", function () { renderPolicySettings(); byId("policy-dialog").showModal(); }); });
+  byId("save-policy").addEventListener("click", savePolicySettings);
+  byId("save-product-detail").addEventListener("click", saveProductDetail);
   byId("scope-button").addEventListener("click", function () { notify("현재 시연에서는 서울 · 공원지원부 범위로 고정되어 있습니다."); });
   byId("notice-button").addEventListener("click", function () { notify("환불 확인 1건과 잔여 수량 주의 1건이 있습니다."); });
   byId("bulk-cancel").addEventListener("click", function () { notify("운영 취소는 날짜와 회차를 선택한 뒤 대상 예약을 확인하도록 설계되어 있습니다."); });
