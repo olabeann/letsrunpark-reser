@@ -8,9 +8,11 @@
   var activeProductKey = null;
   var policySettings = {
     maxPurchaseQty: 4, purchaseScope: "pending", combinePrograms: true, includeCart: true,
-    discountRate: 50, discountMaxQty: 2, discountScope: "lifetime", proofOnsite: true,
     bookingWindow: 14, cancelMinutes: 10, onlineRatio: 50, onsiteRatio: 50
   };
+  var discountPolicies = [
+    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, scope: "lifetime", proof: "onsite", allPrograms: true, programs: [], active: true }
+  ];
   var productState = { overrides: {}, added: [] };
 
   var demoReservations = [
@@ -64,6 +66,7 @@
         });
       }
       if (state.policy && typeof state.policy === "object") policySettings = Object.assign(policySettings, state.policy);
+      if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
       if (state.products && typeof state.products === "object") {
         productState.overrides = state.products.overrides || {};
         productState.added = Array.isArray(state.products.added) ? state.products.added : [];
@@ -72,7 +75,7 @@
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), policy: policySettings, products: productState })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), policy: policySettings, discounts: discountPolicies, products: productState })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -179,6 +182,7 @@
         var base = {
           key: programKey + "-" + index,
           programKey: programKey,
+          programName: programs[programKey].name,
           category: (Number(session[1].split(":")[0]) < 12 ? "오전 · " : "오후 · ") + programs[programKey].name,
           name: session[0] + " (" + session[1] + "~" + session[2] + ")",
           price: programs[programKey].price,
@@ -186,7 +190,7 @@
           active: session[5] !== "운영 마감",
           capacity: session[4], onsiteCapacity: session[4], start: session[1], end: session[2],
           description: programs[programKey].name + " 체험 회차입니다.", image: programs[programKey].image,
-          channels: ["online", "onsite"], discountEnabled: true
+          channels: ["online", "onsite"], discountIds: ["gwacheon"]
         };
         rows.push(Object.assign(base, productState.overrides[base.key] || {}));
       });
@@ -201,8 +205,10 @@
     body.replaceChildren();
     kioskProducts().filter(function (item) { return (!category || item.category === category) && (!search || (item.category + " " + item.name).toLowerCase().includes(search)); }).forEach(function (item) {
       var row = document.createElement("tr"); row.dataset.productKey = item.key;
-      var channelText = item.channels.length === 2 ? "온라인 · 현장" : item.channels[0] === "online" ? "온라인" : "현장";
-      row.innerHTML = '<td><input type="checkbox" aria-label="' + escapeHtml(item.name) + ' 선택"></td><td><select aria-label="카테고리"><option>' + escapeHtml(item.category) + '</option></select></td><td><input class="product-name-input" value="' + escapeHtml(item.name) + '" aria-label="상품명"></td><td><strong>' + money(item.price) + '</strong></td><td>' + channelText + '</td><td>' + (item.discountEnabled ? '과천시민 ' + policySettings.discountRate + '%' : '미적용') + '</td><td><button class="row-state ' + (item.soldOut ? 'is-off' : '') + '" type="button">' + (item.soldOut ? '품절' : '판매중') + '</button></td><td><button class="row-state ' + (item.active ? '' : 'is-off') + '" type="button">' + (item.active ? '활성' : '숨김') + '</button></td><td><button class="row-save" type="button">저장</button></td><td><button class="row-detail" type="button">상세</button></td>';
+      var channels = item.channels || ["online", "onsite"];
+      var channelText = channels.length === 2 ? "온라인 · 현장" : channels[0] === "online" ? "온라인" : "현장";
+      var appliedDiscounts = discountPolicies.filter(function (discount) { return discountAppliesToProduct(discount, item); }).map(function (discount) { return discount.name; });
+      row.innerHTML = '<td><input type="checkbox" aria-label="' + escapeHtml(item.name) + ' 선택"></td><td><select aria-label="카테고리"><option>' + escapeHtml(item.category) + '</option></select></td><td><input class="product-name-input" value="' + escapeHtml(item.name) + '" aria-label="상품명"></td><td><strong>' + money(item.price) + '</strong></td><td>' + channelText + '</td><td>' + escapeHtml(appliedDiscounts.length ? appliedDiscounts.join(", ") : "미적용") + '</td><td><button class="row-state ' + (item.soldOut ? 'is-off' : '') + '" type="button">' + (item.soldOut ? '품절' : '판매중') + '</button></td><td><button class="row-state ' + (item.active ? '' : 'is-off') + '" type="button">' + (item.active ? '활성' : '숨김') + '</button></td><td><button class="row-save" type="button">저장</button></td><td><button class="row-detail" type="button">상세</button></td>';
       row.querySelectorAll(".row-state").forEach(function (button) { button.addEventListener("click", function () { button.classList.toggle("is-off"); button.textContent = button.textContent === "판매중" ? "품절" : button.textContent === "품절" ? "판매중" : button.textContent === "활성" ? "숨김" : "활성"; }); });
       row.querySelector(".row-save").addEventListener("click", function () {
         var saved = Object.assign({}, item, { category: row.querySelector("select").value, name: row.querySelector(".product-name-input").value.trim(), soldOut: row.querySelectorAll(".row-state")[0].textContent === "품절", active: row.querySelectorAll(".row-state")[1].textContent === "활성" });
@@ -215,7 +221,9 @@
 
   function openProductDialog(item) {
     activeProductKey = item.key || null;
-    byId("product-dialog-title").textContent = activeProductKey ? item.name + " 수정" : "새 상품 등록";
+    byId("product-dialog-title").textContent = activeProductKey ? item.name + " 수정" : "새 프로그램 상품 등록";
+    refreshProgramInputs();
+    byId("detail-program").value = item.programName || (item.programKey && programs[item.programKey] ? programs[item.programKey].name : "");
     byId("detail-category").value = item.category;
     byId("detail-name").value = item.name;
     byId("detail-description").value = item.description || "";
@@ -227,9 +235,38 @@
     byId("detail-end").value = item.end;
     byId("detail-channel-online").checked = !item.channels || item.channels.includes("online");
     byId("detail-channel-onsite").checked = !item.channels || item.channels.includes("onsite");
-    byId("detail-discount-enabled").checked = item.discountEnabled !== false;
-    byId("detail-discount-copy").textContent = policySettings.discountRate + "% 할인 · 계정당 평생 최대 " + policySettings.discountMaxQty + "매 · 현장 증빙";
+    renderProductDiscountOptions(item.discountIds || []);
     byId("product-dialog").showModal();
+  }
+
+  function uniqueProgramNames() {
+    var seen = {};
+    return kioskProducts().map(function (item) { return item.programName || (programs[item.programKey] && programs[item.programKey].name) || item.category; }).filter(function (name) { if (!name || seen[name]) return false; seen[name] = true; return true; });
+  }
+
+  function refreshProgramInputs() {
+    byId("program-name-options").innerHTML = uniqueProgramNames().map(function (name) { return '<option value="' + escapeHtml(name) + '">'; }).join("");
+    var seen = {};
+    byId("category-name-options").innerHTML = kioskProducts().map(function (item) { return item.category; }).filter(function (name) { if (!name || seen[name]) return false; seen[name] = true; return true; }).map(function (name) { return '<option value="' + escapeHtml(name) + '">'; }).join("");
+  }
+
+  function renderProductDiscountOptions(selectedIds) {
+    var wrap = byId("detail-discount-options"); wrap.replaceChildren();
+    var activeDiscounts = discountPolicies.filter(function (discount) { return discount.active; });
+    if (!activeDiscounts.length) { wrap.innerHTML = '<p>등록된 활성 할인이 없습니다.</p>'; return; }
+    activeDiscounts.forEach(function (discount) {
+      var label = document.createElement("label");
+      var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
+      label.innerHTML = '<input type="checkbox" value="' + escapeHtml(discount.id) + '" ' + (discount.allPrograms || selectedIds.includes(discount.id) ? "checked" : "") + (discount.allPrograms ? " disabled" : "") + '><span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + (discount.allPrograms ? "모든 프로그램 자동 적용" : "이 상품에 선택 적용") + '</small></span>';
+      wrap.append(label);
+    });
+  }
+
+  function discountAppliesToProduct(discount, product) {
+    if (!discount.active) return false;
+    if (discount.allPrograms) return true;
+    if ((discount.programs || []).includes(product.programName)) return true;
+    return (product.discountIds || []).includes(discount.id);
   }
 
   function persistProduct(product) {
@@ -242,20 +279,23 @@
 
   function saveProductDetail(event) {
     var name = byId("detail-name").value.trim();
+    var programName = byId("detail-program").value.trim();
     var channels = [];
     if (byId("detail-channel-online").checked) channels.push("online");
     if (byId("detail-channel-onsite").checked) channels.push("onsite");
-    if (!name || !channels.length) { event.preventDefault(); notify(!name ? "상품 제목을 입력해주세요." : "판매 채널을 하나 이상 선택해주세요."); return; }
+    if (!programName || !name || !channels.length) { event.preventDefault(); notify(!programName ? "프로그램명을 입력해주세요." : !name ? "상품 제목을 입력해주세요." : "판매 채널을 하나 이상 선택해주세요."); return; }
     var existing = activeProductKey ? kioskProducts().find(function (item) { return item.key === activeProductKey; }) : null;
     var category = byId("detail-category").value;
+    var matchedProgramKey = Object.keys(programs).find(function (key) { return programs[key].name === programName; });
+    var discountIds = Array.from(document.querySelectorAll("#detail-discount-options input:checked")).map(function (input) { return input.value; });
     var product = Object.assign({}, existing || {}, {
       key: activeProductKey || "custom-" + Date.now(),
-      programKey: category.includes("놀기") ? "play" : "ride",
-      category: category, name: name, description: byId("detail-description").value.trim(),
+      programKey: matchedProgramKey || (existing && existing.programKey) || "program-" + Date.now(),
+      programName: programName, category: category, name: name, description: byId("detail-description").value.trim(),
       price: Number(byId("detail-price").value) || 0, image: byId("detail-image").value.trim(),
       capacity: Number(byId("detail-capacity").value) || 0, onsiteCapacity: Number(byId("detail-onsite-capacity").value) || 0,
       start: byId("detail-start").value, end: byId("detail-end").value, channels: channels,
-      discountEnabled: byId("detail-discount-enabled").checked, soldOut: false, active: true
+      discountIds: discountIds, soldOut: false, active: true
     });
     persistProduct(product); activeProductKey = product.key; notify(name + " 상품을 저장했습니다.");
   }
@@ -267,8 +307,7 @@
   function renderPolicySettings() {
     byId("policy-max-summary").textContent = policySettings.maxPurchaseQty;
     byId("policy-scope-summary").textContent = policyScopeLabel(policySettings.purchaseScope);
-    byId("policy-rate-summary").textContent = policySettings.discountRate;
-    byId("policy-discount-summary").textContent = policySettings.discountMaxQty;
+    byId("discount-policy-count").textContent = discountPolicies.filter(function (discount) { return discount.active; }).length;
     byId("policy-booking-window-summary").textContent = policySettings.bookingWindow;
     byId("policy-cancel-summary").textContent = policySettings.cancelMinutes;
     byId("policy-online-summary").textContent = policySettings.onlineRatio;
@@ -278,10 +317,6 @@
     byId("policy-purchase-scope").value = policySettings.purchaseScope;
     byId("policy-combine-programs").checked = policySettings.combinePrograms;
     byId("policy-include-cart").checked = policySettings.includeCart;
-    byId("policy-discount-rate").value = policySettings.discountRate;
-    byId("policy-discount-max").value = policySettings.discountMaxQty;
-    byId("policy-discount-scope").value = policySettings.discountScope;
-    byId("policy-proof-onsite").checked = policySettings.proofOnsite;
     byId("policy-booking-window").value = policySettings.bookingWindow;
     byId("policy-cancel-minutes").value = policySettings.cancelMinutes;
     byId("policy-online-ratio").value = policySettings.onlineRatio;
@@ -297,15 +332,74 @@
       purchaseScope: byId("policy-purchase-scope").value,
       combinePrograms: byId("policy-combine-programs").checked,
       includeCart: byId("policy-include-cart").checked,
-      discountRate: Number(byId("policy-discount-rate").value) || 0,
-      discountMaxQty: Number(byId("policy-discount-max").value) || 0,
-      discountScope: byId("policy-discount-scope").value,
-      proofOnsite: byId("policy-proof-onsite").checked,
       bookingWindow: Number(byId("policy-booking-window").value) || 1,
       cancelMinutes: Number(byId("policy-cancel-minutes").value) || 0,
       onlineRatio: onlineRatio, onsiteRatio: onsiteRatio
     };
-    saveDemoState(); renderPolicySettings(); renderKioskProducts(); notify("예약 · 할인 정책을 저장했습니다.");
+    saveDemoState(); renderPolicySettings(); renderKioskProducts(); notify("예약 운영 정책을 저장했습니다.");
+  }
+
+  function discountScopeText(scope) {
+    return scope === "day" ? "이용일 하루" : scope === "order" ? "주문당" : scope === "unlimited" ? "제한 없음" : "계정 평생";
+  }
+
+  function renderDiscountProgramOptions(selectedPrograms) {
+    var wrap = byId("discount-program-options"); wrap.replaceChildren();
+    uniqueProgramNames().forEach(function (name) {
+      var label = document.createElement("label");
+      label.innerHTML = '<input type="checkbox" value="' + escapeHtml(name) + '" ' + (selectedPrograms.includes(name) ? "checked" : "") + '><span>' + escapeHtml(name) + '</span>';
+      wrap.append(label);
+    });
+    wrap.classList.toggle("is-disabled", byId("discount-all-programs").checked);
+    wrap.querySelectorAll("input").forEach(function (input) { input.disabled = byId("discount-all-programs").checked; });
+  }
+
+  function editDiscountPolicy(discount) {
+    byId("discount-id").value = discount ? discount.id : "";
+    byId("discount-name").value = discount ? discount.name : "";
+    byId("discount-type").value = discount ? discount.type : "percent";
+    byId("discount-value").value = discount ? discount.value : 10;
+    byId("discount-max-qty").value = discount ? discount.maxQty : 1;
+    byId("discount-scope").value = discount ? discount.scope : "order";
+    byId("discount-proof").value = discount ? discount.proof : "none";
+    byId("discount-all-programs").checked = discount ? discount.allPrograms : false;
+    byId("discount-active").checked = discount ? discount.active : true;
+    renderDiscountProgramOptions(discount ? discount.programs || [] : []);
+  }
+
+  function renderDiscountPolicies() {
+    var list = byId("discount-policy-list"); list.replaceChildren();
+    discountPolicies.forEach(function (discount) {
+      var button = document.createElement("button"); button.type = "button";
+      var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
+      button.className = byId("discount-id").value === discount.id ? "is-selected" : "";
+      button.innerHTML = '<span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + discountScopeText(discount.scope) + '</small></span><em class="' + (discount.active ? "" : "is-off") + '">' + (discount.active ? "사용중" : "중지") + '</em>';
+      button.addEventListener("click", function () { editDiscountPolicy(discount); renderDiscountPolicies(); });
+      list.append(button);
+    });
+  }
+
+  function openDiscountManager(discountId) {
+    var target = discountPolicies.find(function (discount) { return discount.id === discountId; }) || discountPolicies[0] || null;
+    editDiscountPolicy(target); renderDiscountPolicies(); byId("discount-dialog").showModal();
+  }
+
+  function saveDiscountPolicy() {
+    var name = byId("discount-name").value.trim();
+    if (!name) { notify("할인명을 입력해주세요."); return; }
+    var allPrograms = byId("discount-all-programs").checked;
+    var selectedPrograms = Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; });
+    if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
+    var id = byId("discount-id").value || "discount-" + Date.now();
+    var saved = {
+      id: id, name: name, type: byId("discount-type").value,
+      value: Number(byId("discount-value").value) || 0, maxQty: Number(byId("discount-max-qty").value) || 0,
+      scope: byId("discount-scope").value, proof: byId("discount-proof").value,
+      allPrograms: allPrograms, programs: selectedPrograms, active: byId("discount-active").checked
+    };
+    var index = discountPolicies.findIndex(function (discount) { return discount.id === id; });
+    if (index === -1) discountPolicies.push(saved); else discountPolicies[index] = saved;
+    byId("discount-id").value = id; saveDemoState(); renderDiscountPolicies(); renderPolicySettings(); renderKioskProducts(); notify(name + " 정책을 저장했습니다.");
   }
 
   function selectProgram(programKey) {
@@ -388,7 +482,6 @@
   byId("drawer-close").addEventListener("click", closeDrawer); byId("drawer-backdrop").addEventListener("click", closeDrawer);
   byId("cancel-selected").addEventListener("click", openCancelDialog); byId("confirm-cancel").addEventListener("click", confirmCancellation);
   byId("mobile-menu").addEventListener("click", function () { document.querySelector(".admin-sidebar").classList.toggle("is-open"); });
-  byId("save-programs").addEventListener("click", function () { notify("프로그램과 회차 변경사항을 저장했습니다."); });
   byId("add-session").addEventListener("click", function () { var key = byId("session-editor").dataset.program; sessionData[key].push([sessionData[key].length + 1 + "회차", "17:00", "17:20", 0, 8, "판매중"]); renderSessionEditor(key); notify("새 회차를 추가했습니다."); });
   byId("copy-sessions").addEventListener("click", function () { notify("현재 회차 구성을 다음 운영일에 복사했습니다."); });
   byId("kiosk-product-search").addEventListener("input", renderKioskProducts);
@@ -397,9 +490,15 @@
   byId("open-category-manager").addEventListener("click", function () { byId("category-dialog").showModal(); });
   byId("add-category").addEventListener("click", function () { var label = document.createElement("label"); label.innerHTML = '<i>↕</i><input value="새 카테고리"><button type="button">수정</button>'; byId("category-sort-list").append(label); });
   byId("category-dialog").addEventListener("close", function () { if (byId("category-dialog").returnValue === "save") notify("카테고리 이름과 순서를 저장했습니다."); });
-  byId("add-product").addEventListener("click", function () { openProductDialog({ category: "오전 · 포니 타기", name: "", description: "", price: 5000, image: "assets/pony/cover.jpg", capacity: 8, onsiteCapacity: 8, start: "10:00", end: "10:20", channels: ["online", "onsite"], discountEnabled: true }); });
-  byId("discount-settings").addEventListener("click", function () { renderPolicySettings(); byId("policy-dialog").showModal(); });
+  byId("add-product").addEventListener("click", function () { openProductDialog({ programName: "", category: "", name: "", description: "", price: 0, image: "", capacity: 0, onsiteCapacity: 0, start: "10:00", end: "10:20", channels: ["online", "onsite"], discountIds: [] }); });
+  byId("reservation-settings").addEventListener("click", function () { renderPolicySettings(); byId("policy-dialog").showModal(); });
+  byId("discount-settings").addEventListener("click", function () { openDiscountManager(); });
   document.querySelectorAll("[data-open-policy]").forEach(function (button) { button.addEventListener("click", function () { renderPolicySettings(); byId("policy-dialog").showModal(); }); });
+  document.querySelectorAll("[data-open-discounts]").forEach(function (button) { button.addEventListener("click", function () { openDiscountManager(); }); });
+  byId("add-discount-policy").addEventListener("click", function () { editDiscountPolicy(null); renderDiscountPolicies(); });
+  byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
+  byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
+  byId("open-discounts-from-product").addEventListener("click", function () { byId("product-dialog").close(); openDiscountManager(); notify("할인을 저장한 뒤 상품 상세에서 적용할 수 있습니다."); });
   byId("save-policy").addEventListener("click", savePolicySettings);
   byId("save-product-detail").addEventListener("click", saveProductDetail);
   byId("scope-button").addEventListener("click", function () { notify("현재 시연에서는 서울 · 공원지원부 범위로 고정되어 있습니다."); });
