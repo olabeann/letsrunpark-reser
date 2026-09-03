@@ -99,7 +99,8 @@
 
 .admin-panel,
 .metric-grid article,
-.program-tabs button {
+.program-tabs button,
+.settlement-metrics article {
   border-color:#e6e8eb;
   border-radius:10px;
   box-shadow:none;
