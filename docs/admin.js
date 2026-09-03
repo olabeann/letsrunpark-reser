@@ -217,15 +217,11 @@
     byId("detail-name").value = item.name;
     byId("detail-description").value = item.description || "";
     byId("detail-price").value = item.price;
-    byId("detail-image").value = item.image || "assets/pony/cover.jpg";
     byId("detail-capacity").value = item.capacity;
     byId("detail-onsite-capacity").value = item.onsiteCapacity == null ? item.capacity : item.onsiteCapacity;
-    byId("detail-booking-window").value = item.bookingWindow || defaultBookingWindow;
     byId("detail-cancel-minutes").value = item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes;
     byId("detail-start").value = item.start;
     byId("detail-end").value = item.end;
-    byId("detail-channel-online").checked = !item.channels || item.channels.includes("online");
-    byId("detail-channel-onsite").checked = !item.channels || item.channels.includes("onsite");
     renderProductDiscountOptions(item.discountIds || []);
     byId("product-dialog").showModal();
   }
@@ -276,10 +272,8 @@
   function saveProductDetail(event) {
     var name = byId("detail-name").value.trim();
     var programName = byId("detail-program").value.trim();
-    var channels = [];
-    if (byId("detail-channel-online").checked) channels.push("online");
-    if (byId("detail-channel-onsite").checked) channels.push("onsite");
-    if (!programName || !name || !channels.length) { event.preventDefault(); notify(!programName ? "프로그램명을 입력해주세요." : !name ? "상품 제목을 입력해주세요." : "판매 채널을 하나 이상 선택해주세요."); return; }
+    var channels = ["online", "onsite"];
+    if (!programName || !name) { event.preventDefault(); notify(!programName ? "프로그램명을 입력해주세요." : "회차 제목을 입력해주세요."); return; }
     var existing = activeProductKey ? kioskProducts().find(function (item) { return item.key === activeProductKey; }) : null;
     var category = byId("detail-program-type").value;
     var location = byId("detail-location").value;
@@ -293,9 +287,9 @@
       location: location, department: department, programType: byId("detail-program-type").value,
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
-      bookingWindow: Number(byId("detail-booking-window").value) || defaultBookingWindow,
+      bookingWindow: (existing && existing.bookingWindow) || defaultBookingWindow,
       cancelMinutes: Number(byId("detail-cancel-minutes").value) || 0,
-      price: Number(byId("detail-price").value) || 0, image: byId("detail-image").value.trim(),
+      price: Number(byId("detail-price").value) || 0, image: (existing && existing.image) || "assets/pony/cover.jpg",
       capacity: Number(byId("detail-capacity").value) || 0, onsiteCapacity: Number(byId("detail-onsite-capacity").value) || 0,
       start: byId("detail-start").value, end: byId("detail-end").value, channels: channels,
       discountIds: discountIds, soldOut: false, active: true
