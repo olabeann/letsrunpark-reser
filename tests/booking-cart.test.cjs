@@ -79,6 +79,16 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(error([item({ qty: 2, discount: true })]), '');
 });
 
+test('enforces the confirmed cross-program cart and lifetime citizen-discount limits', () => {
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
+  assert.match(error([item({ qty: 3 }), play]), /최대 4매/);
+  assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
+  const discountedRide = item({ qty: 1, discount: true });
+  const discountedPlay = { ...play, qty: 1, discount: true };
+  assert.equal(error([discountedRide, discountedPlay]), '');
+  assert.match(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), /최대 2매/);
+});
+
 test('keeps ride and play as independent sellable programs in one cart', () => {
   const ride = rules.quoteItem(item({ qty: 1 }), programs);
   const play = rules.quoteItem(item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1, price: 4000 }), programs);

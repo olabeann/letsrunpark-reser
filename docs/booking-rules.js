@@ -58,9 +58,47 @@
     });
   }
 
+  function programFor(item, programs) {
+    return item && programs ? programs[item.programKey] : null;
+  }
+
+  function purchaseLimitError(items, programs) {
+    var totals = {};
+    for (var i = 0; i < items.length; i += 1) {
+      var program = programFor(items[i], programs), policy = program && program.purchasePolicy;
+      if (!policy || !policy.group || !policy.maxQty) continue;
+      totals[policy.group] = (totals[policy.group] || 0) + (Number.isInteger(items[i].qty) ? items[i].qty : 0);
+      if (totals[policy.group] > policy.maxQty) return "같은 구매 한도 그룹은 장바구니에 최대 " + policy.maxQty + "매까지 담을 수 있습니다.";
+    }
+    return "";
+  }
+
+  function discountLimitError(items, reservations, memberId, programs) {
+    var totals = {};
+    reservations.concat(items).forEach(function (item) {
+      if (!item || item.memberId !== memberId || !item.discount || !isActive(item)) return;
+      var program = programFor(item, programs), policy = program && program.discountPolicy;
+      if (!policy || !policy.id || !policy.lifetimeMaxQty) return;
+      totals[policy.id] = (totals[policy.id] || 0) + (Number.isInteger(item.qty) ? item.qty : 0);
+    });
+    var exceeded = Object.keys(totals).find(function (id) {
+      var item = items.find(function (candidate) { var program = programFor(candidate, programs); return program && program.discountPolicy && program.discountPolicy.id === id; });
+      var policy = item && programFor(item, programs).discountPolicy;
+      return policy && totals[id] > policy.lifetimeMaxQty;
+    });
+    if (!exceeded) return "";
+    var target = items.find(function (item) { var program = programFor(item, programs); return program && program.discountPolicy && program.discountPolicy.id === exceeded; });
+    var discount = programFor(target, programs).discountPolicy;
+    return discount.label + "은(는) 계정당 최대 " + discount.lifetimeMaxQty + "매까지 적용됩니다.";
+  }
+
   function validationError(items, reservations, memberId, programs, now) {
     if (!memberId) return "로그인 후 진행해주세요.";
     if (!items.length) return "장바구니에 프로그램을 담아주세요.";
+    var purchaseError = purchaseLimitError(items, programs);
+    if (purchaseError) return purchaseError;
+    var discountError = discountLimitError(items, reservations, memberId, programs);
+    if (discountError) return discountError;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var lastDay = new Date(today); lastDay.setDate(lastDay.getDate() + 14);
     var checked = [];

@@ -95,7 +95,8 @@
       subtitle: "작은 포니와 함께하는 어린이 승마 체험",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
-      discountPolicy: { rate: 0.5, maxQty: 2, label: "과천시민 50% 할인" },
+      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
       slots: ponySlots
     },
     play: {
@@ -111,7 +112,8 @@
       subtitle: "빗질하고 꾸며주며 함께 산책하는 교감 체험",
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
-      discountPolicy: { rate: 0.5, maxQty: 2, label: "과천시민 50% 할인" },
+      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
       slots: ponySlots
     },
     pony: {
@@ -119,7 +121,8 @@
       name: "포니 승마체험",
       price: 5000,
       image: "assets/pony/cover.jpg",
-      discountPolicy: { rate: 0.5, maxQty: 2, label: "과천시민 50% 할인" },
+      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
       experiences: {
         ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg" },
         play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg" }
