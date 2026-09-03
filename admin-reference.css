@@ -111,17 +111,6 @@
 
 /* The reservation screen is the primary working surface, like the reference. */
 [data-view="reservations"] .page-head {margin-bottom:20px}
-[data-view="reservations"] .page-head:after {
-  content:"서울  ·  판매중  ·  온라인 예약";
-  position:absolute;
-  right:39px;
-  top:90px;
-  padding:8px 12px;
-  border-radius:8px;
-  background:#f7f8fa;
-  color:#72777e;
-  font-size:10px;
-}
 [data-view="reservations"] .filter-panel:before {
   content:"예약 접수  10      입장 예정  68      입장 완료  16      취소 요청  3      환불 확인  1      취소 완료  24";
   grid-column:1/-1;
@@ -210,7 +199,6 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
   .admin-sidebar {transform:translateX(-100%)}
   .admin-shell {margin-left:0}
   .admin-shell main {padding:24px 16px 60px}
-  [data-view="reservations"] .page-head:after {display:none}
   .table-pagination>span {left:18px}
 }
 @media(max-width:560px) {
@@ -359,7 +347,6 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .admin-button {font-size:13px}
 .admin-panel h2 {font-size:18px}
 .admin-panel header p {font-size:12px}
-[data-view="reservations"] .page-head:after {font-size:12px}
 [data-view="reservations"] .filter-panel:before {font-size:14px}
 .filter-panel label>span {font-size:11px}
 .filter-panel input,.filter-panel select {font-size:13px}
@@ -404,3 +391,5 @@ td small {font-size:11px}
 .reservation-drawer>header h2 {font-size:17px}
 .drawer-section h3 {font-size:14px}
 .drawer-section>p,.payment-detail,.history-list {font-size:12px}
+.page-head,.page-head__actions {flex-wrap:wrap}
+@media(max-width:1100px){.page-head__actions{width:100%;justify-content:flex-start}.reservation-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.reservation-filter:before{grid-column:1/-1}.reservation-filter>button{width:100%}}
