@@ -122,17 +122,6 @@
   color:#72777e;
   font-size:10px;
 }
-[data-view="reservations"]:before {
-  content:"운영 알림    오늘 14:20 포니 타기 회차 잔여 1석   ·   과천시민 증빙 확인 6명";
-  display:block;
-  margin:0 0 24px;
-  padding:16px 20px;
-  color:#38527b;
-  background:#f5f8ff;
-  border:1px solid #dce7ff;
-  border-radius:10px;
-  font-size:11px;
-}
 [data-view="reservations"] .filter-panel:before {
   content:"예약 접수  10      입장 예정  68      입장 완료  16      취소 요청  3      환불 확인  1      취소 완료  24";
   grid-column:1/-1;
@@ -225,7 +214,6 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
   .table-pagination>span {left:18px}
 }
 @media(max-width:560px) {
-  [data-view="reservations"]:before {line-height:1.7}
   [data-view="reservations"] .filter-panel:before {line-height:2;word-spacing:2px}
 }
 
@@ -372,7 +360,6 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .admin-panel h2 {font-size:18px}
 .admin-panel header p {font-size:12px}
 [data-view="reservations"] .page-head:after {font-size:12px}
-[data-view="reservations"]:before {font-size:13px}
 [data-view="reservations"] .filter-panel:before {font-size:14px}
 .filter-panel label>span {font-size:11px}
 .filter-panel input,.filter-panel select {font-size:13px}

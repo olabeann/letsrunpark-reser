@@ -473,7 +473,6 @@
   byId("open-discounts-from-product").addEventListener("click", function () { byId("product-dialog").close(); openDiscountManager(); notify("할인을 저장한 뒤 상품 상세에서 적용할 수 있습니다."); });
   byId("save-product-detail").addEventListener("click", saveProductDetail);
   byId("scope-button").addEventListener("click", function () { notify("전체 지역의 프로그램은 조회할 수 있고 수정은 담당 부서 권한으로 제한됩니다."); });
-  byId("notice-button").addEventListener("click", function () { notify("환불 확인 1건과 잔여 수량 주의 1건이 있습니다."); });
   byId("bulk-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").showModal(); });
   byId("confirm-operation-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").close(); notify("선택한 회차를 운영 취소하고 대상 예약의 환불 처리를 시작했습니다."); });
   byId("invite-admin").addEventListener("click", function () { notify("관리자 초대와 실제 권한 부여는 인증 연동 후 제공됩니다."); });
