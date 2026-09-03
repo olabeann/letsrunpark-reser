@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Inventory · 디자인 시스템 · 렛츠런파크 PLAY</title>
+<style>
+/* =========================================================
+   이 파일은 독립 실행형(standalone)입니다 — 다른 CSS/JS 파일을 참조하지 않습니다.
+   아래 스타일은 tokens.css / home.css / detail.css / documentation.css에서 실제로
+   쓰이는 규칙을 그대로 옮겨온 것입니다(값을 새로 만들지 않음). 원본이 바뀌면 이 파일도
+   손으로 함께 갱신해야 합니다 — 실시간 공유가 필요하면 <link>로 원본을 참조하는 버전을
+   대신 쓰세요.
+   ========================================================= */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* ---------- tokens.css ---------- */
+:root {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", sans-serif;
+
+  --yellow-100:#FFFDF2; --yellow-200:#FFF9DB; --yellow-300:#FFF4B8;
+  --yellow-400:#FFF08E; --yellow-500:#FFEC58; --yellow-600:#D8C83F;
+  --yellow-700:#A2941D; --yellow-800:#827821; --yellow-900:#595113;
+
+  --coral-100:#FFF4F0; --coral-200:#FFE3DA; --coral-300:#FFC2AF;
+  --coral-400:#FF9C78; --coral-500:#FF7E56; --coral-600:#E7633D;
+  --coral-700:#C14A28; --coral-800:#93341A; --coral-900:#64210F;
+
+  --ground-100:#FFF7EE; --ground-200:#FCE8CF; --ground-300:#F8D19F;
+  --ground-400:#F4BE79; --ground-500:#F0B365; --ground-600:#D79745;
+  --ground-700:#AE7126; --ground-800:#80531A; --ground-900:#573712;
+
+  --green-100:#F3FDF1; --green-200:#DDF9D8; --green-300:#B9F2B0;
+  --green-400:#99EC8C; --green-500:#89EA7A; --green-600:#67C85A;
+  --green-700:#438F39; --green-800:#2F6529; --green-900:#1F431B;
+
+  --c-event:   var(--yellow-500);  --c-event-deep:   var(--yellow-700);  --c-event-bg:   var(--yellow-100);
+  --c-season:  var(--coral-500);   --c-season-deep:  var(--coral-700);   --c-season-bg:  var(--coral-100);
+  --c-exp:     var(--ground-500);  --c-exp-deep:     var(--ground-700);  --c-exp-bg:     var(--ground-100);
+  --c-fac:     var(--green-500);   --c-fac-deep:     var(--green-700);   --c-fac-bg:     var(--green-100);
+
+  --ink:  #1D1D1F;
+  --grey: #6B6B70;
+  --soft: #9A9AA0;
+  --line: #E5E5E7;
+  --bg:   #F6F6F4;
+  --white:#FFFFFF;
+  --neut-thumb:#D9D1BF;
+  --icon-bg:#F2F2F7;
+  --cta-green:#97FC85;
+
+  --fs-display: 80px;
+  --fs-card-lg: 26px;
+  --fs-hero-meta: 24px;
+  --fs-h1:      24px;
+  --fs-h2:      22px;
+  --fs-h3:      18px;
+  --fs-card:    17px;
+  --fs-body-lg: 16px;
+  --fs-body:    15px;
+  --fs-body-sm: 14px;
+  --fs-label:   13px;
+  --fs-caption: 12px;
+  --fs-badge:   11px;
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  --lh-tight: 1.15;
+  --lh-base:  1.5;
+  --lh-body:  1.6;
+
+  --sp-4: 16px; --sp-6: 24px;
+  --container: 1280px;
+  --pad-page: clamp(20px, 5.556vw, 80px);
+  --gap-section: 72px;
+  --gap-card: 32px;
+  --hero-ratio-desk: 876/680;
+  --content-card-media-ratio: 420/280;
+
+  --r-sm: 6px; --r-md: 8px; --r-card: 10px; --r-media: 14px;
+  --r-lg: 12px; --r-xl: 14px; --r-hero: 16px; --r-full: 999px;
+
+  --shadow-fab: 0 4px 12px rgba(0,0,0,.14);
+  --overlay-hero: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.66) 100%);
+  --glass: rgba(255,255,255,.20);
+  --glass-active: rgba(255,255,255,.36);
+  --glass-chip: rgba(255,255,255,.13);
+
+  /* 문서 셸 전용 토큰(documentation.css) */
+  --doc-sidebar-w:264px; --doc-toc-w:200px; --doc-maxw:920px;
+  --doc-border:var(--line); --doc-fg:var(--ink); --doc-soft:var(--soft);
+  --doc-accent:var(--yellow-500); --doc-accent-soft:#fff6d9;
+}
+@media (max-width:997px) {
+  :root {
+    --fs-display: 36px; --fs-h1: 20px; --fs-h2: 19px; --fs-h3: 16px;
+    --fs-card-lg: 20px; --fs-hero-meta: 13.5px;
+    --pad-page: 16px; --gap-section: 40px; --gap-card: 12px; --r-hero: 12px;
+  }
+}
+
+/* ---------- home.css 전역 리셋 ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:auto}
+body{font-family:var(--font-sans);color:var(--ink);background:#fff;line-height:var(--lh-base)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+
+/* ---------- home.css: 태그 · 배지 · 칩 ---------- */
+.tag{display:inline-flex;align-items:center;font-size:var(--fs-label);font-weight:700;border-radius:var(--r-sm);padding:5px 10px}
+.tag--pill{border-radius:var(--r-full);background:var(--ink);color:var(--white);font-size:var(--fs-body-lg);padding:7px 16px}
+.tag--cat{border-radius:var(--r-full);font-size:var(--fs-label);padding:0 12px;height:26px;display:inline-flex;align-items:center;width:fit-content}
+.tag--fac{background:var(--green-500);color:var(--ink)}
+.tag--exp{background:var(--ground-500);color:var(--ink)}
+.tag--event{background:var(--yellow-500);color:var(--ink)}
+.tag--season{background:var(--coral-500);color:var(--ink)}
+.tag--type{border-radius:var(--r-full);font-size:var(--fs-label);padding:0 12px;height:26px;display:inline-flex;align-items:center;width:fit-content;background:var(--c-fac);color:var(--ink)}
+.badge{font-size:var(--fs-label);font-weight:500;border-radius:var(--r-full);padding:0 12px;height:26px;display:inline-flex;align-items:center;flex:none;width:fit-content;align-self:flex-start}
+.badge--on{background:var(--ink);color:var(--white)}
+.badge--muted{background:#EDEDEF;color:var(--ink)}
+.badge--ended{background:transparent;border:1px solid var(--line);color:var(--soft)}
+.badge--sm{height:19px;padding:0 10px;font-size:var(--fs-badge)}
+.chip{height:36px;min-width:48px;padding-inline:14px;border-radius:var(--r-md);background:var(--white);border:1px solid var(--line);color:var(--grey);font-size:var(--fs-label);font-weight:500;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;flex:none}
+.chip:hover{background:var(--bg)}
+.chip.is-selected{background:var(--ink);border-color:var(--ink);color:var(--white)}
+.chip--slots,.chip--slots.is-selected{background:var(--white);border-color:var(--ink);color:var(--ink)}
+.chip--slots:hover{background:var(--bg)}
+.chip__caret{width:16px;height:16px;flex:none;opacity:.85;transition:transform .2s ease}
+.chip__caret.is-up{transform:rotate(180deg)}
+
+/* ---------- home.css: 카드 ---------- */
+.card{display:flex;flex-direction:column}
+.card__media{position:relative;border-radius:var(--r-media);overflow:hidden;background:var(--img,var(--neut-thumb));background-size:cover;background-position:center;margin-bottom:16px}
+.card__title{font-size:var(--fs-h3);font-weight:600;padding-inline:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card__sub{font-size:var(--fs-body-sm);color:var(--grey);margin-top:5px;padding-inline:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card__meta{font-size:var(--fs-label);color:var(--grey);margin-top:5px;padding-inline:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card--pick{width:240px}
+.card--pick .card__media{aspect-ratio:1/1;height:auto}
+.card--pick .card__title{font-size:20px}
+.card--pick .card__meta{margin-top:4px}
+.card--wide{width:420px}
+.card--wide .card__media{aspect-ratio:var(--content-card-media-ratio)}
+.card--sns{width:280px}
+
+/* ---------- home.css: 버튼 ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:700;border-radius:var(--r-md);height:40px;padding-inline:20px;font-size:var(--fs-body-sm)}
+.btn--dark{background:var(--ink);color:var(--white)}
+.btn--full{width:100%;height:48px;font-size:var(--fs-body-lg)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+
+/* ---------- detail.css: 콘텐츠 유형별 accent + 버튼 확장 ---------- */
+.detail-page{--detail-accent:var(--line);--detail-accent-deep:var(--ink);--detail-accent-bg:var(--bg)}
+.detail-page--event{--detail-accent:var(--c-event);--detail-accent-deep:var(--c-event-deep);--detail-accent-bg:var(--c-event-bg)}
+.detail-page--season{--detail-accent:var(--c-season);--detail-accent-deep:var(--c-season-deep);--detail-accent-bg:var(--c-season-bg)}
+.detail-page--experience{--detail-accent:var(--c-exp);--detail-accent-deep:var(--c-exp-deep);--detail-accent-bg:var(--c-exp-bg)}
+.btn--pill{border-radius:var(--r-md)}
+.btn--accent{background:var(--detail-accent);color:var(--ink)}
+.btn--outline{background:var(--white);border:1px solid var(--line);color:var(--ink)}
+.btn--outline:hover{background:var(--bg)}
+.btn--lg{height:52px;padding-inline:24px;font-size:var(--fs-body-lg);gap:6px}
+.btn--icon{width:52px;height:52px;flex:none;border:1px solid var(--line)}
+.btn--icon svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* =========================================================
+   documentation.css — 문서 셸(사이드바 · 본문 · 목차)
+   ========================================================= */
+.doc-shell{display:flex;align-items:flex-start;max-width:1440px;margin-inline:auto}
+.doc-shell__menu-btn{display:none}
+.doc-icon{display:inline-block;width:18px;height:18px;flex:none}
+.doc-sidebar{position:sticky;top:0;flex:0 0 var(--doc-sidebar-w);width:var(--doc-sidebar-w);height:100vh;overflow-y:auto;padding:28px 16px;border-right:1px solid var(--doc-border);box-sizing:border-box}
+.doc-sidebar__title{font-size:14px;font-weight:700;color:var(--doc-fg);padding:0 8px 12px;display:flex;align-items:center;gap:8px}
+.doc-sidebar__title a{color:inherit;text-decoration:none}
+.doc-search{position:relative;margin-bottom:16px}
+.doc-search input{width:100%;height:36px;border:1px solid var(--doc-border);border-radius:8px;padding:0 12px;font-size:13px;box-sizing:border-box;background:#fafafa;color:var(--doc-fg)}
+.doc-search input:focus{outline:2px solid var(--doc-accent);outline-offset:1px;background:#fff}
+.doc-search__empty{display:none;padding:8px;font-size:12px;color:var(--doc-soft)}
+.doc-search__empty.is-visible{display:block}
+.doc-nav{display:flex;flex-direction:column;gap:2px}
+.doc-nav__group{margin-top:14px}
+.doc-nav__group:first-child{margin-top:0}
+.doc-nav__group-label{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--doc-soft);text-transform:uppercase;padding:6px 8px}
+.doc-nav a{display:block;padding:7px 8px;border-radius:6px;font-size:13px;color:var(--doc-fg);text-decoration:none;line-height:1.4}
+.doc-nav a:hover{background:#f4f4f4}
+.doc-nav a.is-current{background:var(--doc-accent);font-weight:700}
+.doc-nav a[hidden]{display:none}
+.doc-main{flex:1;min-width:0;padding:28px 40px 120px}
+.doc-hero{max-width:var(--doc-maxw);margin-bottom:8px}
+.doc-hero h1{font-size:52px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px}
+.doc-hero p{font-size:14px;color:var(--doc-soft);line-height:1.6;max-width:640px}
+.doc-overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:24px 0 8px;max-width:var(--doc-maxw)}
+.doc-overview__card{border:1px solid var(--doc-border);border-radius:12px;padding:14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.doc-overview__card:hover{border-color:var(--doc-fg)}
+.doc-overview__preview{display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;gap:6px;height:56px;padding:8px;border-radius:8px;background:var(--bg);margin:-14px -14px 4px;overflow:hidden}
+.doc-overview__preview .tag,.doc-overview__preview .badge{font-size:11px;padding:3px 8px;margin:0;flex:none}
+.doc-overview__preview .btn{height:28px;padding-inline:12px;font-size:11px;flex:none}
+.doc-overview__preview .card{width:76px;gap:3px;display:flex;flex-direction:column}
+.doc-overview__preview .card__media{aspect-ratio:16/10;border-radius:5px;flex:none}
+.doc-overview__preview .card__title{font-size:9px;line-height:1.2;margin:0;white-space:nowrap}
+.doc-overview__card-tag{font-size:11px;font-weight:700;color:var(--doc-soft);text-transform:uppercase;letter-spacing:.03em}
+.doc-overview__card-name{font-size:14px;font-weight:700}
+.doc-overview__card-desc{font-size:12px;color:var(--doc-soft);line-height:1.5}
+.doc-callout{max-width:var(--doc-maxw);border:1px solid var(--doc-border);border-left:4px solid var(--doc-soft);border-radius:8px;padding:16px 18px;font-size:13px;line-height:1.7;margin:20px 0}
+.doc-callout b{font-weight:700}
+.doc-callout::before{content:"참고";display:block;width:fit-content;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--doc-soft);background:var(--doc-border);border-radius:4px;padding:2px 8px;margin-bottom:10px}
+.doc-callout--rule{border-left-color:var(--doc-fg)}
+.doc-callout--rule::before{content:"규칙";color:var(--doc-fg);background:#e8e8e8}
+.doc-table-wrap{overflow-x:auto;max-width:var(--doc-maxw);margin:20px 0}
+.doc-table-wrap table{width:100%;min-width:400px;border-collapse:collapse;font-size:13px;margin:0}
+.doc-table-wrap th,.doc-table-wrap td{border:1px solid var(--doc-border);padding:12px 16px;text-align:left;vertical-align:top;line-height:1.6}
+.doc-table-wrap th{background:var(--bg);font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1;box-shadow:0 1px 0 var(--doc-border)}
+.doc-table-wrap tr:nth-child(even) td{background:rgba(0,0,0,.02)}
+.doc-meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:var(--doc-soft);border-top:1px dashed var(--doc-border);padding-top:14px;max-width:var(--doc-maxw)}
+.doc-meta b{color:var(--doc-fg);font-weight:700}
+.doc-meta code{background:var(--bg);border-radius:4px;padding:1px 6px;font-size:12px;color:var(--doc-fg)}
+.doc-brief{max-width:var(--doc-maxw);border:1px solid var(--doc-border);border-radius:14px;padding:22px 24px;margin:20px 0 28px;background:#fcfcfc}
+.doc-brief__title{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--doc-soft);margin:0 0 10px}
+.doc-brief p{font-size:14px;line-height:1.7;margin:0}
+.doc-toc{position:sticky;top:0;flex:0 0 var(--doc-toc-w);width:var(--doc-toc-w);height:100vh;overflow-y:auto;padding:28px 0 28px 16px;box-sizing:border-box}
+.doc-toc__title{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--doc-soft);text-transform:uppercase;padding:0 8px 12px}
+.doc-toc__nav{display:flex;flex-direction:column;gap:1px}
+.doc-toc__nav a{display:block;padding:5px 8px;border-left:2px solid transparent;font-size:12.5px;color:var(--doc-soft);text-decoration:none;line-height:1.4}
+.doc-toc__nav a:hover{color:var(--doc-fg)}
+.doc-toc__nav a.is-current{color:var(--doc-fg);font-weight:700;border-left-color:var(--doc-accent)}
+@media (max-width:1200px){ .doc-toc{display:none} }
+@media (max-width:1200px) and (min-width:861px){ .doc-main{padding-left:32px;padding-right:32px} }
+@media (max-width:860px){
+  .doc-shell{display:block;max-width:none}
+  .doc-shell__menu-btn{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:40;width:100%;height:48px;padding:0 16px;background:#fff;border-bottom:1px solid var(--doc-border);font-size:13px;font-weight:700;box-sizing:border-box}
+  .doc-shell__menu-btn .doc-current{color:var(--doc-soft);font-weight:400;margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .doc-sidebar{position:fixed;inset:0 auto 0 0;top:48px;height:calc(100% - 48px);width:min(84vw,320px);transform:translateX(-100%);transition:transform .2s ease;background:#fff;z-index:39;box-shadow:2px 0 16px rgba(0,0,0,.08)}
+  .doc-shell.is-drawer-open .doc-sidebar{transform:translateX(0)}
+  .doc-shell__scrim{display:none;position:fixed;inset:0;top:48px;background:rgba(0,0,0,.3);z-index:38}
+  .doc-shell.is-drawer-open .doc-shell__scrim{display:block}
+  .doc-main{padding:20px 16px 80px}
+  .doc-hero h1{font-size:32px}
+  .doc-overview{grid-template-columns:1fr 1fr}
+}
+
+/* =========================================================
+   UI Inventory 전용(.inv-*) — 이 페이지에서만 쓰는 클래스
+   ========================================================= */
+.inv-section{max-width:none;padding-top:56px;margin-top:56px;border-top:1px solid var(--doc-border)}
+.inv-section:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.inv-section__title{font-size:20px;font-weight:800;margin:0 0 8px;line-height:1.4}
+.inv-section__title .num{color:var(--doc-soft);font-weight:700;margin-right:6px}
+.inv-section__desc{font-size:14px;color:var(--doc-soft);line-height:1.7;margin:0 0 24px;max-width:var(--doc-maxw)}
+.inv-swatchgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;max-width:var(--doc-maxw);margin-bottom:24px}
+.inv-swatch{border:1px solid var(--doc-border);border-radius:10px;overflow:hidden;background:#fff}
+.inv-swatch__color{height:64px}
+.inv-swatch__meta{padding:8px 10px;font-size:12px;line-height:1.6}
+.inv-swatch__meta b{display:block;font-size:12.5px}
+.inv-swatch__meta code{display:block;font-size:11px;color:var(--doc-soft)}
+.inv-type-row{display:flex;align-items:baseline;gap:24px;padding:16px 0;border-bottom:1px dashed var(--doc-border);max-width:var(--doc-maxw)}
+.inv-type-row:last-child{border-bottom:0}
+.inv-type-row__sample{flex:1;min-width:0;color:var(--ink)}
+.inv-type-row__meta{flex:0 0 240px;font-size:12px;color:var(--doc-soft);line-height:1.7}
+.inv-type-row__meta code{font-size:11px;background:var(--bg);border-radius:4px;padding:1px 6px}
+.inv-boxrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px;max-width:var(--doc-maxw);margin-bottom:20px}
+.inv-boxrow__item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.inv-box{background:var(--ground-300);border:1px solid var(--ground-600)}
+.inv-boxrow__item span{font-size:11px;color:var(--doc-soft);font-family:monospace;white-space:nowrap}
+.inv-demo{border:1px solid var(--doc-border);border-radius:12px;padding:24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#fafafa;max-width:var(--doc-maxw);margin-bottom:14px}
+.inv-demo__label{flex-basis:100%;font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--doc-soft);margin-bottom:2px}
+.inv-placeholder{background:var(--neut-thumb)}
+</style>
+</head>
+<body>
+
+<div class="doc-shell">
+  <button class="doc-shell__menu-btn" aria-label="목차 열기" aria-expanded="false"><svg class="doc-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" stroke-width="1.37143" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="doc-current">색상</span></button>
+  <div class="doc-shell__scrim"></div>
+
+  <aside class="doc-sidebar">
+    <p class="doc-sidebar__title"><a href="#top">UI Inventory</a></p>
+    <div class="doc-search">
+      <input type="search" id="docSearch" placeholder="토큰·컴포넌트 검색" aria-label="문서 검색">
+      <p class="doc-search__empty">일치하는 항목이 없어요.</p>
+    </div>
+    <nav class="doc-nav">
+      <div class="doc-nav__group">
+        <p class="doc-nav__group-label">Foundations</p>
+        <a href="#color" data-keywords="색상 컬러 팔레트 이벤트 시즌 체험 시설 semantic">1. 색상</a>
+        <a href="#typography" data-keywords="타이포그래피 폰트 크기 fs display h1 h2 h3 body caption">2. 타이포그래피</a>
+        <a href="#spacing" data-keywords="간격 spacing sp gap section card container">3. 간격</a>
+        <a href="#radius" data-keywords="라운드 radius r-sm r-md r-lg pill">4. 라운드</a>
+        <a href="#effect" data-keywords="이펙트 그림자 shadow 오버레이 글래스 glass">5. 이펙트</a>
+      </div>
+      <div class="doc-nav__group">
+        <p class="doc-nav__group-label">Components</p>
+        <a href="#button" data-keywords="버튼 btn dark accent outline pill lg icon disabled">6. 버튼</a>
+        <a href="#badge-tag" data-keywords="배지 태그 badge tag 카테고리 상태">7. 배지·태그</a>
+        <a href="#chip" data-keywords="칩 chip 필터 드롭다운 selected">8. 칩</a>
+        <a href="#card" data-keywords="카드 card pick wide sns 미디어 비율">9. 카드</a>
+      </div>
+      <div class="doc-nav__group">
+        <p class="doc-nav__group-label">Patterns</p>
+        <a href="#layout-tokens" data-keywords="레이아웃 컨테이너 container pad-page 반응형">10. 레이아웃 토큰</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="doc-main" id="top">
+    <div class="doc-hero">
+      <h1>UI Inventory</h1>
+      <p>렛츠런파크 PLAY의 <b>디자인 토큰</b>과 <b>공용 컴포넌트</b>를 모아 보여주는 독립 실행형 문서입니다. 외부 CSS/JS 파일 없이 이 파일 하나로 완결됩니다 — 값은 전부 원본 코드에서 그대로 옮겨왔습니다.</p>
+    </div>
+
+    <section class="doc-brief" aria-labelledby="brief-inv">
+      <p class="doc-brief__title" id="brief-inv">이 문서는</p>
+      <p>새 화면을 만들거나 기존 화면을 수정할 때 <b>어떤 토큰·클래스를 재사용해야 하는지</b> 확인하는 참조 문서입니다. 색은 4가지 콘텐츠 카테고리(행사·시즌·체험·시설)에 맞춰 각 500단계를 메인으로 쓰고, 텍스트는 700단계, 넓은 배경은 100~200단계를 씁니다.</p>
+    </section>
+
+    <div class="doc-overview">
+      <a class="doc-overview__card" href="#color" data-keywords="색상">
+        <div class="doc-overview__preview" aria-hidden="true">
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--yellow-500)"></span>
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--coral-500)"></span>
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--ground-500)"></span>
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--green-500)"></span>
+        </div>
+        <p class="doc-overview__card-tag">Foundations</p>
+        <p class="doc-overview__card-name">1. 색상</p>
+        <p class="doc-overview__card-desc">4개 팔레트 × 9단계 + 시맨틱 별칭</p>
+      </a>
+      <a class="doc-overview__card" href="#typography" data-keywords="타이포그래피">
+        <div class="doc-overview__preview" aria-hidden="true"><span style="font-size:22px;font-weight:800">Aa</span></div>
+        <p class="doc-overview__card-tag">Foundations</p>
+        <p class="doc-overview__card-name">2. 타이포그래피</p>
+        <p class="doc-overview__card-desc">Display~Badge, 13단계 크기 스케일</p>
+      </a>
+      <a class="doc-overview__card" href="#spacing" data-keywords="간격">
+        <div class="doc-overview__preview" aria-hidden="true"><span style="width:60px;height:16px;background:var(--ground-300);border-radius:3px"></span></div>
+        <p class="doc-overview__card-tag">Foundations</p>
+        <p class="doc-overview__card-name">3. 간격</p>
+        <p class="doc-overview__card-desc">섹션·카드 간격, 컨테이너 패딩</p>
+      </a>
+      <a class="doc-overview__card" href="#radius" data-keywords="라운드">
+        <div class="doc-overview__preview" aria-hidden="true"><span style="width:32px;height:32px;background:var(--ground-300);border-radius:14px"></span></div>
+        <p class="doc-overview__card-tag">Foundations</p>
+        <p class="doc-overview__card-name">4. 라운드</p>
+        <p class="doc-overview__card-desc">6px~pill, 면은 덜 둥글게 알약은 그대로</p>
+      </a>
+      <a class="doc-overview__card" href="#effect" data-keywords="이펙트">
+        <div class="doc-overview__preview" aria-hidden="true"><span style="width:32px;height:32px;border-radius:8px;background:#222;box-shadow:0 4px 12px rgba(0,0,0,.3)"></span></div>
+        <p class="doc-overview__card-tag">Foundations</p>
+        <p class="doc-overview__card-name">5. 이펙트</p>
+        <p class="doc-overview__card-desc">그림자·히어로 오버레이·글래스</p>
+      </a>
+      <a class="doc-overview__card" href="#button" data-keywords="버튼">
+        <div class="doc-overview__preview" aria-hidden="true"><button class="btn btn--dark" type="button" tabindex="-1">버튼</button></div>
+        <p class="doc-overview__card-tag">Components</p>
+        <p class="doc-overview__card-name">6. 버튼</p>
+        <p class="doc-overview__card-desc">dark·accent·outline·pill·icon</p>
+      </a>
+      <a class="doc-overview__card" href="#badge-tag" data-keywords="배지 태그">
+        <div class="doc-overview__preview" aria-hidden="true"><span class="tag--cat tag--exp">체험</span><span class="badge badge--on">badge</span></div>
+        <p class="doc-overview__card-tag">Components</p>
+        <p class="doc-overview__card-name">7. 배지·태그</p>
+        <p class="doc-overview__card-desc">카테고리 분류, 상태 표시</p>
+      </a>
+      <a class="doc-overview__card" href="#chip" data-keywords="칩">
+        <div class="doc-overview__preview" aria-hidden="true"><span class="chip is-selected">전체</span></div>
+        <p class="doc-overview__card-tag">Components</p>
+        <p class="doc-overview__card-name">8. 칩</p>
+        <p class="doc-overview__card-desc">필터·드롭다운 트리거</p>
+      </a>
+      <a class="doc-overview__card" href="#card" data-keywords="카드">
+        <div class="doc-overview__preview" aria-hidden="true">
+          <div class="card" style="width:76px;gap:3px">
+            <div class="card__media inv-placeholder" style="aspect-ratio:16/10;border-radius:5px"></div>
+            <p class="card__title" style="font-size:9px;margin:0;white-space:nowrap">카드 제목</p>
+          </div>
+        </div>
+        <p class="doc-overview__card-tag">Components</p>
+        <p class="doc-overview__card-name">9. 카드</p>
+        <p class="doc-overview__card-desc">pick·wide·sns 3가지 크기</p>
+      </a>
+      <a class="doc-overview__card" href="#layout-tokens" data-keywords="레이아웃">
+        <div class="doc-overview__preview" aria-hidden="true"><span style="width:56px;height:32px;border:2px dashed var(--doc-border);border-radius:4px"></span></div>
+        <p class="doc-overview__card-tag">Patterns</p>
+        <p class="doc-overview__card-name">10. 레이아웃 토큰</p>
+        <p class="doc-overview__card-desc">컨테이너 폭·반응형 여백</p>
+      </a>
+    </div>
+
+    <!-- ============ 1. 색상 ============ -->
+    <section id="color" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">1.</span>색상</h2>
+      <p class="inv-section__desc">4개 콘텐츠 카테고리 팔레트(각 100~900) + 시맨틱 별칭 + 뉴트럴. 마크업에서는 <code>--yellow-500</code> 같은 원색 변수보다 <code>--c-event</code> 같은 시맨틱 별칭을 우선 사용합니다.</p>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">Play Yellow — 행사·축제·대회</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-100)"></div><div class="inv-swatch__meta"><b>100</b><code>#FFFDF2</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-200)"></div><div class="inv-swatch__meta"><b>200</b><code>#FFF9DB</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-300)"></div><div class="inv-swatch__meta"><b>300</b><code>#FFF4B8</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-400)"></div><div class="inv-swatch__meta"><b>400</b><code>#FFF08E</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-500)"></div><div class="inv-swatch__meta"><b>500 · MAIN</b><code>#FFEC58</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-600)"></div><div class="inv-swatch__meta"><b>600</b><code>#D8C83F</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-700)"></div><div class="inv-swatch__meta"><b>700 · 텍스트</b><code>#A2941D</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-800)"></div><div class="inv-swatch__meta"><b>800</b><code>#827821</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--yellow-900)"></div><div class="inv-swatch__meta"><b>900</b><code>#595113</code></div></div>
+      </div>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">Look Coral — 시즌·계절감</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-100)"></div><div class="inv-swatch__meta"><b>100</b><code>#FFF4F0</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-200)"></div><div class="inv-swatch__meta"><b>200</b><code>#FFE3DA</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-300)"></div><div class="inv-swatch__meta"><b>300</b><code>#FFC2AF</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-400)"></div><div class="inv-swatch__meta"><b>400</b><code>#FF9C78</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-500)"></div><div class="inv-swatch__meta"><b>500 · MAIN</b><code>#FF7E56</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-600)"></div><div class="inv-swatch__meta"><b>600</b><code>#E7633D</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-700)"></div><div class="inv-swatch__meta"><b>700 · 텍스트</b><code>#C14A28</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-800)"></div><div class="inv-swatch__meta"><b>800</b><code>#93341A</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--coral-900)"></div><div class="inv-swatch__meta"><b>900</b><code>#64210F</code></div></div>
+      </div>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">Activity Ground — 체험·참여</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-100)"></div><div class="inv-swatch__meta"><b>100</b><code>#FFF7EE</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-200)"></div><div class="inv-swatch__meta"><b>200</b><code>#FCE8CF</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-300)"></div><div class="inv-swatch__meta"><b>300</b><code>#F8D19F</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-400)"></div><div class="inv-swatch__meta"><b>400</b><code>#F4BE79</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-500)"></div><div class="inv-swatch__meta"><b>500 · MAIN</b><code>#F0B365</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-600)"></div><div class="inv-swatch__meta"><b>600</b><code>#D79745</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-700)"></div><div class="inv-swatch__meta"><b>700 · 텍스트</b><code>#AE7126</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-800)"></div><div class="inv-swatch__meta"><b>800</b><code>#80531A</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ground-900)"></div><div class="inv-swatch__meta"><b>900</b><code>#573712</code></div></div>
+      </div>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">Yard Green — 시설·공간</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-100)"></div><div class="inv-swatch__meta"><b>100</b><code>#F3FDF1</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-200)"></div><div class="inv-swatch__meta"><b>200</b><code>#DDF9D8</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-300)"></div><div class="inv-swatch__meta"><b>300</b><code>#B9F2B0</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-400)"></div><div class="inv-swatch__meta"><b>400</b><code>#99EC8C</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-500)"></div><div class="inv-swatch__meta"><b>500 · MAIN</b><code>#89EA7A</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-600)"></div><div class="inv-swatch__meta"><b>600</b><code>#67C85A</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-700)"></div><div class="inv-swatch__meta"><b>700 · 텍스트</b><code>#438F39</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-800)"></div><div class="inv-swatch__meta"><b>800</b><code>#2F6529</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--green-900)"></div><div class="inv-swatch__meta"><b>900</b><code>#1F431B</code></div></div>
+      </div>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">시맨틱 별칭 — 마크업에서 우선 사용</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-event)"></div><div class="inv-swatch__meta"><b>--c-event</b><code>행사</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-event-deep)"></div><div class="inv-swatch__meta"><b>--c-event-deep</b><code>행사 텍스트</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-event-bg)"></div><div class="inv-swatch__meta"><b>--c-event-bg</b><code>행사 배경</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-season)"></div><div class="inv-swatch__meta"><b>--c-season</b><code>시즌</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-season-deep)"></div><div class="inv-swatch__meta"><b>--c-season-deep</b><code>시즌 텍스트</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-season-bg)"></div><div class="inv-swatch__meta"><b>--c-season-bg</b><code>시즌 배경</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-exp)"></div><div class="inv-swatch__meta"><b>--c-exp</b><code>체험</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-exp-deep)"></div><div class="inv-swatch__meta"><b>--c-exp-deep</b><code>체험 텍스트</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-exp-bg)"></div><div class="inv-swatch__meta"><b>--c-exp-bg</b><code>체험 배경</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-fac)"></div><div class="inv-swatch__meta"><b>--c-fac</b><code>시설</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-fac-deep)"></div><div class="inv-swatch__meta"><b>--c-fac-deep</b><code>시설 텍스트</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--c-fac-bg)"></div><div class="inv-swatch__meta"><b>--c-fac-bg</b><code>시설 배경</code></div></div>
+      </div>
+
+      <p style="font-weight:700;font-size:14px;margin-bottom:10px">뉴트럴</p>
+      <div class="inv-swatchgrid">
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--ink)"></div><div class="inv-swatch__meta"><b>--ink</b><code>#1D1D1F · 본문</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--grey)"></div><div class="inv-swatch__meta"><b>--grey</b><code>#6B6B70 · 보조 텍스트</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--soft)"></div><div class="inv-swatch__meta"><b>--soft</b><code>#9A9AA0 · 장식 전용</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--line)"></div><div class="inv-swatch__meta"><b>--line</b><code>#E5E5E7 · 구분선</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--bg)"></div><div class="inv-swatch__meta"><b>--bg</b><code>#F6F6F4 · 옅은 배경</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--white);border-bottom:1px solid var(--doc-border)"></div><div class="inv-swatch__meta"><b>--white</b><code>#FFFFFF</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--neut-thumb)"></div><div class="inv-swatch__meta"><b>--neut-thumb</b><code>#D9D1BF · 썸네일 기본</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--icon-bg)"></div><div class="inv-swatch__meta"><b>--icon-bg</b><code>#F2F2F7 · 아이콘 배경</code></div></div>
+        <div class="inv-swatch"><div class="inv-swatch__color" style="background:var(--cta-green)"></div><div class="inv-swatch__meta"><b>--cta-green</b><code>#97FC85 · 처음방문 CTA</code></div></div>
+      </div>
+      <div class="doc-callout doc-callout--rule">본문에 노출하는 텍스트에는 <code>--soft</code>를 쓰지 않습니다 — 흰 배경 대비 2.80:1로 WCAG AA 본문 기준(4.5:1)에 못 미쳐 아이콘·플레이스홀더 등 장식 전용입니다. 보조 텍스트는 <code>--grey</code>(5.30:1)를 사용합니다.</div>
+    </section>
+
+    <!-- ============ 2. 타이포그래피 ============ -->
+    <section id="typography" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">2.</span>타이포그래피</h2>
+      <p class="inv-section__desc">서체는 Pretendard Variable 한 가지만 사용합니다. 크기는 13단계, 굵기는 4단계(400/500/600/700)만 씁니다. 모바일(≤997px)에서는 일부 값이 축소됩니다.</p>
+
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-display);font-weight:700;line-height:var(--lh-tight)">히어로 타이틀</div><div class="inv-type-row__meta"><code>--fs-display</code><br>80px(모바일 36px) · 대형 타이틀</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-h1);font-weight:700">Section Heading</div><div class="inv-type-row__meta"><code>--fs-h1</code><br>24px(모바일 20px) · 섹션 헤딩</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-h2);font-weight:700">PLAY NOW!</div><div class="inv-type-row__meta"><code>--fs-h2</code><br>22px(모바일 19px) · 카드·모달 부제목</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-h3);font-weight:600">일반 카드 제목</div><div class="inv-type-row__meta"><code>--fs-h3</code><br>18px(모바일 16px) · .card__title</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-card-lg);font-weight:700">카드 대형 제목</div><div class="inv-type-row__meta"><code>--fs-card-lg</code><br>26px(모바일 20px)</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-card);font-weight:500">카드 기본 텍스트</div><div class="inv-type-row__meta"><code>--fs-card</code><br>17px</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-body-lg);font-weight:400">본문 큰 텍스트입니다</div><div class="inv-type-row__meta"><code>--fs-body-lg</code><br>16px</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-body);font-weight:400">본문 기본 텍스트입니다</div><div class="inv-type-row__meta"><code>--fs-body</code><br>15px</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-body-sm);font-weight:400">본문 작은 텍스트입니다</div><div class="inv-type-row__meta"><code>--fs-body-sm</code><br>14px · 버튼 텍스트</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-label);font-weight:500">라벨 텍스트</div><div class="inv-type-row__meta"><code>--fs-label</code><br>13px · 칩·태그</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-caption);color:var(--grey)">캡션 텍스트</div><div class="inv-type-row__meta"><code>--fs-caption</code><br>12px</div></div>
+      <div class="inv-type-row"><div class="inv-type-row__sample" style="font-size:var(--fs-badge)">badge</div><div class="inv-type-row__meta"><code>--fs-badge</code><br>11px · 배지 전용</div></div>
+
+      <div class="doc-table-wrap" style="margin-top:24px">
+        <table>
+          <thead><tr><th>토큰</th><th>값</th></tr></thead>
+          <tbody>
+            <tr><td><code>--fw-regular</code></td><td>400</td></tr>
+            <tr><td><code>--fw-medium</code></td><td>500</td></tr>
+            <tr><td><code>--fw-semibold</code></td><td>600</td></tr>
+            <tr><td><code>--fw-bold</code></td><td>700</td></tr>
+            <tr><td><code>--lh-tight</code></td><td>1.15 · 대형 타이틀</td></tr>
+            <tr><td><code>--lh-base</code></td><td>1.5</td></tr>
+            <tr><td><code>--lh-body</code></td><td>1.6</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 3. 간격 ============ -->
+    <section id="spacing" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">3.</span>간격</h2>
+      <p class="inv-section__desc">간격 토큰은 실사용되는 2단계(<code>--sp-4</code>, <code>--sp-6</code>)와 섹션·카드 간격만 유지합니다.</p>
+      <div class="inv-boxrow">
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:var(--sp-4);height:24px"></div><span>--sp-4 · 16px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:var(--sp-6);height:24px"></div><span>--sp-6 · 24px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:var(--gap-card);height:24px"></div><span>--gap-card · 32px(모바일 12px)</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:72px;height:24px"></div><span>--gap-section · 72px(모바일 40px)</span></div>
+      </div>
+      <div class="doc-table-wrap">
+        <table>
+          <thead><tr><th>토큰</th><th>값</th><th>용도</th></tr></thead>
+          <tbody>
+            <tr><td><code>--container</code></td><td>1280px</td><td>데스크톱 콘텐츠 폭</td></tr>
+            <tr><td><code>--pad-page</code></td><td>clamp(20px, 5.556vw, 80px) · 모바일 16px</td><td>좌우 페이지 여백 — .container·GNB·풀블리드 레일·코스 캐러셀 공용</td></tr>
+            <tr><td><code>--gap-section</code></td><td>72px · 모바일 40px</td><td>섹션 간 세로 간격</td></tr>
+            <tr><td><code>--gap-card</code></td><td>32px · 모바일 12px</td><td>카드 간 간격</td></tr>
+            <tr><td><code>--hero-ratio-desk</code></td><td>876 / 680</td><td>데스크톱 히어로 배너 고정 비율</td></tr>
+            <tr><td><code>--content-card-media-ratio</code></td><td>420 / 280</td><td>일반 콘텐츠 카드(.card--wide) 이미지 비율</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 4. 라운드 ============ -->
+    <section id="radius" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">4.</span>라운드</h2>
+      <p class="inv-section__desc">면(surface)은 덜 둥글게, 알약(Chip·Badge)은 그대로 — 알약 형태는 "조작=Chip / 표시=Badge"를 구분하는 브랜드 요소라 각지게 바꾸지 않습니다.</p>
+      <div class="inv-boxrow">
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-sm)"></div><span>--r-sm · 6px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-md)"></div><span>--r-md · 8px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-card)"></div><span>--r-card · 10px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-lg)"></div><span>--r-lg · 12px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-media)"></div><span>--r-media · 14px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-xl)"></div><span>--r-xl · 14px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:48px;height:48px;border-radius:var(--r-hero)"></div><span>--r-hero · 16px</span></div>
+        <div class="inv-boxrow__item"><div class="inv-box" style="width:96px;height:32px;border-radius:var(--r-full)"></div><span>--r-full · pill</span></div>
+      </div>
+    </section>
+
+    <!-- ============ 5. 이펙트 ============ -->
+    <section id="effect" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">5.</span>이펙트</h2>
+      <p class="inv-section__desc">그림자보다 얇은 border로 면을 구분하는 방향이라, box-shadow는 대부분 제거되고 FAB에만 최소한으로 남아 있습니다.</p>
+      <div class="inv-demo">
+        <div>
+          <div style="width:64px;height:64px;border-radius:var(--r-full);background:var(--ink);box-shadow:var(--shadow-fab)"></div>
+          <p style="font-size:12px;color:var(--doc-soft);margin-top:8px"><code>--shadow-fab</code></p>
+        </div>
+        <div>
+          <div style="width:180px;height:80px;border-radius:var(--r-lg);background:var(--overlay-hero)"></div>
+          <p style="font-size:12px;color:var(--doc-soft);margin-top:8px"><code>--overlay-hero</code> · 히어로 이미지 위 그라디언트</p>
+        </div>
+        <div>
+          <div style="width:120px;height:80px;border-radius:var(--r-lg);background:var(--ground-500);display:flex;align-items:center;justify-content:center">
+            <div style="width:80px;height:40px;border-radius:var(--r-md);background:var(--glass)"></div>
+          </div>
+          <p style="font-size:12px;color:var(--doc-soft);margin-top:8px"><code>--glass</code> / <code>--glass-active</code> / <code>--glass-chip</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. 버튼 ============ -->
+    <section id="button" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">6.</span>버튼</h2>
+      <p class="inv-section__desc">기본 <code>.btn</code>에 modifier를 조합해 씁니다. <code>--accent</code>는 상세 페이지의 콘텐츠 유형별 색(<code>--detail-accent</code>)을 그대로 물려받습니다.</p>
+      <div class="inv-demo">
+        <div class="inv-demo__label">기본 · 조합</div>
+        <button class="btn btn--dark" type="button">기본 (.btn.btn--dark)</button>
+        <button class="btn btn--dark" type="button" disabled>disabled</button>
+        <button class="btn btn--dark btn--full" type="button" style="width:220px">전체 폭 (--full)</button>
+      </div>
+      <div class="inv-demo">
+        <div class="inv-demo__label">detail.css 확장 (상세 페이지 전용)</div>
+        <span class="detail-page detail-page--experience" style="display:contents">
+          <button class="btn btn--pill btn--accent btn--lg" type="button">accent · lg (체험)</button>
+        </span>
+        <span class="detail-page detail-page--event" style="display:contents">
+          <button class="btn btn--pill btn--accent btn--lg" type="button">accent · lg (행사)</button>
+        </span>
+        <button class="btn btn--pill btn--outline btn--lg" type="button">outline · lg</button>
+        <button class="btn btn--pill btn--icon" type="button" aria-label="아이콘 버튼"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M17 7H9M17 7v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="doc-meta">
+        <span><b>Class</b> .btn, .btn--dark, .btn--full, .btn--pill, .btn--accent, .btn--outline, .btn--lg, .btn--icon</span>
+        <span><b>원본</b> home.css / detail.css</span>
+      </div>
+    </section>
+
+    <!-- ============ 7. 배지·태그 ============ -->
+    <section id="badge-tag" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">7.</span>배지 · 태그</h2>
+      <p class="inv-section__desc">태그(Tag)는 <b>카테고리 분류</b>, 배지(Badge)는 <b>상태 표시</b> 용도로 구분해서 씁니다.</p>
+      <div class="inv-demo">
+        <div class="inv-demo__label">Tag — 카테고리</div>
+        <span class="tag--cat tag--event">행사</span>
+        <span class="tag--cat tag--season">시즌</span>
+        <span class="tag--cat tag--exp">체험</span>
+        <span class="tag--cat tag--fac">시설</span>
+        <span class="tag--pill">pill</span>
+      </div>
+      <div class="inv-demo">
+        <div class="inv-demo__label">Badge — 상태</div>
+        <span class="badge badge--on">진행중</span>
+        <span class="badge badge--muted">사전 예약</span>
+        <span class="badge badge--ended">종료</span>
+        <span class="badge badge--on badge--sm">sm</span>
+      </div>
+      <div class="doc-meta">
+        <span><b>Class</b> .tag--cat(+event/season/exp/fac), .tag--type, .tag--pill, .badge(+on/muted/ended/sm)</span>
+        <span><b>원본</b> home.css</span>
+      </div>
+    </section>
+
+    <!-- ============ 8. 칩 ============ -->
+    <section id="chip" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">8.</span>칩</h2>
+      <p class="inv-section__desc">필터·드롭다운 트리거로 쓰는 조작형 컴포넌트입니다.</p>
+      <div class="inv-demo">
+        <span class="chip">기본</span>
+        <span class="chip is-selected">선택됨</span>
+        <span class="chip chip--slots">전체 지역 <svg class="chip__caret" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="1.37143" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </div>
+      <div class="doc-meta">
+        <span><b>Class</b> .chip, .is-selected, .chip--slots, .chip__caret</span>
+        <span><b>원본</b> home.css</span>
+      </div>
+    </section>
+
+    <!-- ============ 9. 카드 ============ -->
+    <section id="card" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">9.</span>카드</h2>
+      <p class="inv-section__desc">용도별로 폭·미디어 비율이 고정된 3가지 크기를 씁니다. 실제 서비스에서는 <code>.card__media</code>가 <code>--img</code> 커스텀 프로퍼티로 배경 이미지를 받는데, 이 문서는 이미지 파일에 의존하지 않도록 플레이스홀더 색으로 대신 표시합니다.</p>
+      <div class="inv-demo">
+        <div class="inv-demo__label">card--pick (240px · 1:1)</div>
+        <div class="card card--pick">
+          <div class="card__media inv-placeholder"></div>
+          <p class="card__title">가을 축제</p>
+          <p class="card__meta">서울 · 10.1~10.31</p>
+        </div>
+      </div>
+      <div class="inv-demo">
+        <div class="inv-demo__label">card--wide (420px · 420:280)</div>
+        <div class="card card--wide">
+          <div class="card__media inv-placeholder"></div>
+          <p class="card__title">도심 속 승마 체험</p>
+          <p class="card__sub">렛츠런파크 서울</p>
+        </div>
+      </div>
+      <div class="inv-demo">
+        <div class="inv-demo__label">card--sns (280px · 411:731)</div>
+        <div class="card card--sns" style="width:180px">
+          <div class="card__media inv-placeholder" style="aspect-ratio:411/731"></div>
+          <p class="card__title">PARK LIVE 클립</p>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span><b>Class</b> .card, .card__media, .card__title, .card__sub, .card__meta, .card--pick, .card--wide, .card--sns</span>
+        <span><b>원본</b> home.css</span>
+      </div>
+    </section>
+
+    <!-- ============ 10. 레이아웃 토큰 ============ -->
+    <section id="layout-tokens" class="inv-section">
+      <h2 class="inv-section__title"><span class="num">10.</span>레이아웃 토큰</h2>
+      <p class="inv-section__desc"><code>.container</code>는 <code>--container</code>(1280px 콘텐츠 폭)와 <code>--pad-page</code>(반응형 좌우 여백)로 계산됩니다. 이 두 토큰은 GNB, 풀블리드 레일(<code>.rail--bleed</code>), 코스 캐러셀(<code>.courses-viewport</code>)이 함께 참조하므로 따로 바꾸면 정렬이 어긋납니다.</p>
+      <div class="doc-callout">모바일(≤997px)에서는 <code>--pad-page</code>가 16px로 고정되고, <code>--gap-section</code>·<code>--gap-card</code>도 함께 축소됩니다. 다른 브레이크포인트 없이 이 한 지점에서만 전환됩니다.</div>
+    </section>
+
+    <footer style="max-width:var(--doc-maxw);margin-top:72px;padding-top:24px;border-top:1px solid var(--doc-border);font-size:12px;color:var(--doc-soft)">렛츠런파크 PLAY · UI Inventory(독립형) — 값이 바뀌면 원본 CSS를 먼저 고치고 이 파일도 손으로 함께 갱신하세요.</footer>
+  </main>
+
+  <aside class="doc-toc">
+    <p class="doc-toc__title">이 페이지에서</p>
+    <nav class="doc-toc__nav" id="docToc"></nav>
+  </aside>
+</div>
+
+<script>
+/* 문서 셸 동작 — 이 파일 전용으로 축약. 원본 로직: docs/documentation.js */
+(function () {
+  var shell = document.querySelector(".doc-shell");
+  if (!shell) return;
+  var sidebar = shell.querySelector(".doc-sidebar");
+  var menuBtn = shell.querySelector(".doc-shell__menu-btn");
+  var scrim = shell.querySelector(".doc-shell__scrim");
+  var currentLabel = shell.querySelector(".doc-current");
+
+  var tocNav = shell.querySelector("#docToc");
+  var tocLinks = [], h2s = [];
+  if (tocNav) {
+    Array.prototype.slice.call(shell.querySelectorAll(".doc-main h2")).forEach(function (h) {
+      var idHost = h.id ? h : (h.classList.contains("inv-section__title") ? h.closest("[id]") : null);
+      if (!idHost || !idHost.id) return;
+      var num = h.querySelector(".num");
+      var label = num ? num.textContent + " " + h.textContent.slice(num.textContent.length) : h.textContent;
+      var a = document.createElement("a");
+      a.href = "#" + idHost.id;
+      a.textContent = label;
+      tocNav.appendChild(a);
+      tocLinks.push(a);
+      h2s.push(h);
+    });
+  }
+
+  function syncTocCurrent() {
+    if (!h2s.length) return;
+    var y = window.scrollY + 96, idx = 0, bestTop = -Infinity;
+    for (var i = 0; i < h2s.length; i++) {
+      var top = h2s[i].getBoundingClientRect().top + window.scrollY;
+      if (top <= y && top > bestTop) { bestTop = top; idx = i; }
+    }
+    tocLinks.forEach(function (a, i) { a.classList.toggle("is-current", i === idx); });
+  }
+
+  function openDrawer() { shell.classList.add("is-drawer-open"); if (menuBtn) menuBtn.setAttribute("aria-expanded", "true"); }
+  function closeDrawer() { shell.classList.remove("is-drawer-open"); if (menuBtn) menuBtn.setAttribute("aria-expanded", "false"); }
+  if (menuBtn) menuBtn.addEventListener("click", function () {
+    shell.classList.contains("is-drawer-open") ? closeDrawer() : openDrawer();
+  });
+  if (scrim) scrim.addEventListener("click", closeDrawer);
+  if (sidebar) sidebar.addEventListener("click", function (e) { if (e.target.closest("a")) closeDrawer(); });
+
+  var navLinks = Array.prototype.slice.call(shell.querySelectorAll(".doc-nav a[href^='#']"));
+  var sections = navLinks.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
+  function syncCurrent() {
+    var y = window.scrollY + 96, idx = 0, bestTop = -Infinity, firstTop = Infinity;
+    for (var k = 0; k < sections.length; k++) {
+      if (sections[k] && sections[k].offsetTop < firstTop) { firstTop = sections[k].offsetTop; idx = k; }
+    }
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].offsetTop <= y && sections[i].offsetTop > bestTop) { bestTop = sections[i].offsetTop; idx = i; }
+    }
+    navLinks.forEach(function (a, i) { a.classList.toggle("is-current", i === idx); });
+    if (currentLabel && navLinks[idx]) currentLabel.textContent = navLinks[idx].textContent;
+  }
+  var tick = false;
+  window.addEventListener("scroll", function () {
+    if (tick) return;
+    tick = true;
+    requestAnimationFrame(function () { tick = false; syncCurrent(); syncTocCurrent(); });
+  }, { passive: true });
+  syncCurrent();
+  syncTocCurrent();
+
+  var input = shell.querySelector(".doc-search input[type='search']");
+  var emptyMsg = shell.querySelector(".doc-search__empty");
+  var overviewCards = Array.prototype.slice.call(shell.querySelectorAll(".doc-overview__card"));
+  function matches(text, q) { return text.toLowerCase().indexOf(q) > -1; }
+  function runFilter() {
+    var q = (input.value || "").trim().toLowerCase();
+    var visibleCount = 0;
+    navLinks.forEach(function (a) {
+      var keywords = (a.getAttribute("data-keywords") || "") + " " + a.textContent;
+      var show = !q || matches(keywords, q);
+      a.hidden = !show;
+      if (show) visibleCount++;
+    });
+    shell.querySelectorAll(".doc-nav__group").forEach(function (g) {
+      var anyVisible = Array.prototype.some.call(g.querySelectorAll("a"), function (a) { return !a.hidden; });
+      g.style.display = anyVisible ? "" : "none";
+    });
+    overviewCards.forEach(function (c) {
+      var keywords = (c.getAttribute("data-keywords") || "") + " " + c.textContent;
+      c.style.display = (!q || matches(keywords, q)) ? "" : "none";
+    });
+    if (emptyMsg) emptyMsg.classList.toggle("is-visible", q.length > 0 && visibleCount === 0);
+  }
+  if (input) {
+    input.addEventListener("input", runFilter);
+    input.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      var firstVisible = navLinks.filter(function (a) { return !a.hidden; })[0];
+      if (firstVisible) { location.hash = firstVisible.getAttribute("href"); closeDrawer(); }
+    });
+  }
+})();
+</script>
+</body>
+</html>
