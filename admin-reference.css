@@ -222,6 +222,9 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .row-save:hover,.row-detail:hover {border-color:#1769ff;color:#1769ff}
 .kiosk-dialog {width:min(760px,calc(100vw - 32px));padding:0;border:1px solid #dfe3e7;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
 .kiosk-dialog::backdrop {background:rgba(24,28,33,.42)}
+.product-detail-dialog {max-height:calc(100vh - 32px)}
+.product-detail-dialog>form {display:flex;max-height:calc(100vh - 34px);flex-direction:column}
+.product-detail-dialog .product-edit-grid {overflow-y:auto}
 .kiosk-dialog header {display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e7e9ec}
 .kiosk-dialog header small {font-size:9px;color:#1769ff;font-weight:800;letter-spacing:.08em}
 .kiosk-dialog header h2 {margin:5px 0 0;font-size:18px}
@@ -245,6 +248,11 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .detail-days input {position:absolute;opacity:0}
 .detail-days span {height:34px;display:grid;place-items:center;border:1px solid #dfe3e7;border-radius:6px;font-size:9px}
 .detail-days input:checked+span {border-color:#8cb3ff;background:#eef5ff;color:#1769ff;font-weight:700}
+.sales-period-grid {display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.sales-period-grid label>span {display:block;margin-bottom:6px;color:#747a81;font-size:9px;font-weight:700}
+.cancel-offset-control {display:grid;grid-template-columns:auto minmax(80px,1fr) minmax(96px,1fr) auto;align-items:center;gap:8px}
+.cancel-offset-control>span {color:#4f5760;font-size:10px;font-weight:700;white-space:nowrap}
+.field-help {display:block;margin-top:7px;color:#7b8187;font-size:9px;line-height:1.5}
 .detail-options>label {display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #dfe3e7;border-radius:8px}
 .detail-options input {width:15px;height:15px;accent-color:#1769ff}
 .detail-options strong,.detail-options small {display:block}
@@ -360,6 +368,7 @@ td small {font-size:11px}
 .product-edit-grid>label>span,.product-edit-grid legend {font-size:11px}
 .product-edit-grid input,.product-edit-grid select,.product-edit-grid textarea {font-size:13px}
 .detail-days span {font-size:11px}
+.sales-period-grid label>span,.cancel-offset-control>span,.field-help {font-size:11px}
 .detail-options strong,.detail-discount-options strong {font-size:12px}
 .detail-options small,.detail-discount-options small {font-size:11px}
 .detail-options>button {font-size:11px}
