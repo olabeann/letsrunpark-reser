@@ -13,9 +13,12 @@
 | 포니 체험 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/pony.html) |
 | 렛츠런파크 투어 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/tour.html) |
 | 운영 관리자 | [관리자 화면 열기](https://olabeann.github.io/letsrunpark-reser/admin.html) |
+| 위이 내부 계정 관리 | [계정 발급 화면 열기](https://olabeann.github.io/letsrunpark-reser/account-admin.html) |
 | GitHub 저장소 | [코드 보기](https://github.com/olabeann/letsrunpark-reser) |
 
 티켓 목록과 상세 화면은 **예약 조회 → 카카오로 계속하기 또는 네이버로 계속하기 → 티켓 선택** 순서로 확인할 수 있습니다.
+
+위이 내부 계정 관리 화면은 부서별 공용 ID·임시 비밀번호·기능 권한을 발급하는 별도 화면이며, 고객사 운영 관리자 메뉴에는 노출하지 않습니다.
 
 ## 이용 안내
 

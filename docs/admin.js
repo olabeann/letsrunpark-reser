@@ -9,7 +9,6 @@
   var activeProgramKey = null;
   var activeSessionKey = null;
   var sessionProgramKey = null;
-  var activeAdminAccountKey = null;
   var organization = {
     "서울": ["홍보부", "브랜드총괄부", "발매운영부", "서울고객안전부", "공원화사업추진TF"],
     "부산경남": ["부산경주자원관리부", "부산고객안전부", "부산운영지원부"],
@@ -21,13 +20,6 @@
     { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, scope: "lifetime", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
   ];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
-  var adminAccounts = [
-    { key: "account-super", loginId: "letsrun_admin", type: "super", location: "전체", department: "통합 운영", permissions: { programs: true, reservations: true, refunds: true, settlement: true }, active: true, lastLogin: "오늘 09:12", passwordIssued: true },
-    { key: "account-seoul-brand", loginId: "seoul_brand", type: "department", location: "서울", department: "브랜드총괄부", permissions: { programs: true, reservations: true, refunds: false, settlement: true }, active: true, lastLogin: "어제 17:40", passwordIssued: true },
-    { key: "account-seoul-park", loginId: "seoul_park", type: "department", location: "서울", department: "공원화사업추진TF", permissions: { programs: true, reservations: true, refunds: true, settlement: true }, active: true, lastLogin: "오늘 08:55", passwordIssued: true },
-    { key: "account-busan-ops", loginId: "busan_ops", type: "department", location: "부산경남", department: "부산운영지원부", permissions: { programs: true, reservations: true, refunds: true, settlement: true }, active: true, lastLogin: "8월 30일", passwordIssued: true },
-    { key: "account-jeju-ops", loginId: "jeju_ops", type: "department", location: "제주", department: "제주운영지원부", permissions: { programs: true, reservations: true, refunds: false, settlement: true }, active: false, lastLogin: "미접속", passwordIssued: true }
-  ];
 
   var demoReservations = [
     { id: "GP-260902-1042", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
@@ -90,12 +82,11 @@
         catalogState.addedSessions = Array.isArray(state.catalog.addedSessions) ? state.catalog.addedSessions : [];
       }
       if (Array.isArray(state.deletedReservationIds)) deletedReservationIds = state.deletedReservationIds;
-      if (Array.isArray(state.adminAccounts) && state.adminAccounts.length) adminAccounts = state.adminAccounts;
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), discounts: discountPolicies, catalog: catalogState, deletedReservationIds: deletedReservationIds, adminAccounts: adminAccounts })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), discounts: discountPolicies, catalog: catalogState, deletedReservationIds: deletedReservationIds })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -183,7 +174,6 @@
     document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.adminView === navView); });
     document.querySelector(".admin-sidebar").classList.remove("is-open");
     if (viewName === "reservations") renderReservations();
-    if (viewName === "permissions") renderAdminAccounts();
     history.replaceState(null, "", "#" + viewName);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -462,115 +452,6 @@
     byId("discount-id").value = id; saveDemoState(); renderDiscountPolicies(); renderKioskProducts(); notify(name + " 할인을 저장했습니다.");
   }
 
-  function permissionSummary(account) {
-    if (account.type === "super") return ["전체 관리", "계정 발급"];
-    var labels = ["전체 프로그램 조회"];
-    if (account.permissions.programs) labels.push("프로그램·회차");
-    if (account.permissions.reservations) labels.push("예약 조회");
-    if (account.permissions.refunds) labels.push("취소·환불");
-    if (account.permissions.settlement) labels.push("매출·정산");
-    return labels;
-  }
-
-  function renderAdminAccounts() {
-    var body = byId("admin-account-body"); if (!body) return;
-    var location = byId("account-location-filter").value;
-    var search = byId("account-search").value.trim().toLowerCase();
-    var visible = adminAccounts.filter(function (account) {
-      var matchesLocation = !location || account.location === location || account.type === "super";
-      var haystack = [account.location, account.department, account.loginId].join(" ").toLowerCase();
-      return matchesLocation && (!search || haystack.includes(search));
-    });
-    body.replaceChildren();
-    visible.forEach(function (account) {
-      var row = document.createElement("tr");
-      var permissionChips = permissionSummary(account).map(function (label, index) { return '<span class="' + (index === 0 ? 'is-enabled' : '') + '">' + escapeHtml(label) + '</span>'; }).join("");
-      row.innerHTML = '<td><strong>' + escapeHtml(account.location) + '</strong><small>' + escapeHtml(account.department) + '</small></td>' +
-        '<td><strong>' + escapeHtml(account.loginId) + '</strong><small>비밀번호 ········</small></td>' +
-        '<td><span class="account-type ' + (account.type === "super" ? 'is-super' : '') + '">' + (account.type === "super" ? '통합 관리자' : '부서 공용') + '</span></td>' +
-        '<td><div class="account-permission-summary">' + permissionChips + '</div></td>' +
-        '<td>' + escapeHtml(account.lastLogin || "미접속") + '</td>' +
-        '<td><span class="account-status ' + (account.active ? '' : 'is-off') + '">' + (account.active ? '사용 중' : '사용 중지') + '</span></td>' +
-        '<td><button class="account-edit" type="button">계정 설정</button></td>';
-      row.querySelector(".account-edit").addEventListener("click", function () { openAdminAccountDialog(account); });
-      body.append(row);
-    });
-    if (!visible.length) body.innerHTML = '<tr><td colspan="7" class="empty-table">조건에 맞는 관리자 계정이 없습니다.</td></tr>';
-    byId("issued-account-count").textContent = adminAccounts.length;
-    byId("active-account-count").textContent = adminAccounts.filter(function (account) { return account.active; }).length;
-  }
-
-  function refreshAccountDepartment(location, selected) {
-    var select = byId("account-department");
-    var departments = location === "전체" ? ["통합 운영"] : organization[location] || [];
-    select.innerHTML = departments.map(function (department) { return '<option>' + escapeHtml(department) + '</option>'; }).join("");
-    if (selected && departments.includes(selected)) select.value = selected;
-  }
-
-  function openAdminAccountDialog(account) {
-    activeAdminAccountKey = account ? account.key : null;
-    var isSuper = !!account && account.type === "super";
-    var locationSelect = byId("account-location");
-    var allOption = Array.from(locationSelect.options).find(function (option) { return option.value === "전체"; });
-    if (isSuper && !allOption) locationSelect.insertAdjacentHTML("afterbegin", '<option>전체</option>');
-    if (!isSuper && allOption) allOption.remove();
-    byId("account-dialog-title").textContent = account ? account.department + " 계정 설정" : "부서 계정 발급";
-    byId("account-key").value = account ? account.key : "";
-    locationSelect.value = account ? account.location : "서울";
-    locationSelect.disabled = isSuper;
-    refreshAccountDepartment(locationSelect.value, account ? account.department : organization["서울"][0]);
-    byId("account-department").disabled = isSuper;
-    byId("account-login-id").value = account ? account.loginId : "";
-    byId("account-password").value = "";
-    byId("account-password").type = "password";
-    byId("account-password").placeholder = account ? "재발급할 때만 입력" : "8자 이상 임시 비밀번호";
-    ["programs", "reservations", "refunds", "settlement"].forEach(function (permission) {
-      var input = byId("permission-" + permission);
-      input.checked = isSuper || (account ? !!account.permissions[permission] : true);
-      input.disabled = isSuper;
-    });
-    byId("account-active").checked = account ? account.active : true;
-    byId("account-dialog").showModal();
-  }
-
-  function generateAccountPassword() {
-    var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$";
-    var values = new Uint32Array(12);
-    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(values);
-    else values.forEach(function (_, index) { values[index] = Math.floor(Math.random() * alphabet.length); });
-    byId("account-password").value = Array.from(values, function (value) { return alphabet[value % alphabet.length]; }).join("");
-    byId("account-password").type = "text";
-    notify("임시 비밀번호를 생성했습니다. 저장 전에 안전하게 전달할 값을 확인하세요.");
-  }
-
-  function saveAdminAccount() {
-    var existing = activeAdminAccountKey ? adminAccounts.find(function (account) { return account.key === activeAdminAccountKey; }) : null;
-    var isSuper = !!existing && existing.type === "super";
-    var location = isSuper ? "전체" : byId("account-location").value;
-    var department = isSuper ? "통합 운영" : byId("account-department").value;
-    var loginId = byId("account-login-id").value.trim();
-    var password = byId("account-password").value;
-    if (!/^[a-zA-Z0-9._-]{4,32}$/.test(loginId)) { notify("로그인 ID는 영문·숫자와 . _ - 기호로 4~32자 입력해주세요."); return; }
-    if (adminAccounts.some(function (account) { return account.key !== activeAdminAccountKey && account.loginId.toLowerCase() === loginId.toLowerCase(); })) { notify("이미 사용 중인 로그인 ID입니다."); return; }
-    if (!isSuper && adminAccounts.some(function (account) { return account.key !== activeAdminAccountKey && account.type === "department" && account.location === location && account.department === department; })) { notify("해당 부서에는 이미 발급된 계정이 있습니다."); return; }
-    if (!existing && password.length < 8) { notify("최초 발급용 임시 비밀번호를 8자 이상 입력해주세요."); return; }
-    if (password && password.length < 8) { notify("임시 비밀번호는 8자 이상이어야 합니다."); return; }
-    if (byId("permission-refunds").checked && !byId("permission-reservations").checked) { notify("취소·환불 권한에는 예약·결제 조회 권한이 필요합니다."); return; }
-    var saved = Object.assign({}, existing || {}, {
-      key: activeAdminAccountKey || "department-account-" + Date.now(), loginId: loginId, type: isSuper ? "super" : "department",
-      location: location, department: department, permissions: {
-        programs: isSuper || byId("permission-programs").checked,
-        reservations: isSuper || byId("permission-reservations").checked,
-        refunds: isSuper || byId("permission-refunds").checked,
-        settlement: isSuper || byId("permission-settlement").checked
-      }, active: byId("account-active").checked, lastLogin: existing ? existing.lastLogin : "미접속", passwordIssued: existing ? existing.passwordIssued || !!password : true
-    });
-    var index = adminAccounts.findIndex(function (account) { return account.key === saved.key; });
-    if (index === -1) adminAccounts.push(saved); else adminAccounts[index] = saved;
-    saveDemoState(); renderAdminAccounts(); byId("account-dialog").close();
-    notify(department + " 관리자 계정과 권한을 저장했습니다.");
-  }
-
   function openDrawer(reservationId) {
     activeReservation = allReservations().find(function (item) { return item.id === reservationId; });
     if (!activeReservation) return;
@@ -633,7 +514,7 @@
   loadSavedDemoState();
   refreshDepartmentSelect("reservation-department", "", "");
   refreshDepartmentSelect("kiosk-department-filter", "", "");
-  renderReservations(); renderKioskProducts(); renderAdminAccounts();
+  renderReservations(); renderKioskProducts();
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
@@ -664,12 +545,6 @@
   byId("scope-button").addEventListener("click", function () { notify("전체 지역의 프로그램은 조회할 수 있고 수정은 담당 부서 권한으로 제한됩니다."); });
   byId("bulk-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").showModal(); });
   byId("confirm-operation-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").close(); notify("선택한 회차를 운영 취소하고 대상 예약의 환불 처리를 시작했습니다."); });
-  byId("invite-admin").addEventListener("click", function () { openAdminAccountDialog(null); });
-  byId("account-location-filter").addEventListener("change", renderAdminAccounts);
-  byId("account-search").addEventListener("input", renderAdminAccounts);
-  byId("account-location").addEventListener("change", function () { refreshAccountDepartment(byId("account-location").value, ""); });
-  byId("generate-account-password").addEventListener("click", generateAccountPassword);
-  byId("save-admin-account").addEventListener("click", saveAdminAccount);
   byId("apply-settlement").addEventListener("click", function () { notify("선택한 기간의 정산 내역을 조회했습니다."); });
   byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("렛츠런플레이_통합예약목록.csv", rows); });
   byId("download-settlement").addEventListener("click", function () { downloadCsv("렛츠런플레이_부서별정산_2026-09.csv", [["서비스완료월", "지역", "담당부서", "정산태그", "프로그램", "완료건수", "결제액", "환불액", "PG수수료", "지급예정액"], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니 타기", 982, 5210000, -210000, -150000, 4850000], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니랑 놀기", 604, 3210000, -116000, -92820, 3001180]]); });
@@ -681,6 +556,6 @@
   });
 
   var requestedView = location.hash.replace("#", "");
-  if (["reservations", "programs", "settlement", "permissions"].includes(requestedView)) showView(requestedView);
+  if (["reservations", "programs", "settlement"].includes(requestedView)) showView(requestedView);
   else showView("programs");
 })();
