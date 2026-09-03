@@ -48,11 +48,16 @@
   };
 
   var programs = {
-    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingOpenTime: "00:00", saleCloseValue: 0, saleCloseUnit: "minutes", saleCloseMinutes: 0, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
-    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingOpenTime: "00:00", saleCloseValue: 0, saleCloseUnit: "minutes", saleCloseMinutes: 0, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true }
+    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
+    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true }
   };
 
   function byId(id) { return document.getElementById(id); }
+  function prepareBookingSaleDateFields() {
+    var fieldset = document.querySelector(".booking-sale-setting");
+    if (!fieldset) return;
+    fieldset.innerHTML = '<legend>예약 판매 가능 기간</legend><div class="booking-date-grid"><label><span>판매 시작일</span><input id="detail-booking-start-date" type="date"></label><label><span>판매 종료일</span><input id="detail-booking-end-date" type="date"></label></div><small class="field-help">설정한 날짜 사이에만 예약을 판매합니다. 판매 기간 안에서도 사용자는 오늘부터 최대 14일 뒤 이용일까지만 선택할 수 있습니다.</small>';
+  }
   function money(value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; }
   function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, function (char) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]; }); }
   function notify(message) {
@@ -244,10 +249,8 @@
     byId("detail-sale-end").value = item.saleEndDate || "";
     byId("detail-visible-start").value = item.visibleStartAt || (item.saleStartDate ? item.saleStartDate + "T00:00" : "");
     byId("detail-visible-end").value = item.visibleEndAt || (item.saleEndDate ? item.saleEndDate + "T23:59" : "");
-    byId("detail-booking-window").value = item.bookingWindow == null ? defaultBookingWindow : item.bookingWindow;
-    byId("detail-booking-open-time").value = item.bookingOpenTime || "00:00";
-    byId("detail-sale-close-value").value = item.saleCloseValue == null ? 0 : item.saleCloseValue;
-    byId("detail-sale-close-unit").value = item.saleCloseUnit || "minutes";
+    byId("detail-booking-start-date").value = item.bookingStartDate || item.saleStartDate || "";
+    byId("detail-booking-end-date").value = item.bookingEndDate || item.saleEndDate || "";
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
@@ -311,10 +314,8 @@
     var saleEndDate = byId("detail-sale-end").value;
     var visibleStartAt = byId("detail-visible-start").value;
     var visibleEndAt = byId("detail-visible-end").value;
-    var bookingWindow = Number(byId("detail-booking-window").value);
-    var bookingOpenTime = byId("detail-booking-open-time").value;
-    var saleCloseValue = Number(byId("detail-sale-close-value").value);
-    var saleCloseUnit = byId("detail-sale-close-unit").value;
+    var bookingStartDate = byId("detail-booking-start-date").value;
+    var bookingEndDate = byId("detail-booking-end-date").value;
     var saleDays = Array.from(document.querySelectorAll(".detail-days input:checked")).map(function (input) { return Number(input.value); });
     var cancelOffsetValue = Number(byId("detail-cancel-value").value);
     var cancelOffsetUnit = byId("detail-cancel-unit").value;
@@ -322,12 +323,11 @@
     if (saleEndDate < saleStartDate) { event.preventDefault(); notify("운영 종료일은 시작일보다 빠를 수 없습니다."); return; }
     if (!visibleStartAt || !visibleEndAt) { event.preventDefault(); notify("프로그램 노출 시작과 종료 일시를 모두 설정해주세요."); return; }
     if (visibleEndAt < visibleStartAt) { event.preventDefault(); notify("프로그램 노출 종료는 시작보다 빨라질 수 없습니다."); return; }
-    if (!Number.isInteger(bookingWindow) || bookingWindow < 0 || !bookingOpenTime) { event.preventDefault(); notify("예약 판매 시작 시간을 확인해주세요."); return; }
-    if (!Number.isFinite(saleCloseValue) || saleCloseValue < 0) { event.preventDefault(); notify("예약 판매 마감 시간을 확인해주세요."); return; }
+    if (!bookingStartDate || !bookingEndDate) { event.preventDefault(); notify("예약 판매 시작일과 종료일을 모두 설정해주세요."); return; }
+    if (bookingEndDate < bookingStartDate) { event.preventDefault(); notify("예약 판매 종료일은 시작일보다 빠를 수 없습니다."); return; }
     if (!saleDays.length) { event.preventDefault(); notify("판매 요일을 하나 이상 선택해주세요."); return; }
     if (!Number.isFinite(cancelOffsetValue) || cancelOffsetValue < 0) { event.preventDefault(); notify("취소 마감 값을 확인해주세요."); return; }
     var cancelMultiplier = cancelOffsetUnit === "days" ? 1440 : cancelOffsetUnit === "hours" ? 60 : 1;
-    var saleCloseMultiplier = saleCloseUnit === "days" ? 1440 : saleCloseUnit === "hours" ? 60 : 1;
     var discountIds = Array.from(document.querySelectorAll("#detail-discount-options input:checked")).map(function (input) { return input.value; });
     var program = Object.assign({}, existing || {}, {
       key: activeProgramKey || "custom-program-" + Date.now(),
@@ -336,8 +336,8 @@
       location: location, department: department, programType: byId("detail-program-type").value,
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
-      bookingWindow: bookingWindow, bookingOpenTime: bookingOpenTime,
-      saleCloseValue: saleCloseValue, saleCloseUnit: saleCloseUnit, saleCloseMinutes: saleCloseValue * saleCloseMultiplier,
+      bookingWindow: existing && existing.bookingWindow != null ? existing.bookingWindow : defaultBookingWindow,
+      bookingStartDate: bookingStartDate, bookingEndDate: bookingEndDate,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: Number(byId("detail-price").value) || 0, image: (existing && existing.image) || "assets/pony/cover.jpg",
@@ -540,6 +540,7 @@
     notify("자료를 내려받았습니다.");
   }
 
+  prepareBookingSaleDateFields();
   loadSavedDemoState();
   refreshDepartmentSelect("reservation-department", "", "");
   refreshDepartmentSelect("kiosk-department-filter", "", "");
@@ -558,7 +559,7 @@
   byId("kiosk-department-filter").addEventListener("change", renderKioskProducts);
   byId("kiosk-type-filter").addEventListener("change", renderKioskProducts);
   byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; byId("kiosk-location-filter").value = ""; byId("kiosk-type-filter").value = ""; refreshDepartmentSelect("kiosk-department-filter", "", ""); renderKioskProducts(); notify("전체 프로그램 목록을 새로고침했습니다."); });
-  byId("add-product").addEventListener("click", function () { openProductDialog({ location: "서울", department: "공원화사업추진TF", programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, bookingOpenTime: "00:00", saleCloseValue: 0, saleCloseUnit: "minutes", saleCloseMinutes: 0, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true }); });
+  byId("add-product").addEventListener("click", function () { openProductDialog({ location: "서울", department: "공원화사업추진TF", programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true }); });
   byId("detail-location").addEventListener("change", function () { var location = byId("detail-location").value; refreshDepartmentSelect("detail-department", location, organization[location][0]); });
   byId("discount-settings").addEventListener("click", function () { openDiscountManager(); });
   byId("add-discount-policy").addEventListener("click", function () { editDiscountPolicy(null); renderDiscountPolicies(); });
