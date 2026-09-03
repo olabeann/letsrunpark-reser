@@ -99,9 +99,7 @@
 
 .admin-panel,
 .metric-grid article,
-.filter-panel,
-.program-tabs button,
-.settlement-metrics article {
+.program-tabs button {
   border-color:#e6e8eb;
   border-radius:10px;
   box-shadow:none;
@@ -113,7 +111,7 @@
 [data-view="reservations"] .page-head {margin-bottom:20px}
 .filter-panel {
   grid-template-columns:1.2fr .8fr .8fr .8fr 64px;
-  padding:15px;
+  padding:15px 0;
   margin-bottom:14px;
   background:#fff;
 }
