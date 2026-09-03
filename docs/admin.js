@@ -17,7 +17,7 @@
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
   var discountPolicies = [
-    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, scope: "lifetime", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
+    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "lifetime", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
   ];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
 
@@ -58,6 +58,22 @@
     if (!fieldset) return;
     fieldset.innerHTML = '<legend>예약 판매 가능 기간</legend><div class="booking-date-grid"><label><span>판매 시작일</span><input id="detail-booking-start-date" type="date"></label><label><span>판매 종료일</span><input id="detail-booking-end-date" type="date"></label></div><small class="field-help">설정한 날짜 사이에만 예약을 판매합니다. 판매 기간 안에서도 사용자는 오늘부터 최대 14일 뒤 이용일까지만 선택할 수 있습니다.</small>';
   }
+  function prepareDiscountFormFields() {
+    var form = document.querySelector(".discount-form-grid");
+    if (!form) return;
+    form.innerHTML = '<label><span>할인명</span><input id="discount-name" placeholder="예: 어린이 무료 할인"></label>' +
+      '<label><span>할인 방식</span><select id="discount-type"><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
+      '<label><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
+      '<label><span>1매당 최대 할인 금액</span><span class="discount-input-suffix"><input id="discount-max-amount" type="number" min="0" step="100" value="0"><em>원</em></span><small class="field-help">정률 할인에만 적용됩니다. 0원은 상한 없음입니다.</small></label>' +
+      '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>할인 수량을 어느 범위에서 합산할지 설정합니다.</small></div>' +
+      '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
+      '<label><span>수량 한도 적용 기준</span><select id="discount-scope"><option value="order">주문마다</option><option value="day">계정당 이용일마다</option><option value="lifetime">계정당 전체 기간</option><option value="unlimited">수량 제한 없음</option></select></label>' +
+      '<label><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
+      '<label><span>할인 적용 종료일</span><input id="discount-end-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 종료일 제한이 없습니다.</small></label>' +
+      '<label><span>증빙 방식</span><select id="discount-proof"><option value="none">증빙 없음</option><option value="onsite">현장 증빙</option></select></label>' +
+      '<fieldset class="field-wide"><legend>적용 프로그램</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
+      '<label class="policy-toggle field-wide"><input id="discount-active" type="checkbox" checked><span><strong>할인 활성화</strong><small>활성화한 할인만 신규 예약에 적용됩니다. 기존 예약의 할인 금액은 변경되지 않습니다.</small></span></label>';
+  }
   function money(value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; }
   function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, function (char) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]; }); }
   function notify(message) {
@@ -78,7 +94,8 @@
       }
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
       discountPolicies = discountPolicies.map(function (discount) {
-        return discount.id === "gwacheon" ? Object.assign({}, discount, { name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, scope: "lifetime", proof: "onsite" }) : discount;
+        var normalized = Object.assign({ maxAmount: 0, maxQty: 0, scope: "unlimited", proof: "none", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
+        return discount.id === "gwacheon" ? Object.assign(normalized, { name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "lifetime", proof: "onsite", stackable: false }) : normalized;
       });
       if (state.catalog && typeof state.catalog === "object") {
         catalogState.programOverrides = state.catalog.programOverrides || {};
@@ -416,7 +433,30 @@
   }
 
   function discountScopeText(scope) {
-    return scope === "day" ? "이용일 하루" : scope === "order" ? "주문당" : scope === "unlimited" ? "제한 없음" : "계정 평생";
+    return scope === "day" ? "계정당 이용일마다" : scope === "order" ? "주문마다" : scope === "unlimited" ? "수량 제한 없음" : "계정당 전체 기간";
+  }
+
+  function updateDiscountConstraintFields() {
+    var isFixedPolicy = byId("discount-id").value === "gwacheon";
+    var isPercent = byId("discount-type").value === "percent";
+    var isUnlimited = byId("discount-scope").value === "unlimited";
+    byId("discount-value-label").textContent = isPercent ? "할인율" : "할인 금액";
+    byId("discount-value-unit").textContent = isPercent ? "%" : "원";
+    byId("discount-value").max = isPercent ? "100" : "";
+    byId("discount-max-amount").disabled = isFixedPolicy || !isPercent;
+    byId("discount-max-qty").disabled = isFixedPolicy || isUnlimited;
+    if (!isPercent) {
+      if (Number(byId("discount-max-amount").value) > 0) byId("discount-max-amount").dataset.lastValue = byId("discount-max-amount").value;
+      byId("discount-max-amount").value = 0;
+    } else if (Number(byId("discount-max-amount").value) < 1 && byId("discount-max-amount").dataset.lastValue) {
+      byId("discount-max-amount").value = byId("discount-max-amount").dataset.lastValue;
+    }
+    if (isUnlimited) {
+      if (Number(byId("discount-max-qty").value) > 0) byId("discount-max-qty").dataset.lastValue = byId("discount-max-qty").value;
+      byId("discount-max-qty").value = 0;
+    } else if (Number(byId("discount-max-qty").value) < 1) {
+      byId("discount-max-qty").value = byId("discount-max-qty").dataset.lastValue || 1;
+    }
   }
 
   function renderDiscountProgramOptions(selectedPrograms) {
@@ -433,14 +473,25 @@
   function editDiscountPolicy(discount) {
     var isFixed = !!discount && discount.id === "gwacheon";
     byId("discount-id").value = discount ? discount.id : "";
+    delete byId("discount-max-amount").dataset.lastValue;
+    delete byId("discount-max-qty").dataset.lastValue;
     byId("discount-name").value = discount ? discount.name : "";
     byId("discount-type").value = discount ? discount.type : "percent";
     byId("discount-value").value = discount ? discount.value : 10;
+    byId("discount-max-amount").value = discount ? discount.maxAmount || 0 : 0;
+    byId("discount-max-qty").value = discount ? discount.maxQty || 0 : 1;
+    byId("discount-scope").value = discount ? discount.scope || "unlimited" : "order";
+    byId("discount-start-date").value = discount ? discount.startDate || "" : "";
+    byId("discount-end-date").value = discount ? discount.endDate || "" : "";
+    byId("discount-proof").value = discount ? discount.proof || "none" : "none";
     byId("discount-name").disabled = isFixed;
     byId("discount-type").disabled = isFixed;
     byId("discount-value").disabled = isFixed;
+    byId("discount-scope").disabled = isFixed;
+    byId("discount-proof").disabled = isFixed;
     byId("discount-all-programs").checked = discount ? discount.allPrograms : false;
     byId("discount-active").checked = discount ? discount.active : true;
+    updateDiscountConstraintFields();
     renderDiscountProgramOptions(discount ? discount.programs || [] : []);
   }
 
@@ -449,8 +500,10 @@
     discountPolicies.forEach(function (discount) {
       var button = document.createElement("button"); button.type = "button";
       var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
+      if (discount.type === "percent" && discount.maxAmount > 0) valueText += " · 1매당 최대 " + money(discount.maxAmount);
       button.className = byId("discount-id").value === discount.id ? "is-selected" : "";
-      button.innerHTML = '<span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + discountScopeText(discount.scope) + '</small></span><em class="' + (discount.active ? "" : "is-off") + '">' + (discount.active ? "사용중" : "중지") + '</em>';
+      var quantityText = discount.scope === "unlimited" ? discountScopeText(discount.scope) : discountScopeText(discount.scope) + " " + discount.maxQty + "매";
+      button.innerHTML = '<span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + quantityText + '</small></span><em class="' + (discount.active ? "" : "is-off") + '">' + (discount.active ? "활성" : "비활성") + '</em>';
       button.addEventListener("click", function () { editDiscountPolicy(discount); renderDiscountPolicies(); });
       list.append(button);
     });
@@ -464,16 +517,27 @@
   function saveDiscountPolicy() {
     var name = byId("discount-name").value.trim();
     if (!name) { notify("할인명을 입력해주세요."); return; }
+    var id = byId("discount-id").value || "discount-" + Date.now();
+    var isFixed = id === "gwacheon";
+    var type = isFixed ? "percent" : byId("discount-type").value;
+    var value = isFixed ? 50 : Number(byId("discount-value").value);
+    var maxAmount = isFixed || type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
+    var scope = isFixed ? "lifetime" : byId("discount-scope").value;
+    var maxQty = isFixed ? 2 : scope === "unlimited" ? 0 : Number(byId("discount-max-qty").value);
+    var startDate = byId("discount-start-date").value;
+    var endDate = byId("discount-end-date").value;
+    if (!Number.isFinite(value) || value <= 0 || (type === "percent" && value > 100)) { notify(type === "percent" ? "할인율은 1~100%로 입력해주세요." : "할인 금액은 1원 이상 입력해주세요."); return; }
+    if (maxAmount < 0) { notify("최대 할인 금액은 0원 이상으로 입력해주세요."); return; }
+    if (scope !== "unlimited" && (!Number.isInteger(maxQty) || maxQty < 1)) { notify("최대 적용 수량은 1매 이상으로 입력해주세요."); return; }
+    if (startDate && endDate && startDate > endDate) { notify("적용 종료일은 시작일보다 빠를 수 없습니다."); return; }
     var allPrograms = byId("discount-all-programs").checked;
     var selectedPrograms = Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; });
     if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
-    var id = byId("discount-id").value || "discount-" + Date.now();
-    var isFixed = id === "gwacheon";
+    var existing = discountPolicies.find(function (discount) { return discount.id === id; });
     var saved = {
-      id: id, name: isFixed ? "과천시민 할인" : name, type: isFixed ? "percent" : byId("discount-type").value,
-      value: isFixed ? 50 : Number(byId("discount-value").value) || 0, maxQty: isFixed ? 2 : 0,
-      scope: isFixed ? "lifetime" : "unlimited", proof: isFixed ? "onsite" : "none",
-      startDate: "", endDate: "", stackable: false, restoreOnCancel: true,
+      id: id, name: isFixed ? "과천시민 할인" : name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty,
+      scope: scope, proof: isFixed ? "onsite" : byId("discount-proof").value,
+      startDate: startDate, endDate: endDate, stackable: false, restoreOnCancel: existing ? existing.restoreOnCancel : true,
       allPrograms: allPrograms, programs: selectedPrograms, active: byId("discount-active").checked
     };
     var index = discountPolicies.findIndex(function (discount) { return discount.id === id; });
@@ -541,6 +605,7 @@
   }
 
   prepareBookingSaleDateFields();
+  prepareDiscountFormFields();
   loadSavedDemoState();
   refreshDepartmentSelect("reservation-department", "", "");
   refreshDepartmentSelect("kiosk-department-filter", "", "");
@@ -563,6 +628,8 @@
   byId("detail-location").addEventListener("change", function () { var location = byId("detail-location").value; refreshDepartmentSelect("detail-department", location, organization[location][0]); });
   byId("discount-settings").addEventListener("click", function () { openDiscountManager(); });
   byId("add-discount-policy").addEventListener("click", function () { editDiscountPolicy(null); renderDiscountPolicies(); });
+  byId("discount-type").addEventListener("change", updateDiscountConstraintFields);
+  byId("discount-scope").addEventListener("change", updateDiscountConstraintFields);
   byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
   byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
   byId("open-discounts-from-product").addEventListener("click", function () { openDiscountManager(); notify("할인을 저장한 뒤 프로그램 수정 화면에서 적용할 수 있습니다."); });
