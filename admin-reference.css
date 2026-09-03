@@ -201,8 +201,8 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .policy-overview strong {margin-top:8px;font-size:15px;color:#1d242c}
 .policy-overview em {margin-top:7px;font-size:9px;color:#5e6974;font-style:normal;line-height:1.45}
 .policy-overview button:first-child {border-color:#9ec0ff;background:#f5f9ff}
-.kiosk-product-manager {margin-bottom:18px;overflow:hidden}
-.kiosk-toolbar {display:flex;align-items:end;gap:10px;padding:14px 16px;border-bottom:1px solid #e7e9ec;background:#fafbfc}
+.kiosk-product-manager {overflow:hidden}
+.kiosk-toolbar {display:flex;align-items:end;gap:10px;padding:0;margin-bottom:14px}
 .kiosk-toolbar>label:not(.kiosk-search) {height:38px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600}
 .kiosk-toolbar input[type="checkbox"] {accent-color:#1769ff}
 .kiosk-toolbar select,.kiosk-toolbar input[type="search"] {height:38px;border:1px solid #dfe3e7;border-radius:7px;background:#fff;padding:0 10px;font-size:10px}
@@ -216,15 +216,14 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .kiosk-product-table td {height:54px;padding:8px 10px}
 .kiosk-product-table select,.product-name-input {width:100%;height:32px;border:1px solid transparent;border-radius:6px;background:transparent;padding:0 7px;font-size:10px}
 .kiosk-product-table tr:hover select,.kiosk-product-table tr:hover .product-name-input {border-color:#dfe3e7;background:#fff}
-.row-state,.row-save,.row-detail {min-width:48px;height:31px;border:1px solid #dce1e5;border-radius:6px;background:#fff;font-size:9px;font-weight:700}
+.row-actions {display:flex;gap:6px}
+.row-state,.row-save,.row-detail,.row-sessions {min-width:48px;height:31px;padding:0 10px;border:1px solid #dce1e5;border-radius:6px;background:#fff;font-size:9px;font-weight:700;white-space:nowrap}
+.row-sessions:hover {border-color:#1769ff;color:#1769ff}
 .row-state {border-color:#a9c8ff;background:#eef5ff;color:#1769ff}
 .row-state.is-off {border-color:#e1e3e6;background:#f4f5f6;color:#777c82}
 .row-save:hover,.row-detail:hover {border-color:#1769ff;color:#1769ff}
 .kiosk-dialog {width:min(760px,calc(100vw - 32px));padding:0;border:1px solid #dfe3e7;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
 .kiosk-dialog::backdrop {background:rgba(24,28,33,.42)}
-.product-detail-dialog {max-height:calc(100vh - 32px)}
-.product-detail-dialog>form {display:flex;max-height:calc(100vh - 34px);flex-direction:column}
-.product-detail-dialog .product-edit-grid {overflow-y:auto}
 .kiosk-dialog header {display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e7e9ec}
 .kiosk-dialog header small {font-size:9px;color:#1769ff;font-weight:800;letter-spacing:.08em}
 .kiosk-dialog header h2 {margin:5px 0 0;font-size:18px}
@@ -362,7 +361,7 @@ td small {font-size:11px}
 .kiosk-toolbar select,.kiosk-search input,.kiosk-toolbar>button {font-size:12px}
 .kiosk-search span {font-size:11px}
 .kiosk-product-table td small {font-size:11px}
-.kiosk-product-table .row-state,.kiosk-product-table .row-detail {font-size:11px}
+.kiosk-product-table .row-state,.kiosk-product-table .row-detail,.kiosk-product-table .row-sessions {font-size:11px}
 .kiosk-dialog>form>header small {font-size:11px}
 .kiosk-dialog>form>header h2 {font-size:22px}
 .product-edit-grid>label>span,.product-edit-grid legend {font-size:11px}
