@@ -351,25 +351,37 @@
 
   function renderSessionList() {
     var list = byId("session-list"); if (!list || !sessionProgramKey) return;
+    var editor = byId("session-editor");
+    if (editor.parentElement === list) list.after(editor);
     var sessions = sessionsForProgram(sessionProgramKey); list.replaceChildren();
     if (!sessions.length) { list.innerHTML = '<div class="session-empty"><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 시작·종료 시간과 온라인 판매 수량을 추가하세요.</small></div>'; return; }
     sessions.forEach(function (session, index) {
       var row = document.createElement("article");
       row.className = "session-row";
-      row.innerHTML = '<span class="session-number">' + (index + 1) + '</span><div><strong>' + (index + 1) + '회차 (' + escapeHtml(session.start) + '~' + escapeHtml(session.end) + ')</strong><small>온라인 판매 수량 ' + session.capacity + '명</small></div><em class="' + (session.active ? '' : 'is-off') + '">' + (session.active ? '판매중' : '숨김') + '</em><button type="button">수정</button>';
-      row.querySelector("button").addEventListener("click", function () { editSession(session); });
+      row.innerHTML = '<span class="session-number">' + (index + 1) + '</span><div><strong>' + (index + 1) + '회차 (' + escapeHtml(session.start) + '~' + escapeHtml(session.end) + ')</strong><small>온라인 판매 수량 ' + session.capacity + '명</small></div><button class="session-state ' + (session.active ? '' : 'is-off') + '" type="button" aria-pressed="' + session.active + '" aria-label="' + (index + 1) + '회차 판매 상태 변경">' + (session.active ? '판매중' : '숨김') + '</button><button class="session-edit" type="button">수정</button>';
+      row.querySelector(".session-state").addEventListener("click", function () {
+        var saved = Object.assign({}, session, { active: !session.active });
+        if (activeSessionKey === session.key) byId("session-active").checked = saved.active;
+        persistSession(saved);
+        notify(saved.active ? (index + 1) + "회차 판매를 시작했습니다." : (index + 1) + "회차를 숨겼습니다.");
+      });
+      row.querySelector(".session-edit").addEventListener("click", function () { editSession(session, row); });
       list.append(row);
+      if (activeSessionKey === session.key && !editor.hidden) row.after(editor);
     });
   }
 
-  function editSession(session) {
+  function editSession(session, row) {
     activeSessionKey = session ? session.key : null;
-    byId("session-editor-title").textContent = session ? "회차 수정" : "새 회차 등록";
+    var sessionIndex = session ? sessionsForProgram(sessionProgramKey).findIndex(function (item) { return item.key === session.key; }) + 1 : 0;
+    byId("session-editor-title").textContent = session ? sessionIndex + "회차 수정" : "새 회차 등록";
     byId("session-start").value = session ? session.start : "10:00";
     byId("session-end").value = session ? session.end : "10:20";
     byId("session-capacity").value = session ? session.capacity : 8;
     byId("session-active").checked = session ? session.active : true;
-    byId("session-editor").hidden = false;
+    var editor = byId("session-editor");
+    editor.hidden = false;
+    if (row) row.after(editor); else byId("session-list").after(editor);
     byId("session-start").focus();
   }
 
