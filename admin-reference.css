@@ -124,8 +124,7 @@
 }
 .filter-panel>button {height:42px;background:#f6f7f8}
 .search-field input {background:#fff}
-.reservation-panel>header {background:#fff}
-.reservation-panel>header p {display:none}
+.reservation-list-head p {display:none}
 .legend {color:#90959b}
 .table-scroll {background:#fff}
 th {
