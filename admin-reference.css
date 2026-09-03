@@ -431,7 +431,8 @@ td small {font-size:11px}
 .admin-view[data-view="program-edit"] .admin-panel {overflow:visible;border:0;border-radius:0;background:transparent}
 .admin-view[data-view="program-edit"] .product-edit-grid {width:min(1200px,100%);margin:0;padding:4px 0 36px;gap:20px 24px}
 .admin-view[data-view="program-edit"] .product-edit-grid>fieldset {padding:22px!important;border:0!important;border-radius:10px;background:#f7f9fb}
-.admin-view[data-view="program-edit"] .product-edit-grid>fieldset>legend {margin:0 0 15px;padding:0;color:#28323b;font-size:14px;font-weight:800}
+.admin-view[data-view="program-edit"] .product-edit-grid>fieldset>legend {float:left;width:100%;margin:0 0 16px;padding:0;color:#28323b;font-size:14px;font-weight:800}
+.admin-view[data-view="program-edit"] .product-edit-grid>fieldset>legend+* {clear:both}
 .admin-view[data-view="program-edit"] .sales-period-grid,
 .admin-view[data-view="program-edit"] .availability-grid,
 .admin-view[data-view="program-edit"] .booking-rule-grid {grid-template-columns:repeat(2,minmax(260px,400px));justify-content:start;gap:16px 20px}
