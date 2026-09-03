@@ -355,3 +355,65 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 @media(max-width:820px){.kiosk-toolbar{flex-wrap:wrap}.kiosk-toolbar select{margin-left:0}.kiosk-search{margin-left:0}.kiosk-search input{width:180px}}
 @media(max-width:720px){.discount-manager{grid-template-columns:1fr}.discount-manager>aside{border-right:0;border-bottom:1px solid #e4e7ea}.discount-form-grid{grid-template-columns:1fr}.discount-form-grid .field-wide{grid-column:auto}}
 @media(max-width:560px){.policy-overview,.policy-edit-grid{grid-template-columns:1fr}.policy-edit-grid>section:last-child{grid-column:auto}.kiosk-toolbar>*{width:100%!important}.kiosk-toolbar>label:not(.kiosk-search){width:auto!important}.kiosk-toolbar select,.kiosk-search input{width:100%}.category-sort-list,.product-edit-grid{grid-template-columns:1fr}.product-edit-grid .field-wide{grid-column:auto}.detail-discount-options{grid-template-columns:1fr}.kiosk-dialog footer{flex-wrap:wrap}}
+
+/* Readable admin type scale */
+.admin-brand strong {font-size:16px}
+.admin-scope button {font-size:14px}
+.admin-menu:before {font-size:11px}
+.admin-menu button span {font-size:14px}
+.admin-sidebar__footer>a {font-size:13px}
+.admin-user strong {font-size:13px}
+.admin-user small {font-size:11px}
+.topbar-path {font-size:13px}
+.system-state,.topbar-actions>a {font-size:12px}
+.page-head h1 {font-size:27px}
+.page-head p {font-size:14px}
+.admin-button {font-size:13px}
+.admin-panel h2 {font-size:18px}
+.admin-panel header p {font-size:12px}
+[data-view="reservations"] .page-head:after {font-size:12px}
+[data-view="reservations"]:before {font-size:13px}
+[data-view="reservations"] .filter-panel:before {font-size:14px}
+.filter-panel label>span {font-size:11px}
+.filter-panel input,.filter-panel select {font-size:13px}
+.filter-panel>button {font-size:12px}
+th {font-size:12px}
+td {font-size:13px}
+td strong {font-size:13px}
+td small {font-size:11px}
+.table-status,.legend,.table-pagination>span,.table-pagination button {font-size:11px}
+.settlement-metrics small {font-size:12px}
+.settlement-metrics strong {font-size:22px}
+.settlement-metrics p {font-size:11px}
+.organization-tree button {font-size:12px}
+.organization-tree button small {font-size:10px}
+.role-members strong {font-size:12px}
+.role-members small,.role-members article>b {font-size:10px}
+.role-panel>h3 {font-size:14px}
+.permission-note {font-size:11px}
+.kiosk-toolbar select,.kiosk-search input,.kiosk-toolbar>button {font-size:12px}
+.kiosk-search span {font-size:11px}
+.kiosk-product-table td small {font-size:11px}
+.kiosk-product-table .row-state,.kiosk-product-table .row-detail {font-size:11px}
+.kiosk-dialog>form>header small {font-size:11px}
+.kiosk-dialog>form>header h2 {font-size:22px}
+.product-edit-grid>label>span,.product-edit-grid legend {font-size:11px}
+.product-edit-grid input,.product-edit-grid select,.product-edit-grid textarea {font-size:13px}
+.detail-days span {font-size:11px}
+.detail-options strong,.detail-discount-options strong {font-size:12px}
+.detail-options small,.detail-discount-options small {font-size:11px}
+.detail-options>button {font-size:11px}
+.owner-rule,.dialog-note {font-size:11px}
+.discount-manager>aside>div:first-child strong {font-size:14px}
+.discount-manager>aside>div:first-child button {font-size:11px}
+.discount-policy-list span strong {font-size:12px}
+.discount-policy-list span small {font-size:11px}
+.discount-policy-list em {font-size:10px}
+.discount-form-grid>label>span,.discount-form-grid legend {font-size:11px}
+.discount-form-grid input,.discount-form-grid select {font-size:13px}
+.discount-form-grid .policy-toggle strong {font-size:12px}
+.discount-form-grid .policy-toggle small,.discount-program-options label {font-size:11px}
+.reservation-drawer>header small {font-size:11px}
+.reservation-drawer>header h2 {font-size:17px}
+.drawer-section h3 {font-size:14px}
+.drawer-section>p,.payment-detail,.history-list {font-size:12px}
