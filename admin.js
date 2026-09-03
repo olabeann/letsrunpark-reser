@@ -409,7 +409,6 @@
     byId("discount-name").disabled = isFixed;
     byId("discount-type").disabled = isFixed;
     byId("discount-value").disabled = isFixed;
-    byId("fixed-discount-note").hidden = !isFixed;
     byId("discount-all-programs").checked = discount ? discount.allPrograms : false;
     byId("discount-active").checked = discount ? discount.active : true;
     renderDiscountProgramOptions(discount ? discount.programs || [] : []);
