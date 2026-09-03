@@ -69,6 +69,9 @@
         });
       }
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
+      discountPolicies = discountPolicies.map(function (discount) {
+        return discount.id === "gwacheon" ? Object.assign({}, discount, { name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, scope: "lifetime", proof: "onsite" }) : discount;
+      });
       if (state.products && typeof state.products === "object") {
         productState.overrides = state.products.overrides || {};
         productState.added = Array.isArray(state.products.added) ? state.products.added : [];
@@ -219,7 +222,6 @@
     byId("detail-price").value = item.price;
     byId("detail-capacity").value = item.capacity;
     byId("detail-onsite-capacity").value = item.onsiteCapacity == null ? item.capacity : item.onsiteCapacity;
-    byId("detail-cancel-minutes").value = item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes;
     byId("detail-start").value = item.start;
     byId("detail-end").value = item.end;
     renderProductDiscountOptions(item.discountIds || []);
@@ -288,7 +290,7 @@
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
       bookingWindow: (existing && existing.bookingWindow) || defaultBookingWindow,
-      cancelMinutes: Number(byId("detail-cancel-minutes").value) || 0,
+      cancelMinutes: defaultCancelMinutes,
       price: Number(byId("detail-price").value) || 0, image: (existing && existing.image) || "assets/pony/cover.jpg",
       capacity: Number(byId("detail-capacity").value) || 0, onsiteCapacity: Number(byId("detail-onsite-capacity").value) || 0,
       start: byId("detail-start").value, end: byId("detail-end").value, channels: channels,
@@ -313,13 +315,15 @@
   }
 
   function editDiscountPolicy(discount) {
+    var isFixed = !!discount && discount.id === "gwacheon";
     byId("discount-id").value = discount ? discount.id : "";
     byId("discount-name").value = discount ? discount.name : "";
     byId("discount-type").value = discount ? discount.type : "percent";
     byId("discount-value").value = discount ? discount.value : 10;
-    byId("discount-max-qty").value = discount ? discount.maxQty : 1;
-    byId("discount-scope").value = discount ? discount.scope : "order";
-    byId("discount-proof").value = discount ? discount.proof : "none";
+    byId("discount-name").disabled = isFixed;
+    byId("discount-type").disabled = isFixed;
+    byId("discount-value").disabled = isFixed;
+    byId("fixed-discount-note").hidden = !isFixed;
     byId("discount-all-programs").checked = discount ? discount.allPrograms : false;
     byId("discount-active").checked = discount ? discount.active : true;
     renderDiscountProgramOptions(discount ? discount.programs || [] : []);
@@ -349,10 +353,11 @@
     var selectedPrograms = Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; });
     if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
     var id = byId("discount-id").value || "discount-" + Date.now();
+    var isFixed = id === "gwacheon";
     var saved = {
-      id: id, name: name, type: byId("discount-type").value,
-      value: Number(byId("discount-value").value) || 0, maxQty: Number(byId("discount-max-qty").value) || 0,
-      scope: byId("discount-scope").value, proof: byId("discount-proof").value,
+      id: id, name: isFixed ? "과천시민 할인" : name, type: isFixed ? "percent" : byId("discount-type").value,
+      value: isFixed ? 50 : Number(byId("discount-value").value) || 0, maxQty: isFixed ? 2 : 0,
+      scope: isFixed ? "lifetime" : "unlimited", proof: isFixed ? "onsite" : "none",
       startDate: "", endDate: "", stackable: false, restoreOnCancel: true,
       allPrograms: allPrograms, programs: selectedPrograms, active: byId("discount-active").checked
     };
