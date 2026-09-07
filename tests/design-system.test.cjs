@@ -16,5 +16,5 @@ test('storefront uses design-system colors, radii and category tags', () => {
   assert.doesNotMatch(html, /data-booking-product/);
   assert.equal([...html.matchAll(/href="index\.html\?product=(ride|play)"/g)].length, 2);
   assert.match(html, /class="booking-program-head"/);
-  assert.match(html, /styles\.css\?v=20260901-booking14/);
+  assert.match(html, /styles\.css\?v=20260907-devpolicy1/);
 });

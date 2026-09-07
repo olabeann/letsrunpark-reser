@@ -10,7 +10,6 @@
 | 포니 타기 | [상품 보기](https://olabeann.github.io/letsrunpark-reser/?product=ride) |
 | 포니랑 놀기 | [상품 보기](https://olabeann.github.io/letsrunpark-reser/?product=play) |
 | 장바구니 | [장바구니 열기](https://olabeann.github.io/letsrunpark-reser/?view=cart) |
-| 포니 체험 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/pony.html) |
 | 렛츠런파크 투어 소개 | [소개 페이지 열기](https://olabeann.github.io/letsrunpark-reser/tour.html) |
 | 운영 관리자 | [관리자 화면 열기](https://olabeann.github.io/letsrunpark-reser/admin.html) |
 | 위이 내부 계정 관리 | [계정 발급 화면 열기](https://olabeann.github.io/letsrunpark-reser/account-admin.html) |

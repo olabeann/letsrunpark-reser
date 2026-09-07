@@ -7,7 +7,6 @@
 ## 전달 파일
 
 - `index.html`: 포니 타기·포니랑 놀기 상품 목록, 상품 옵션, 장바구니, 주문·결제 화면
-- `pony.html`: 서울 포니 승마체험 상세
 - `tour.html`: 서울 렛츠런파크 투어 상세
 - `tokens.css`: 기존 LETSRUN PLAY 디자인 시스템 원본 토큰
 - `components.css`: 디자인 시스템의 Button, Chip, Badge, Card 컴포넌트

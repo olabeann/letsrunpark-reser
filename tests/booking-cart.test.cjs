@@ -79,14 +79,31 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(error([item({ qty: 2, discount: true })]), '');
 });
 
-test('enforces the confirmed cross-program cart and lifetime citizen-discount limits', () => {
+test('enforces the confirmed cross-program cart and per-usage-date citizen discount limits', () => {
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
   assert.match(error([item({ qty: 3 }), play]), /최대 4매/);
   assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
   const discountedRide = item({ qty: 1, discount: true });
   const discountedPlay = { ...play, qty: 1, discount: true };
   assert.equal(error([discountedRide, discountedPlay]), '');
-  assert.match(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), /최대 2매/);
+  assert.match(error([discountedRide], [item({ id: 'used-discount', qty: 2, discount: true })]), /최대 2매/);
+  assert.equal(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), '');
+});
+
+test('resets the 4-ticket purchase cap and 2-ticket discount cap per usage date, not per order', () => {
+  const usedOnSameDate = [
+    item({ id: 'used-1', qty: 2 }),
+    item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 }),
+  ];
+  assert.match(error([item({ qty: 1 })], usedOnSameDate), /최대 4매/);
+  assert.equal(error([item({ dateKey: '2026-08-30', qty: 4 })], usedOnSameDate), '');
+  const usedDiscountSameDate = [item({ id: 'used-discount', qty: 2, discount: true })];
+  assert.match(error([item({ qty: 1, discount: true })], usedDiscountSameDate), /최대 2매/);
+  assert.equal(error([item({ dateKey: '2026-08-30', qty: 2, discount: true })], usedDiscountSameDate), '');
+});
+
+test('blocks a cart that mixes more than one usage date', () => {
+  assert.match(error([item(), item({ id: 'other-date', dateKey: '2026-08-30' })]), /하나의 이용일만/);
 });
 
 test('keeps ride and play as independent sellable programs in one cart', () => {

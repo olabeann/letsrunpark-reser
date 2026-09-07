@@ -91,12 +91,11 @@
       tagClass: "tag--exp",
       image: "assets/pony/cover.jpg",
       character: "assets/characters/pony-rider.png",
-      detail: "pony.html",
       subtitle: "작은 포니와 함께하는 어린이 승마 체험",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       slots: ponySlots
     },
     play: {
@@ -108,12 +107,12 @@
       tagClass: "tag--exp",
       image: "assets/pony/gallery-02.jpg",
       character: "assets/characters/cowboy-child.png",
-      detail: "pony.html",
       subtitle: "빗질하고 꾸며주며 함께 산책하는 교감 체험",
+      noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.",
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       slots: ponySlots
     },
     pony: {
@@ -122,7 +121,7 @@
       price: 5000,
       image: "assets/pony/cover.jpg",
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, lifetimeMaxQty: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       experiences: {
         ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg" },
         play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg" }
@@ -678,10 +677,6 @@
     byId("booking-page-title").textContent = program.name + " 예약";
     byId("booking-page-description").textContent = program.subtitle;
     byId("booking-program-character").src = program.character;
-    byId("booking-animal-note").hidden = program.key !== "play";
-    var experienceLink = byId("back-to-experience");
-    experienceLink.innerHTML = '<span aria-hidden="true">←</span> 포니 체험 소개 보기';
-    if (typeof experienceLink.setAttribute === "function") experienceLink.setAttribute("href", program.detail || "pony.html");
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;
     byId("product-unit-price").textContent = money(program.price);
@@ -804,8 +799,51 @@
     }
   }
 
+  function syncProgramExtras() {
+    var picker = byId("program-picker");
+    if (picker) {
+      picker.querySelectorAll("[data-program-key]").forEach(function (button) {
+        var selected = button.getAttribute("data-program-key") === state.programKey;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      });
+    }
+    var notice = program.noticeText || "";
+    try {
+      var adminState = JSON.parse(window.localStorage.getItem("letsrunPlayAdminDemoV3") || "null");
+      var catalog = adminState && adminState.catalog;
+      var override = catalog && catalog.programOverrides && catalog.programOverrides[program.key];
+      var added = catalog && (catalog.addedPrograms || []).find(function (item) { return item.key === program.key; });
+      var source = override || added;
+      if (source && typeof source.noticeText === "string") notice = source.noticeText;
+    } catch (error) { /* keep the built-in notice if admin storage is unavailable */ }
+    var noticeEl = byId("product-notice");
+    if (noticeEl) { noticeEl.textContent = notice; noticeEl.hidden = !notice; }
+  }
+
   document.querySelectorAll("[data-shop-home]").forEach(function (button) {
     button.addEventListener("click", function () { goToStep(1); });
+  });
+  function openDeveloperPolicy() {
+    var dialog = byId("developer-policy-dialog");
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+  var developerPolicyButton = byId("open-developer-policy");
+  if (developerPolicyButton) developerPolicyButton.addEventListener("click", openDeveloperPolicy);
+  document.addEventListener("keydown", function (event) {
+    if (event.altKey && !event.metaKey && !event.ctrlKey && event.key.toLowerCase() === "p") {
+      event.preventDefault();
+      openDeveloperPolicy();
+    }
+  });
+  byId("program-picker").querySelectorAll("[data-program-key]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var key = button.getAttribute("data-program-key");
+      if (key === state.programKey) return;
+      selectProgram(key);
+      goToStep(1);
+      syncProgramExtras();
+    });
   });
   byId("calendar-prev").addEventListener("click", function () {
     calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
@@ -830,7 +868,7 @@
   byId("view-my-tickets").addEventListener("click", function () {
     showMyTickets();
   });
-  byId("new-booking").addEventListener("click", function () { selectProgram(program.key); goToStep(1); });
+  byId("new-booking").addEventListener("click", function () { selectProgram(program.key); goToStep(1); syncProgramExtras(); });
   byId("back-from-tickets").addEventListener("click", function () { goToStep(1); });
   byId("back-to-ticket-list").addEventListener("click", function () {
     byId("ticket-detail-view").hidden = true;
@@ -861,9 +899,11 @@
     if (!byId("my-tickets-screen").hidden && !byId("my-tickets-list-view").hidden) renderTicketList();
   });
   selectProgram(initialProgramKey);
+  syncProgramExtras();
   renderCart();
   restoreShopRoute();
-  window.addEventListener("popstate", restoreShopRoute);
+  syncProgramExtras();
+  window.addEventListener("popstate", function () { restoreShopRoute(); syncProgramExtras(); });
   setInterval(function () { updateTicketAccess(); updateTicketListStatuses(); }, 1000);
   setInterval(function () { renderSlots(); update(); renderCart(); }, 30000);
 })();

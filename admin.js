@@ -17,7 +17,7 @@
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
   var discountPolicies = [
-    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "lifetime", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
+    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
   ];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
 
@@ -49,7 +49,7 @@
 
   var programs = {
     ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
-    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true }
+    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
   };
 
   function byId(id) { return document.getElementById(id); }
@@ -95,7 +95,7 @@
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
       discountPolicies = discountPolicies.map(function (discount) {
         var normalized = Object.assign({ maxAmount: 0, maxQty: 0, scope: "unlimited", proof: "none", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
-        return discount.id === "gwacheon" ? Object.assign(normalized, { name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "lifetime", proof: "onsite", stackable: false }) : normalized;
+        return discount.id === "gwacheon" ? Object.assign(normalized, { name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "day", proof: "onsite", stackable: false }) : normalized;
       });
       if (state.catalog && typeof state.catalog === "object") {
         catalogState.programOverrides = state.catalog.programOverrides || {};
@@ -262,6 +262,7 @@
     byId("detail-program-type").value = item.programType || "기타";
     byId("detail-program").value = item.programName || "";
     byId("detail-price").value = item.price || 0;
+    byId("detail-notice").value = item.noticeText || "";
     byId("detail-sale-start").value = item.saleStartDate || "";
     byId("detail-sale-end").value = item.saleEndDate || "";
     byId("detail-visible-start").value = item.visibleStartAt || (item.saleStartDate ? item.saleStartDate + "T00:00" : "");
@@ -358,6 +359,7 @@
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: Number(byId("detail-price").value) || 0, image: (existing && existing.image) || "assets/pony/cover.jpg",
+      noticeText: byId("detail-notice").value.trim(),
       discountIds: discountIds, active: existing ? existing.active : true
     });
     program.programKey = program.key;
@@ -522,7 +524,7 @@
     var type = isFixed ? "percent" : byId("discount-type").value;
     var value = isFixed ? 50 : Number(byId("discount-value").value);
     var maxAmount = isFixed || type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
-    var scope = isFixed ? "lifetime" : byId("discount-scope").value;
+    var scope = isFixed ? "day" : byId("discount-scope").value;
     var maxQty = isFixed ? 2 : scope === "unlimited" ? 0 : Number(byId("discount-max-qty").value);
     var startDate = byId("discount-start-date").value;
     var endDate = byId("discount-end-date").value;
@@ -645,10 +647,14 @@
   byId("apply-settlement").addEventListener("click", function () { notify("선택한 기간의 정산 내역을 조회했습니다."); });
   byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("렛츠런플레이_통합예약목록.csv", rows); });
   byId("download-settlement").addEventListener("click", function () { downloadCsv("렛츠런플레이_부서별정산_2026-09.csv", [["서비스완료월", "지역", "담당부서", "정산태그", "프로그램", "완료건수", "결제액", "환불액", "PG수수료", "지급예정액"], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니 타기", 982, 5210000, -210000, -150000, 4850000], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니랑 놀기", 604, 3210000, -116000, -92820, 3001180]]); });
+  function openDeveloperPolicy() {
+    if (!byId("developer-policy-dialog").open) byId("developer-policy-dialog").showModal();
+  }
+  byId("open-developer-policy").addEventListener("click", openDeveloperPolicy);
   document.addEventListener("keydown", function (event) {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "p") {
+    if (event.altKey && !event.metaKey && !event.ctrlKey && event.key.toLowerCase() === "p") {
       event.preventDefault();
-      if (!byId("developer-policy-dialog").open) byId("developer-policy-dialog").showModal();
+      openDeveloperPolicy();
     }
   });
 
