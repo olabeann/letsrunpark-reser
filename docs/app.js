@@ -26,9 +26,9 @@
 
   function openLoginDialog(intent) {
     loginIntent = intent;
-    loginDialogTitle.textContent = "시연 계정 로그인";
-    loginDialogDescription.textContent = "선택한 계정의 장바구니와 예약 시간을 함께 확인합니다.";
-    loginDialogNote.textContent = "실제 간편 로그인은 연결되지 않습니다. 같은 제공자·회원 번호는 같은 시연 계정입니다.";
+    loginDialogTitle.textContent = "계정 로그인";
+    loginDialogDescription.textContent = "로그인하면 장바구니와 예약 시간을 함께 확인할 수 있습니다.";
+    loginDialogNote.textContent = "로그인 서비스를 선택해주세요.";
     loginDialog.showModal();
   }
 
@@ -43,8 +43,7 @@
     loginDialog.querySelectorAll("[data-login-provider]").forEach(function (button) {
       button.addEventListener("click", function () {
         var provider = button.getAttribute("data-login-provider");
-        var memberNumber = document.getElementById("demo-member").value;
-        var nextMember = { id: "demo:" + provider + ":" + memberNumber, label: provider + " · 회원 " + memberNumber };
+        var nextMember = { id: "demo:" + provider + ":1", label: provider + " 계정" };
         try { window.sessionStorage.setItem("ponylandDemoMember", JSON.stringify(nextMember)); }
         catch (error) { notify("계정을 저장할 수 없습니다. 브라우저 저장 공간을 확인해주세요."); return; }
         currentMember = nextMember;
@@ -419,6 +418,14 @@
     byId("cart-page-error").hidden = !error;
     byId("to-checkout").disabled = !cart.length || !store || !!error;
     byId("complete-payment").disabled = isPaying || !cart.length || !!error;
+    var cartedProgramKeys = cart.map(function (item) { return item.programKey; });
+    var addLinks = document.querySelectorAll("#cart-program-links [data-program-key]");
+    var addProgramsLabel = document.querySelector("#cart-program-links > span");
+    if (addProgramsLabel) addProgramsLabel.textContent = cart.length ? "다른 체험 추가" : "체험 둘러보기";
+    addLinks.forEach(function (link) {
+      link.hidden = cartedProgramKeys.includes(link.getAttribute("data-program-key"));
+    });
+    byId("cart-program-links").hidden = Array.from(addLinks).every(function (link) { return link.hidden; });
   }
 
   function startCheckout() {
@@ -509,7 +516,7 @@
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     return [
       { id: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive },
-      { id: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 1, price: 4000, discount: false },
+      { id: ticketReservationId(upcomingDate, secondSlot) + "-4", programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2 },
       { id: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false }
     ];
   }
@@ -517,7 +524,9 @@
   function ticketListReservations(now) {
     now = now || new Date();
     var reservations = readReservations();
-    var visibleReservations = reservations.slice();
+    var visibleReservations = reservations.filter(function (reservation) {
+      return ticketTiming(reservation, now).accessState !== "upcoming";
+    });
     var includedStates = {};
     visibleReservations.forEach(function (reservation) {
       includedStates[ticketTiming(reservation, now).accessState] = true;
@@ -584,7 +593,8 @@
       body.append(status);
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-      var metaText = reservation.qty + "명 · " + money(reservation.price) + (reservation.discount ? " · 과천시민 할인" : "");
+      var discountedQty = Number.isInteger(reservation.discountQty) ? reservation.discountQty : reservation.discount ? reservation.qty : 0;
+      var metaText = reservation.qty + "명 · " + money(reservation.price) + (discountedQty ? " · 과천시민 할인 " + discountedQty + "명" : "");
       var meta = createTextElement("span", "ticket-list-card__meta", metaText);
       body.append(meta);
       card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
@@ -673,9 +683,9 @@
     }
     byId("citizen-discount").checked = state.discount;
     byId("date-picker").open = false;
-    byId("booking-program-tag").textContent = program.tag;
-    byId("booking-page-title").textContent = program.name + " 예약";
-    byId("booking-page-description").textContent = program.subtitle;
+    byId("booking-program-tag").textContent = "렛츠런파크 체험";
+    byId("booking-page-title").textContent = "렛츠런파크 체험 예약";
+    byId("booking-page-description").textContent = "원하는 체험과 이용 일정을 선택해 예약해보세요.";
     byId("booking-program-character").src = program.character;
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;
@@ -771,7 +781,7 @@
       label.classList.toggle("is-done", labelStep < progress);
       label.querySelector("i").textContent = labelStep < progress ? "✓" : labelStep;
     });
-    document.title = (step === 1 ? program.name + " 예약" : step === 4 ? "장바구니" : step === 2 ? "예약 내용 확인" : "예약 완료") + " | 포니랜드";
+    document.title = (step === 1 ? "체험 예약" : step === 4 ? "장바구니" : step === 2 ? "예약 내용 확인" : "예약 완료") + " | 렛츠런파크";
     if (options.history !== false) {
       var url = new URL(window.location.href);
       url.searchParams.delete("program"); url.searchParams.delete("product"); url.searchParams.delete("view");

@@ -3,13 +3,17 @@
 
   var reservationStoreKey = "ponylandBookingStoreV2";
   var adminStateKey = "letsrunPlayAdminDemoV3";
+  var adminSessionKey = "letsrunPlayAdminSessionV1";
   var toastTimer;
   var activeReservation = null;
   var deletedReservationIds = [];
   var activeProgramKey = null;
   var activeSessionKey = null;
+  var activeSettlementKey = null;
   var pendingImageDataUrl = null;
   var sessionProgramKey = null;
+  var operationExceptions = [];
+  var operationCalendarMonth = new Date(2026, 8, 1);
   var organization = {
     "서울": ["홍보부", "브랜드총괄부", "발매운영부", "서울고객안전부", "공원화사업추진TF"],
     "부산경남": ["부산경주자원관리부", "부산고객안전부", "부산운영지원부"],
@@ -31,6 +35,11 @@
     { id: "GP-260901-1844", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"] }
   ];
 
+  var settlementDetails = {
+    ride: { program: "포니 타기", scope: "서울 · 공원화사업추진TF", completed: 982, paid: 5210000, refunded: 210000, fee: 150000, payout: 4850000, daily: [["2026.09.05", 324, 1720000, 60000, 1610000], ["2026.09.12", 346, 1830000, 90000, 1686000], ["2026.09.19", 312, 1660000, 60000, 1554000]], transactions: [["2026.09.05", "GP-260902-1042", "PAY-260902-3018", 3, 15000, 0, 450, 14550, "결제 완료"], ["2026.09.06", "GP-260902-1019", "PAY-260902-2998", 1, 2500, 2500, 0, 0, "전체 환불"], ["2026.09.12", "GP-260902-0927", "PAY-260902-2944", 2, 5000, 0, 150, 4850, "결제 완료"], ["2026.09.12", "GP-260912-1420", "PAY-260912-3811", 4, 20000, 5000, 450, 14550, "부분 환불"], ["2026.09.19", "GP-260919-1100", "PAY-260919-4172", 2, 10000, 0, 300, 9700, "결제 완료"]], refunds: [["2026.09.05 · 전체 환불 8건", "고객 요청 외 2개 사유", 60000], ["2026.09.12 · 부분 환불 14건", "인원별 부분취소", 90000], ["2026.09.19 · 전체·부분 환불 9건", "운영 취소 포함", 60000]] },
+    play: { program: "포니랑 놀기", scope: "서울 · 공원화사업추진TF", completed: 604, paid: 3210000, refunded: 116000, fee: 92820, payout: 3001180, daily: [["2026.09.05", 204, 1080000, 36000, 1012000], ["2026.09.12", 216, 1120000, 40000, 1047000], ["2026.09.19", 184, 1010000, 40000, 942180]], transactions: [["2026.09.05", "GP-260902-1036", "PAY-260902-3012", 2, 8000, 4000, 120, 3880, "부분 환불"], ["2026.09.06", "GP-260902-0951", "PAY-260902-2971", 4, 16000, 0, 480, 15520, "결제 완료"], ["2026.09.12", "GP-260912-1020", "PAY-260912-3758", 2, 8000, 0, 240, 7760, "결제 완료"], ["2026.09.12", "GP-260912-1320", "PAY-260912-3884", 3, 12000, 4000, 240, 7760, "부분 환불"], ["2026.09.19", "GP-260919-1500", "PAY-260919-4263", 1, 4000, 4000, 0, 0, "전체 환불"]], refunds: [["2026.09.05 · 부분 환불 6건", "인원별 부분취소", 36000], ["2026.09.12 · 전체 환불 5건", "고객 요청", 40000], ["2026.09.19 · 전체·부분 환불 7건", "운영 취소 포함", 40000]] }
+  };
+
   var sessionData = {
     ride: [
       ["1회차", "10:00", "10:20", 7, 8, "판매중"], ["2회차", "10:20", "10:45", 6, 6, "마감"],
@@ -49,15 +58,28 @@
   };
 
   var programs = {
-    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
-    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
+    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
+    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
   };
 
   function byId(id) { return document.getElementById(id); }
-  function prepareBookingSaleDateFields() {
-    var fieldset = document.querySelector(".booking-sale-setting");
-    if (!fieldset) return;
-    fieldset.innerHTML = '<legend>예약 판매 가능 기간</legend><div class="booking-date-grid"><label><span>판매 시작일</span><input id="detail-booking-start-date" type="date"></label><label><span>판매 종료일</span><input id="detail-booking-end-date" type="date"></label></div><small class="field-help">설정한 날짜 사이에만 예약을 판매합니다. 판매 기간 안에서도 사용자는 오늘부터 최대 14일 뒤 이용일까지만 선택할 수 있습니다.</small>';
+  function setAdminLoginState(isLoggedIn) {
+    document.body.classList.toggle("is-logged-out", !isLoggedIn);
+    byId("admin-login").hidden = isLoggedIn;
+    if (!isLoggedIn) {
+      document.querySelectorAll("dialog[open]").forEach(function (dialog) { dialog.close(); });
+      byId("admin-login-form").reset();
+      byId("admin-login-error").hidden = true;
+      window.setTimeout(function () { byId("admin-login-id").focus(); }, 0);
+    }
+  }
+
+  function saveAdminSession(value) {
+    try { sessionStorage.setItem(adminSessionKey, value); } catch (error) {}
+  }
+
+  function restoreAdminSession() {
+    try { return sessionStorage.getItem(adminSessionKey) !== "signed-out"; } catch (error) { return true; }
   }
   function prepareDiscountFormFields() {
     var form = document.querySelector(".discount-form-grid");
@@ -66,12 +88,10 @@
       '<label><span>할인 방식</span><select id="discount-type"><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
       '<label><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
       '<label><span>1매당 최대 할인 금액</span><span class="discount-input-suffix"><input id="discount-max-amount" type="number" min="0" step="100" value="0"><em>원</em></span><small class="field-help">정률 할인에만 적용됩니다. 0원은 상한 없음입니다.</small></label>' +
-      '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>할인 수량을 어느 범위에서 합산할지 설정합니다.</small></div>' +
+      '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>수량 한도는 계정당 이용일마다 합산하며, 증빙은 현장에서 확인합니다.</small></div>' +
       '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
-      '<label><span>수량 한도 적용 기준</span><select id="discount-scope"><option value="order">주문마다</option><option value="day">계정당 이용일마다</option><option value="lifetime">계정당 전체 기간</option><option value="unlimited">수량 제한 없음</option></select></label>' +
       '<label><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
       '<label><span>할인 적용 종료일</span><input id="discount-end-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 종료일 제한이 없습니다.</small></label>' +
-      '<label><span>증빙 방식</span><select id="discount-proof"><option value="none">증빙 없음</option><option value="onsite">현장 증빙</option></select></label>' +
       '<fieldset class="field-wide"><legend>적용 프로그램</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
       '<label class="policy-toggle field-wide"><input id="discount-active" type="checkbox" checked><span><strong>할인 활성화</strong><small>활성화한 할인만 신규 예약에 적용됩니다. 기존 예약의 할인 금액은 변경되지 않습니다.</small></span></label>';
   }
@@ -105,11 +125,12 @@
         catalogState.addedSessions = Array.isArray(state.catalog.addedSessions) ? state.catalog.addedSessions : [];
       }
       if (Array.isArray(state.deletedReservationIds)) deletedReservationIds = state.deletedReservationIds;
+      if (Array.isArray(state.operationExceptions)) operationExceptions = state.operationExceptions.filter(function (item) { return item.status !== "open"; }).map(function (item) { return Object.assign({ programKey: "all", status: "closed" }, item); });
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), discounts: discountPolicies, catalog: catalogState, deletedReservationIds: deletedReservationIds })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, tickets: item.tickets }; }), discounts: discountPolicies, catalog: catalogState, operationExceptions: operationExceptions, deletedReservationIds: deletedReservationIds })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -119,13 +140,13 @@
       if (!store || !Array.isArray(store.reservations)) return [];
       return store.reservations.filter(function (item) { return item && item.id && item.qty; }).map(function (item, index) {
         return {
-          id: item.id, orderId: item.orderId || "PAY-DEMO-" + (index + 1), memberId: item.memberId,
+          id: item.id, orderId: item.orderId || "PAY-ORDER-" + (index + 1), memberId: item.memberId,
           location: item.location || "서울", department: item.department || "공원화사업추진TF",
           programKey: item.programKey === "play" ? "play" : "ride",
           program: item.name || (item.programKey === "play" ? "포니랑 놀기" : "포니 타기"), dateKey: item.dateKey,
           date: item.date || item.dateKey, time: item.time, qty: item.qty, price: item.price || 0, discount: !!item.discount,
-          status: item.status === "cancelled" ? "취소 완료" : "예약 확정", createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("ko-KR") : "시연 예약",
-          method: item.paymentMethod === "demo-card" ? "신용카드" : "시연 결제", tickets: Array.from({ length: item.qty }, function () { return item.status === "cancelled" ? "cancelled" : "confirmed"; })
+          status: item.status === "cancelled" ? "취소 완료" : "예약 확정", createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("ko-KR") : "예약 생성",
+          method: item.paymentMethod === "demo-card" ? "신용카드" : "기타 결제", tickets: Array.from({ length: item.qty }, function () { return item.status === "cancelled" ? "cancelled" : "confirmed"; })
         };
       });
     } catch (error) { return []; }
@@ -191,12 +212,82 @@
     byId("reservation-range").textContent = items.length ? "1–" + items.length + " / " + items.length + "건" : "0건";
   }
 
+  function operationDateKey(date) {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+  }
+
+  function refreshOperationProgramFilter() {
+    var select = byId("operation-program");
+    var selected = select.value || "all";
+    var region = byId("operation-region").value;
+    var options = [{ key: "all", name: "전체 프로그램" }].concat(programCatalog().filter(function (item) { return item.location === region; }).map(function (item) { return { key: item.key, name: item.programName }; }));
+    select.innerHTML = options.map(function (item) { return '<option value="' + escapeHtml(item.key) + '">' + escapeHtml(item.name) + '</option>'; }).join("");
+    select.value = options.some(function (item) { return item.key === selected; }) ? selected : "all";
+  }
+
+  function programOperatesOn(programItem, dateKey, weekday) {
+    return programItem.active !== false && (!programItem.saleStartDate || programItem.saleStartDate <= dateKey) && (!programItem.saleEndDate || programItem.saleEndDate >= dateKey) && (programItem.saleDays || []).map(Number).includes(weekday);
+  }
+
+  function closuresForDate(dateKey, region) {
+    return operationExceptions.filter(function (item) { return item.region === region && item.startDate <= dateKey && item.endDate >= dateKey; });
+  }
+
+  function renderOperationExceptions() {
+    var list = byId("operation-exception-list");
+    if (!list) return;
+    list.replaceChildren();
+    var region = byId("operation-region").value;
+    var items = operationExceptions.filter(function (item) { return item.region === region; }).slice().reverse();
+    if (!items.length) { list.innerHTML = "<p>등록된 운영 예외가 없습니다.</p>"; return; }
+    items.forEach(function (item) {
+      var article = document.createElement("article");
+      var programName = item.programKey === "all" ? "전체 프로그램" : ((programCatalog().find(function (programItem) { return programItem.key === item.programKey; }) || {}).programName || "삭제된 프로그램");
+      article.innerHTML = "<strong>휴장 · " + escapeHtml(item.startDate === item.endDate ? item.startDate : item.startDate + " ~ " + item.endDate) + "</strong><span>" + escapeHtml(programName + " · " + (item.reason || "사유 미입력")) + "</span><button type=\"button\">삭제</button>";
+      article.querySelector("button").addEventListener("click", function () { operationExceptions = operationExceptions.filter(function (saved) { return saved.id !== item.id; }); saveDemoState(); renderOperationCalendar(); renderOperationExceptions(); notify("운영 예외를 삭제했습니다."); });
+      list.append(article);
+    });
+  }
+
+  function renderOperationCalendar() {
+    var calendar = byId("operation-calendar");
+    if (!calendar) return;
+    calendar.replaceChildren();
+    var year = operationCalendarMonth.getFullYear();
+    var month = operationCalendarMonth.getMonth();
+    byId("operation-month-title").textContent = year + "년 " + (month + 1) + "월";
+    var first = new Date(year, month, 1);
+    var cursor = new Date(year, month, 1 - first.getDay());
+    var region = byId("operation-region").value;
+    var selectedProgram = byId("operation-program").value;
+    var regionalPrograms = programCatalog().filter(function (item) { return item.location === region; });
+    for (var index = 0; index < 42; index += 1) {
+      var date = new Date(cursor); date.setDate(cursor.getDate() + index);
+      var key = operationDateKey(date);
+      var operatingPrograms = regionalPrograms.filter(function (item) { return (selectedProgram === "all" || item.key === selectedProgram) && programOperatesOn(item, key, date.getDay()); });
+      var closures = closuresForDate(key, region);
+      var isClosed = closures.some(function (item) { return item.programKey === "all" || (selectedProgram !== "all" && item.programKey === selectedProgram); });
+      var closedOperatingCount = operatingPrograms.filter(function (item) { return closures.some(function (closure) { return closure.programKey === "all" || closure.programKey === item.key; }); }).length;
+      var isPartial = selectedProgram === "all" && !isClosed && closedOperatingCount > 0;
+      if (selectedProgram === "all" && operatingPrograms.length && closedOperatingCount === operatingPrograms.length) isClosed = true;
+      var isOperating = operatingPrograms.length > 0 && !isClosed;
+      var button = document.createElement("button"); button.type = "button";
+      button.className = "operation-day" + (date.getMonth() !== month ? " is-outside" : "") + (isClosed ? " is-closed" : isPartial ? " is-partial" : isOperating ? " is-operating" : "");
+      var stateLabel = isClosed ? "휴장" : isPartial ? "일부 휴장" : isOperating ? "운영" : "";
+      button.innerHTML = "<span>" + date.getDate() + "</span>" + (stateLabel ? "<small>" + stateLabel + "</small>" : "");
+      button.setAttribute("aria-label", key + (stateLabel ? " " + stateLabel : " 미운영"));
+      (function (selectedKey) { button.addEventListener("click", function () { byId("operation-start-date").value = selectedKey; byId("operation-end-date").value = selectedKey; }); })(key);
+      calendar.append(button);
+    }
+  }
+
   function showView(viewName) {
     var navView = (viewName === "program-edit" || viewName === "program-sessions") ? "programs" : viewName;
     document.querySelectorAll(".admin-view").forEach(function (view) { var visible = view.dataset.view === viewName; view.hidden = !visible; view.classList.toggle("is-visible", visible); });
     document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.adminView === navView); });
     document.querySelector(".admin-sidebar").classList.remove("is-open");
     if (viewName === "reservations") renderReservations();
+    if (viewName === "operations") { refreshOperationProgramFilter(); renderOperationCalendar(); renderOperationExceptions(); }
     history.replaceState(null, "", "#" + viewName);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -227,11 +318,10 @@
     var search = byId("kiosk-product-search").value.trim().toLowerCase();
     var location = byId("kiosk-location-filter").value;
     var department = byId("kiosk-department-filter").value;
-    var programType = byId("kiosk-type-filter").value;
     body.replaceChildren();
     var visiblePrograms = programCatalog().filter(function (item) {
       var haystack = [item.location, item.department, item.programType, item.programName].join(" ").toLowerCase();
-      return (!location || item.location === location) && (!department || item.department === department) && (!programType || item.programType === programType) && (!search || haystack.includes(search));
+      return (!location || item.location === location) && (!department || item.department === department) && (!search || haystack.includes(search));
     });
     visiblePrograms.forEach(function (item) {
       var sessions = sessionsForProgram(item.key);
@@ -272,8 +362,7 @@
     byId("detail-sale-end").value = item.saleEndDate || "";
     byId("detail-visible-start").value = item.visibleStartAt || (item.saleStartDate ? item.saleStartDate + "T00:00" : "");
     byId("detail-visible-end").value = item.visibleEndAt || (item.saleEndDate ? item.saleEndDate + "T23:59" : "");
-    byId("detail-booking-start-date").value = item.bookingStartDate || item.saleStartDate || "";
-    byId("detail-booking-end-date").value = item.bookingEndDate || item.saleEndDate || "";
+    byId("detail-booking-window").value = item.bookingWindow != null ? item.bookingWindow : defaultBookingWindow;
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
@@ -338,8 +427,7 @@
     var saleEndDate = byId("detail-sale-end").value;
     var visibleStartAt = byId("detail-visible-start").value;
     var visibleEndAt = byId("detail-visible-end").value;
-    var bookingStartDate = byId("detail-booking-start-date").value;
-    var bookingEndDate = byId("detail-booking-end-date").value;
+    var bookingWindow = Number(byId("detail-booking-window").value);
     var saleDays = Array.from(document.querySelectorAll(".detail-days input:checked")).map(function (input) { return Number(input.value); });
     var cancelOffsetValue = Number(byId("detail-cancel-value").value);
     var cancelOffsetUnit = byId("detail-cancel-unit").value;
@@ -347,8 +435,7 @@
     if (saleEndDate < saleStartDate) { event.preventDefault(); notify("운영 종료일은 시작일보다 빠를 수 없습니다."); return; }
     if (!visibleStartAt || !visibleEndAt) { event.preventDefault(); notify("프로그램 노출 시작과 종료 일시를 모두 설정해주세요."); return; }
     if (visibleEndAt < visibleStartAt) { event.preventDefault(); notify("프로그램 노출 종료는 시작보다 빨라질 수 없습니다."); return; }
-    if (!bookingStartDate || !bookingEndDate) { event.preventDefault(); notify("예약 판매 시작일과 종료일을 모두 설정해주세요."); return; }
-    if (bookingEndDate < bookingStartDate) { event.preventDefault(); notify("예약 판매 종료일은 시작일보다 빠를 수 없습니다."); return; }
+    if (!Number.isFinite(bookingWindow) || bookingWindow < 1) { event.preventDefault(); notify("예약 가능 일수를 1일 이상으로 설정해주세요."); return; }
     if (!saleDays.length) { event.preventDefault(); notify("판매 요일을 하나 이상 선택해주세요."); return; }
     if (!Number.isFinite(cancelOffsetValue) || cancelOffsetValue < 0) { event.preventDefault(); notify("취소 마감 값을 확인해주세요."); return; }
     var cancelMultiplier = cancelOffsetUnit === "days" ? 1440 : cancelOffsetUnit === "hours" ? 60 : 1;
@@ -360,8 +447,7 @@
       location: location, department: department, programType: (existing && existing.programType) || "기타",
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
-      bookingWindow: existing && existing.bookingWindow != null ? existing.bookingWindow : defaultBookingWindow,
-      bookingStartDate: bookingStartDate, bookingEndDate: bookingEndDate,
+      bookingWindow: bookingWindow,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: Number(byId("detail-price").value) || 0, image: pendingImageDataUrl,
@@ -397,11 +483,11 @@
     var editor = byId("session-editor");
     if (editor.parentElement === list) list.after(editor);
     var sessions = sessionsForProgram(sessionProgramKey); list.replaceChildren();
-    if (!sessions.length) { list.innerHTML = '<div class="session-empty"><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 시작·종료 시간과 온라인 판매 수량을 추가하세요.</small></div>'; return; }
+    if (!sessions.length) { list.innerHTML = '<div class="session-empty"><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 시작·종료 시간과 판매 수량을 추가하세요.</small></div>'; return; }
     sessions.forEach(function (session, index) {
       var row = document.createElement("article");
       row.className = "session-row";
-      row.innerHTML = '<span class="session-number">' + (index + 1) + '</span><div><strong>' + (index + 1) + '회차 (' + escapeHtml(session.start) + '~' + escapeHtml(session.end) + ')</strong><small>온라인 판매 수량 ' + session.capacity + '명</small></div><button class="session-state ' + (session.active ? '' : 'is-off') + '" type="button" aria-pressed="' + session.active + '" aria-label="' + (index + 1) + '회차 판매 상태 변경">' + (session.active ? '판매중' : '숨김') + '</button><button class="session-edit" type="button">수정</button>';
+      row.innerHTML = '<span class="session-number">' + (index + 1) + '</span><div><strong>' + (index + 1) + '회차 (' + escapeHtml(session.start) + '~' + escapeHtml(session.end) + ')</strong><small>판매 수량 ' + session.capacity + '명</small></div><button class="session-state ' + (session.active ? '' : 'is-off') + '" type="button" aria-pressed="' + session.active + '" aria-label="' + (index + 1) + '회차 판매 상태 변경">' + (session.active ? '판매중' : '숨김') + '</button><button class="session-edit" type="button">수정</button>';
       row.querySelector(".session-state").addEventListener("click", function () {
         var saved = Object.assign({}, session, { active: !session.active });
         if (activeSessionKey === session.key) byId("session-active").checked = saved.active;
@@ -433,7 +519,7 @@
     var end = byId("session-end").value;
     var capacity = Number(byId("session-capacity").value);
     if (!start || !end || start >= end) { notify("종료 시간은 시작 시간보다 늦게 설정해주세요."); return; }
-    if (!Number.isInteger(capacity) || capacity < 1) { notify("온라인 판매 수량은 1명 이상으로 설정해주세요."); return; }
+    if (!Number.isInteger(capacity) || capacity < 1) { notify("판매 수량은 1명 이상으로 설정해주세요."); return; }
     var existing = activeSessionKey ? sessionsForProgram(sessionProgramKey).find(function (session) { return session.key === activeSessionKey; }) : null;
     var saved = Object.assign({}, existing || {}, { key: activeSessionKey || "custom-session-" + Date.now(), programKey: sessionProgramKey, start: start, end: end, capacity: capacity, active: byId("session-active").checked });
     persistSession(saved); byId("session-editor").hidden = true; activeSessionKey = null;
@@ -447,22 +533,18 @@
   function updateDiscountConstraintFields() {
     var isFixedPolicy = byId("discount-id").value === "gwacheon";
     var isPercent = byId("discount-type").value === "percent";
-    var isUnlimited = byId("discount-scope").value === "unlimited";
     byId("discount-value-label").textContent = isPercent ? "할인율" : "할인 금액";
     byId("discount-value-unit").textContent = isPercent ? "%" : "원";
     byId("discount-value").max = isPercent ? "100" : "";
     byId("discount-max-amount").disabled = isFixedPolicy || !isPercent;
-    byId("discount-max-qty").disabled = isFixedPolicy || isUnlimited;
+    byId("discount-max-qty").disabled = isFixedPolicy;
     if (!isPercent) {
       if (Number(byId("discount-max-amount").value) > 0) byId("discount-max-amount").dataset.lastValue = byId("discount-max-amount").value;
       byId("discount-max-amount").value = 0;
     } else if (Number(byId("discount-max-amount").value) < 1 && byId("discount-max-amount").dataset.lastValue) {
       byId("discount-max-amount").value = byId("discount-max-amount").dataset.lastValue;
     }
-    if (isUnlimited) {
-      if (Number(byId("discount-max-qty").value) > 0) byId("discount-max-qty").dataset.lastValue = byId("discount-max-qty").value;
-      byId("discount-max-qty").value = 0;
-    } else if (Number(byId("discount-max-qty").value) < 1) {
+    if (Number(byId("discount-max-qty").value) < 1) {
       byId("discount-max-qty").value = byId("discount-max-qty").dataset.lastValue || 1;
     }
   }
@@ -488,15 +570,11 @@
     byId("discount-value").value = discount ? discount.value : 10;
     byId("discount-max-amount").value = discount ? discount.maxAmount || 0 : 0;
     byId("discount-max-qty").value = discount ? discount.maxQty || 0 : 1;
-    byId("discount-scope").value = discount ? discount.scope || "unlimited" : "order";
     byId("discount-start-date").value = discount ? discount.startDate || "" : "";
     byId("discount-end-date").value = discount ? discount.endDate || "" : "";
-    byId("discount-proof").value = discount ? discount.proof || "none" : "none";
     byId("discount-name").disabled = isFixed;
     byId("discount-type").disabled = isFixed;
     byId("discount-value").disabled = isFixed;
-    byId("discount-scope").disabled = isFixed;
-    byId("discount-proof").disabled = isFixed;
     byId("discount-all-programs").checked = discount ? discount.allPrograms : false;
     byId("discount-active").checked = discount ? discount.active : true;
     updateDiscountConstraintFields();
@@ -530,13 +608,13 @@
     var type = isFixed ? "percent" : byId("discount-type").value;
     var value = isFixed ? 50 : Number(byId("discount-value").value);
     var maxAmount = isFixed || type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
-    var scope = isFixed ? "day" : byId("discount-scope").value;
-    var maxQty = isFixed ? 2 : scope === "unlimited" ? 0 : Number(byId("discount-max-qty").value);
+    var scope = "day";
+    var maxQty = isFixed ? 2 : Number(byId("discount-max-qty").value);
     var startDate = byId("discount-start-date").value;
     var endDate = byId("discount-end-date").value;
     if (!Number.isFinite(value) || value <= 0 || (type === "percent" && value > 100)) { notify(type === "percent" ? "할인율은 1~100%로 입력해주세요." : "할인 금액은 1원 이상 입력해주세요."); return; }
     if (maxAmount < 0) { notify("최대 할인 금액은 0원 이상으로 입력해주세요."); return; }
-    if (scope !== "unlimited" && (!Number.isInteger(maxQty) || maxQty < 1)) { notify("최대 적용 수량은 1매 이상으로 입력해주세요."); return; }
+    if (!Number.isInteger(maxQty) || maxQty < 1) { notify("최대 적용 수량은 1매 이상으로 입력해주세요."); return; }
     if (startDate && endDate && startDate > endDate) { notify("적용 종료일은 시작일보다 빠를 수 없습니다."); return; }
     var allPrograms = byId("discount-all-programs").checked;
     var selectedPrograms = Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; });
@@ -544,13 +622,57 @@
     var existing = discountPolicies.find(function (discount) { return discount.id === id; });
     var saved = {
       id: id, name: isFixed ? "과천시민 할인" : name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty,
-      scope: scope, proof: isFixed ? "onsite" : byId("discount-proof").value,
+      scope: scope, proof: "onsite",
       startDate: startDate, endDate: endDate, stackable: false, restoreOnCancel: existing ? existing.restoreOnCancel : true,
       allPrograms: allPrograms, programs: selectedPrograms, active: byId("discount-active").checked
     };
     var index = discountPolicies.findIndex(function (discount) { return discount.id === id; });
     if (index === -1) discountPolicies.push(saved); else discountPolicies[index] = saved;
     byId("discount-id").value = id; saveDemoState(); renderDiscountPolicies(); renderKioskProducts(); notify(name + " 할인을 저장했습니다.");
+  }
+
+  function closeSettlementDrawer() {
+    byId("settlement-drawer").hidden = true;
+    byId("settlement-drawer-backdrop").hidden = true;
+    activeSettlementKey = null;
+  }
+
+  function filteredSettlementTransactions() {
+    var detail = settlementDetails[activeSettlementKey];
+    if (!detail) return [];
+    var search = byId("settlement-transaction-search").value.trim().toLowerCase();
+    var type = byId("settlement-transaction-type").value;
+    return detail.transactions.filter(function (row) {
+      var matchesSearch = !search || (row[1] + " " + row[2]).toLowerCase().includes(search);
+      var matchesType = !type || (type === "refund" ? row[5] > 0 : row[5] === 0);
+      return matchesSearch && matchesType;
+    });
+  }
+
+  function renderSettlementTransactions() {
+    var rows = filteredSettlementTransactions();
+    byId("settlement-transaction-count").textContent = rows.length.toLocaleString("ko-KR") + "건";
+    byId("settlement-transaction-body").innerHTML = rows.length ? rows.map(function (row) {
+      var statusClassName = row[5] > 0 ? " is-refund" : "";
+      return '<tr><td><strong>' + escapeHtml(row[0]) + '</strong></td><td><strong>' + escapeHtml(row[1]) + '</strong><small>' + escapeHtml(row[2]) + '</small></td><td>' + row[3] + '명</td><td>' + money(row[4]) + '</td><td class="negative">' + (row[5] ? '−' + money(row[5]) : '0원') + '</td><td>−' + money(row[6]) + '</td><td><strong>' + money(row[7]) + '</strong></td><td><span class="ledger-status' + statusClassName + '">' + escapeHtml(row[8]) + '</span></td></tr>';
+    }).join("") : '<tr><td colspan="8" class="empty-table">조건에 맞는 거래 내역이 없습니다.</td></tr>';
+  }
+
+  function openSettlementDrawer(programKey) {
+    var detail = settlementDetails[programKey];
+    if (!detail) return;
+    activeSettlementKey = programKey;
+    byId("settlement-drawer-title").textContent = detail.program;
+    byId("settlement-drawer-scope").textContent = detail.scope + " · 2026.09.01 ~ 2026.09.30";
+    byId("settlement-detail-metrics").innerHTML = '<article><small>완료 건수</small><strong>' + detail.completed.toLocaleString("ko-KR") + '건</strong></article><article><small>결제액</small><strong>' + money(detail.paid) + '</strong></article><article><small>환불액</small><strong>−' + money(detail.refunded) + '</strong></article><article><small>PG 수수료</small><strong>−' + money(detail.fee) + '</strong></article><article><small>지급 예정액</small><strong>' + money(detail.payout) + '</strong></article>';
+    byId("settlement-daily-body").innerHTML = detail.daily.map(function (row) { return '<tr><td><strong>' + row[0] + '</strong></td><td>' + row[1].toLocaleString("ko-KR") + '건</td><td>' + money(row[2]) + '</td><td class="negative">−' + money(row[3]) + '</td><td><strong>' + money(row[4]) + '</strong></td></tr>'; }).join("");
+    byId("settlement-transaction-search").value = "";
+    byId("settlement-transaction-type").value = "";
+    renderSettlementTransactions();
+    byId("settlement-refund-list").innerHTML = detail.refunds.map(function (row) { return '<article><strong>' + escapeHtml(row[0]) + '</strong><span>' + escapeHtml(row[1]) + '</span><b>−' + money(row[2]) + '</b></article>'; }).join("");
+    byId("settlement-drawer").hidden = false;
+    byId("settlement-drawer-backdrop").hidden = false;
+    byId("settlement-drawer-close").focus();
   }
 
   function openDrawer(reservationId) {
@@ -560,7 +682,7 @@
     byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약 식별</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일</dt><dd>' + escapeHtml(activeReservation.date) + '</dd></div><div><dt>회차</dt><dd>' + escapeHtml(activeReservation.time) + '</dd></div></dl>';
     renderDrawerTickets();
     byId("payment-detail").innerHTML = '<div><dt>통합 결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>결제 수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>원 결제금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불 누계</dt><dd>' + money(ticketRefundTotal(activeReservation)) + '</dd></div><div><dt>남은 결제금액</dt><dd>' + money(activeReservation.price - ticketRefundTotal(activeReservation)) + '</dd></div>';
-    byId("history-list").innerHTML = '<li><strong>결제 및 예약 확정</strong><small>' + escapeHtml(activeReservation.createdAt) + ' · 시스템</small></li>' + (activeReservation.tickets.some(function (ticket) { return ticket === "cancelled"; }) ? '<li><strong>개별 티켓 취소 · 부분환불 완료</strong><small>관리자 처리 · 시연 이력</small></li>' : "");
+    byId("history-list").innerHTML = '<li><strong>결제 및 예약 확정</strong><small>' + escapeHtml(activeReservation.createdAt) + ' · 시스템</small></li>' + (activeReservation.tickets.some(function (ticket) { return ticket === "cancelled"; }) ? '<li><strong>개별 티켓 취소 · 부분환불 완료</strong><small>관리자 처리 · 환불 이력</small></li>' : "");
     byId("drawer-backdrop").hidden = false; byId("reservation-drawer").hidden = false; document.body.style.overflow = "hidden";
   }
 
@@ -612,14 +734,22 @@
     notify("자료를 내려받았습니다.");
   }
 
-  prepareBookingSaleDateFields();
   prepareDiscountFormFields();
   loadSavedDemoState();
+  setAdminLoginState(restoreAdminSession());
   refreshDepartmentSelect("reservation-department", "", "");
   refreshDepartmentSelect("kiosk-department-filter", "", "");
   renderReservations(); renderKioskProducts();
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
+  byId("admin-logout").addEventListener("click", function () { saveAdminSession("signed-out"); setAdminLoginState(false); });
+  byId("admin-login-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    var isValid = byId("admin-login-id").value.trim() === "admin" && byId("admin-login-password").value === "1234";
+    byId("admin-login-error").hidden = isValid;
+    if (!isValid) { byId("admin-login-password").focus(); return; }
+    saveAdminSession("signed-in"); setAdminLoginState(true); notify("로그인했습니다.");
+  });
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
   ["reservation-search", "reservation-department", "reservation-date", "reservation-program", "reservation-status"].forEach(function (id) { byId(id).addEventListener(id === "reservation-search" ? "input" : "change", renderReservations); });
   byId("reservation-location").addEventListener("change", function () { refreshDepartmentSelect("reservation-department", byId("reservation-location").value, ""); renderReservations(); });
@@ -627,17 +757,15 @@
   byId("drawer-close").addEventListener("click", closeDrawer); byId("drawer-backdrop").addEventListener("click", closeDrawer);
   byId("cancel-selected").addEventListener("click", openCancelDialog); byId("confirm-cancel").addEventListener("click", confirmCancellation);
   byId("mobile-menu").addEventListener("click", function () { document.querySelector(".admin-sidebar").classList.toggle("is-open"); });
-  byId("kiosk-product-search").addEventListener("input", renderKioskProducts);
+  byId("kiosk-product-search-form").addEventListener("submit", function (event) { event.preventDefault(); renderKioskProducts(); });
   byId("kiosk-location-filter").addEventListener("change", function () { refreshDepartmentSelect("kiosk-department-filter", byId("kiosk-location-filter").value, ""); renderKioskProducts(); });
   byId("kiosk-department-filter").addEventListener("change", renderKioskProducts);
-  byId("kiosk-type-filter").addEventListener("change", renderKioskProducts);
-  byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; byId("kiosk-location-filter").value = ""; byId("kiosk-type-filter").value = ""; refreshDepartmentSelect("kiosk-department-filter", "", ""); renderKioskProducts(); notify("전체 프로그램 목록을 새로고침했습니다."); });
-  byId("add-product").addEventListener("click", function () { openProductDialog({ location: "서울", department: "공원화사업추진TF", programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, bookingStartDate: "2026-09-01", bookingEndDate: "2026-12-31", cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true }); });
+  byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; byId("kiosk-location-filter").value = ""; refreshDepartmentSelect("kiosk-department-filter", "", ""); renderKioskProducts(); notify("전체 프로그램 목록을 새로고침했습니다."); });
+  byId("add-product").addEventListener("click", function () { openProductDialog({ location: "서울", department: "공원화사업추진TF", programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true }); });
   byId("detail-location").addEventListener("change", function () { var location = byId("detail-location").value; refreshDepartmentSelect("detail-department", location, organization[location][0]); });
   byId("discount-settings").addEventListener("click", function () { openDiscountManager(); });
   byId("add-discount-policy").addEventListener("click", function () { editDiscountPolicy(null); renderDiscountPolicies(); });
   byId("discount-type").addEventListener("change", updateDiscountConstraintFields);
-  byId("discount-scope").addEventListener("change", updateDiscountConstraintFields);
   byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
   byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
   byId("open-discounts-from-product").addEventListener("click", function () { openDiscountManager(); notify("할인을 저장한 뒤 프로그램 수정 화면에서 적용할 수 있습니다."); });
@@ -663,6 +791,36 @@
   byId("bulk-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").showModal(); });
   byId("confirm-operation-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").close(); notify("선택한 회차를 운영 취소하고 대상 예약의 환불 처리를 시작했습니다."); });
   byId("apply-settlement").addEventListener("click", function () { notify("선택한 기간의 정산 내역을 조회했습니다."); });
+  document.querySelectorAll(".settlement-row").forEach(function (row) {
+    row.addEventListener("click", function () { openSettlementDrawer(row.dataset.settlementProgram); });
+    row.addEventListener("keydown", function (event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openSettlementDrawer(row.dataset.settlementProgram); } });
+  });
+  byId("settlement-drawer-close").addEventListener("click", closeSettlementDrawer);
+  byId("settlement-drawer-confirm").addEventListener("click", closeSettlementDrawer);
+  byId("settlement-drawer-backdrop").addEventListener("click", closeSettlementDrawer);
+  byId("settlement-transaction-search").addEventListener("input", renderSettlementTransactions);
+  byId("settlement-transaction-type").addEventListener("change", renderSettlementTransactions);
+  byId("download-settlement-detail").addEventListener("click", function () {
+    var detail = settlementDetails[activeSettlementKey]; if (!detail) return;
+    var rows = [["서비스 완료일", "지역·부서", "프로그램", "예약번호", "결제번호", "인원", "결제액", "환불액", "PG 수수료", "지급 예정액", "상태"]];
+    filteredSettlementTransactions().forEach(function (row) { rows.push([row[0], detail.scope, detail.program, row[1], row[2], row[3], row[4], -row[5], -row[6], row[7], row[8]]); });
+    downloadCsv("렛츠런파크_" + detail.program + "_거래원장.csv", rows);
+  });
+  byId("operation-region").addEventListener("change", function () { refreshOperationProgramFilter(); renderOperationCalendar(); renderOperationExceptions(); });
+  byId("operation-program").addEventListener("change", renderOperationCalendar);
+  byId("operation-month-prev").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() - 1, 1); renderOperationCalendar(); });
+  byId("operation-month-next").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() + 1, 1); renderOperationCalendar(); });
+  byId("operation-exception-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    var startDate = byId("operation-start-date").value;
+    var endDate = byId("operation-end-date").value;
+    if (!startDate || !endDate) { notify("적용할 시작일과 종료일을 선택해주세요."); return; }
+    if (startDate > endDate) { notify("종료일은 시작일보다 빠를 수 없습니다."); return; }
+    operationExceptions.push({ id: "operation-" + Date.now(), region: byId("operation-region").value, programKey: byId("operation-program").value, startDate: startDate, endDate: endDate, status: "closed", reason: byId("operation-reason").value.trim() });
+    operationCalendarMonth = new Date(Number(startDate.slice(0, 4)), Number(startDate.slice(5, 7)) - 1, 1);
+    saveDemoState(); renderOperationCalendar(); renderOperationExceptions();
+    notify("휴장 기간을 등록했습니다.");
+  });
   byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("렛츠런플레이_통합예약목록.csv", rows); });
   byId("download-settlement").addEventListener("click", function () { downloadCsv("렛츠런플레이_부서별정산_2026-09.csv", [["서비스완료월", "지역", "담당부서", "정산태그", "프로그램", "완료건수", "결제액", "환불액", "PG수수료", "지급예정액"], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니 타기", 982, 5210000, -210000, -150000, 4850000], ["2026-09", "서울", "공원화사업추진TF", "SEOUL-PARK-TF", "포니랑 놀기", 604, 3210000, -116000, -92820, 3001180]]); });
   function openDeveloperPolicy() {
@@ -677,6 +835,6 @@
   });
 
   var requestedView = location.hash.replace("#", "");
-  if (["reservations", "programs", "settlement"].includes(requestedView)) showView(requestedView);
+  if (["reservations", "programs", "operations", "settlement"].includes(requestedView)) showView(requestedView);
   else showView("programs");
 })();

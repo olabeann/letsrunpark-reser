@@ -74,6 +74,9 @@
 .admin-user>span {background:#eef4ff;color:var(--admin-blue)}
 .admin-user strong {color:#26292e}
 .admin-user small,.admin-user button {color:#8b9096}
+.admin-user {grid-template-columns:36px minmax(0,1fr) auto}
+.admin-user button {padding:7px 9px;border-radius:7px;font-size:11px;font-weight:700;white-space:nowrap}
+.admin-user button:hover {background:#f2f4f5;color:#26292e}
 
 .admin-shell {margin-left:250px;background:#fff}
 .admin-topbar {
@@ -335,6 +338,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .session-list-head strong {font-size:15px}.session-list-head small {margin-top:4px;color:#737b84;font-size:11px}
 .session-list {display:grid;gap:8px}
 .session-row {display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:13px 14px;border:1px solid #e0e5ea;border-radius:9px;background:#fff}
+.session-row:last-child {border-bottom:1px solid #e0e5ea}
 .session-number {display:grid;width:28px;height:28px;place-items:center;border-radius:8px;background:#edf4ff;color:#1769ff;font-size:12px;font-weight:800}
 .session-row strong,.session-row small {display:block}.session-row strong {font-size:13px}.session-row small {margin-top:3px;color:#767f88;font-size:11px}
 .session-row button,.session-editor-head button {height:31px;padding:0 11px;border:1px solid #dce1e5;border-radius:6px;background:#fff;font-size:11px;font-weight:700}

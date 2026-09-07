@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>포니체험 예약 | 포니랜드</title>
+  <title>렛츠런파크 체험 예약</title>
   <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260907-devpolicy9"><link rel="stylesheet" href="styles.css?v=20260907-devpolicy8">
 </head>
 <body data-page="booking" class="shop-page">
@@ -10,7 +10,7 @@
     <a class="reservation-brand" href="index.html" aria-label="포니랜드 홈"><img src="assets/logo/pony-land.png" alt=""><span class="reservation-brand__context"><small>서울 렛츠런파크</small><b>포니랜드</b></span></a>
     <nav class="shop-nav" aria-label="주요 메뉴"><a class="shop-nav__link shop-nav__admin" href="admin.html">관리자</a><button id="view-cart" type="button" hidden>장바구니 <b id="header-cart-count">0</b></button><button id="reservation-login" type="button">예약 조회</button></nav>
   </header>
-  <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-dialog-title"><div class="login-dialog__body"><button class="login-dialog__close" id="login-dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">PONYLAND</span><h2 id="login-dialog-title">시연 계정 로그인</h2><p id="login-dialog-description">계정별로 장바구니와 예약 내역을 확인해요.</p><label class="demo-account-select" for="demo-member">시연 회원 선택<select id="demo-member"><option value="1">회원 1</option><option value="2">회원 2</option></select></label><div class="login-providers"><button class="login-provider login-provider--kakao" type="button" data-login-provider="카카오"><span aria-hidden="true">K</span>카카오로 계속하기</button><button class="login-provider login-provider--naver" type="button" data-login-provider="네이버"><span aria-hidden="true">N</span>네이버로 계속하기</button></div><small id="login-dialog-note">실제 소셜 계정과 연결되지 않는 시연입니다.</small></div></dialog>
+  <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-dialog-title"><div class="login-dialog__body"><button class="login-dialog__close" id="login-dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">PONYLAND</span><h2 id="login-dialog-title">계정 로그인</h2><p id="login-dialog-description">로그인하면 장바구니와 예약 내역을 확인할 수 있어요.</p><div class="login-providers"><button class="login-provider login-provider--kakao" type="button" data-login-provider="카카오"><span aria-hidden="true">K</span>카카오로 계속하기</button><button class="login-provider login-provider--naver" type="button" data-login-provider="네이버"><span aria-hidden="true">N</span>네이버로 계속하기</button></div><small id="login-dialog-note">로그인 서비스를 선택해주세요.</small></div></dialog>
   <dialog class="developer-policy-dialog" id="developer-policy-dialog" aria-labelledby="developer-policy-title">
     <form method="dialog">
       <header><div><small>DEVELOPER POLICY · Alt+P</small><h2 id="developer-policy-title">FE · BE 동작 정책</h2><p>현재 화면에 필요한 동작과 서버 검증 규칙만 표시합니다.</p></div><button value="close" aria-label="정책서 닫기">×</button></header>
@@ -31,7 +31,7 @@
     <div class="reservation-steps shop-steps" hidden><span data-step-label="1"><i>1</i>예약 선택</span><b></b><span data-step-label="2"><i>2</i>내용 확인</span><b></b><span data-step-label="3"><i>3</i>예약 완료</span></div>
     <section class="booking-stage is-visible" data-booking-step="1" aria-labelledby="booking-page-title">
       <div class="shop-container booking-flow">
-        <header class="booking-program-head"><div><small id="booking-program-tag">어린이 전용</small><h1 id="booking-page-title">포니 타기 예약</h1><p id="booking-page-description">작은 포니와 함께하는 어린이 승마 체험</p></div><img id="booking-program-character" src="assets/characters/pony-rider.png" alt="" aria-hidden="true"></header>
+        <header class="booking-program-head"><div><small id="booking-program-tag">렛츠런파크 체험</small><h1 id="booking-page-title">렛츠런파크 체험 예약</h1><p id="booking-page-description">원하는 체험과 이용 일정을 선택해 예약해보세요.</p></div><img id="booking-program-character" src="assets/characters/pony-rider.png" alt="" aria-hidden="true"></header>
         <div class="booking-flow__layout">
           <div class="product-options booking-form">
             <div class="option-field booking-first-field"><h2><span aria-hidden="true">01</span>체험 선택</h2><div class="program-picker chips" id="program-picker" role="group" aria-label="체험 선택"><button type="button" class="chip" data-program-key="ride" aria-pressed="false"><strong>포니 타기</strong><small>5,000원</small></button><button type="button" class="chip" data-program-key="play" aria-pressed="false"><strong>포니랑 놀기</strong><small>4,000원</small></button></div></div>
@@ -45,7 +45,7 @@
     </section>
     <section class="booking-stage" data-booking-step="4" aria-labelledby="cart-title">
       <div class="shop-container shop-cart-wrap"><div class="shop-page-heading"><h1 id="cart-title">장바구니 <span id="cart-count">0</span></h1><button class="text-button" type="button" data-shop-home>예약 옵션으로 →</button></div>
-        <div class="shop-cart-layout"><div class="shop-cart-content"><div class="shop-cart-empty" id="cart-empty"><span aria-hidden="true">＋</span><h2>장바구니가 비어 있어요</h2><p id="cart-empty-message">마음에 드는 체험을 담아보세요.</p></div><div id="cart-items" class="shop-cart-items"></div><nav class="cart-program-links" aria-label="다른 체험 추가"><span>다른 체험 추가</span><a href="index.html?product=ride">포니 타기</a><a href="index.html?product=play">포니랑 놀기</a></nav><p id="cart-page-error" class="cart-error" role="alert" hidden></p><div class="cart-notice"><b>예약 전 확인해주세요</b><p>상품마다 날짜와 회차를 확인해주세요. 같은 계정으로 이용 시간이 겹치는 상품은 예약할 수 없습니다.</p><p>장바구니에 담는 것만으로 예약이 확정되지는 않습니다.</p></div></div>
+        <div class="shop-cart-layout"><div class="shop-cart-content"><div class="shop-cart-empty" id="cart-empty"><span aria-hidden="true">＋</span><h2>장바구니가 비어 있어요</h2><p id="cart-empty-message">마음에 드는 체험을 담아보세요.</p></div><div id="cart-items" class="shop-cart-items"></div><nav class="cart-program-links" id="cart-program-links" aria-label="다른 체험 추가"><span>다른 체험 추가</span><a href="index.html?product=ride" data-program-key="ride">포니 타기</a><a href="index.html?product=play" data-program-key="play">포니랑 놀기</a></nav><p id="cart-page-error" class="cart-error" role="alert" hidden></p><div class="cart-notice"><b>예약 전 확인해주세요</b><p>상품마다 날짜와 회차를 확인해주세요. 같은 계정으로 이용 시간이 겹치는 상품은 예약할 수 없습니다.</p><p>장바구니에 담는 것만으로 예약이 확정되지는 않습니다.</p></div></div>
         <aside class="cart-order-summary" aria-label="결제 예정 금액"><h2>결제 금액</h2><dl><div><dt>상품 금액</dt><dd id="cart-subtotal">0원</dd></div><div><dt>할인 금액</dt><dd id="cart-discount">0원</dd></div></dl><div class="summary-price"><span>총 결제 예정 금액</span><strong id="cart-total">0원</strong></div><button class="btn btn--cta btn--full" id="to-checkout" type="button" disabled><span id="cart-checkout-count">0</span>개 상품 주문하기</button><small>프로그램·날짜·회차별로 티켓이 발급됩니다.</small></aside></div>
       </div>
     </section>

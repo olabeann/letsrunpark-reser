@@ -13,8 +13,8 @@
 - `styles.css`: 화면 컴포넌트 및 모바일 반응형 스타일
 - `app.js`: 화면 전환, 예약 선택, 검색, 회차 차단 등 프로토타입 상호작용
 - `booking-rules.js`: 이용 시간 구간 비교, 계정 기준 중복 검사, 장바구니 검증·가격 계산 및 일괄 예약 생성
-- `admin.html` / `admin.js`: 예약·프로그램·회차·할인·부분취소·정산 관리자 시연 화면
-- `account-admin.html` / `account-admin.js`: 위이 내부 부서 계정 발급·기능 권한 시연 화면
+- `admin.html` / `admin.js`: 예약·프로그램·회차·할인·부분취소·정산 관리자 화면
+- `account-admin.html` / `account-admin.js`: 위이 내부 부서 계정 발급·기능 권한 화면
 - `developer-policy.js`: `Alt + P`로 여는 화면별 RSV·ADM·ACC FE/BE 정책과 결정 필요 항목
 
 ## 구현 범위

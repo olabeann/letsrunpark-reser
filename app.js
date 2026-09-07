@@ -26,9 +26,9 @@
 
   function openLoginDialog(intent) {
     loginIntent = intent;
-    loginDialogTitle.textContent = "시연 계정 로그인";
-    loginDialogDescription.textContent = "선택한 계정의 장바구니와 예약 시간을 함께 확인합니다.";
-    loginDialogNote.textContent = "실제 간편 로그인은 연결되지 않습니다. 같은 제공자·회원 번호는 같은 시연 계정입니다.";
+    loginDialogTitle.textContent = "계정 로그인";
+    loginDialogDescription.textContent = "로그인하면 장바구니와 예약 시간을 함께 확인할 수 있습니다.";
+    loginDialogNote.textContent = "로그인 서비스를 선택해주세요.";
     loginDialog.showModal();
   }
 
@@ -43,8 +43,7 @@
     loginDialog.querySelectorAll("[data-login-provider]").forEach(function (button) {
       button.addEventListener("click", function () {
         var provider = button.getAttribute("data-login-provider");
-        var memberNumber = document.getElementById("demo-member").value;
-        var nextMember = { id: "demo:" + provider + ":" + memberNumber, label: provider + " · 회원 " + memberNumber };
+        var nextMember = { id: "demo:" + provider + ":1", label: provider + " 계정" };
         try { window.sessionStorage.setItem("ponylandDemoMember", JSON.stringify(nextMember)); }
         catch (error) { notify("계정을 저장할 수 없습니다. 브라우저 저장 공간을 확인해주세요."); return; }
         currentMember = nextMember;
@@ -96,6 +95,8 @@
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      bookingWindow: 14,
+      cancelMinutes: 10,
       slots: ponySlots
     },
     play: {
@@ -113,6 +114,8 @@
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      bookingWindow: 14,
+      cancelMinutes: 10,
       slots: ponySlots
     },
     pony: {
@@ -150,17 +153,47 @@
   var initialProgramKey = ["ride", "play"].includes(query.get("product")) ? query.get("product") : "ride";
   var program = programs[initialProgramKey];
   var weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
-  var bookingStart = new Date();
-  bookingStart.setHours(0, 0, 0, 0);
-  var bookingEnd = new Date(bookingStart);
-  bookingEnd.setDate(bookingEnd.getDate() + 14);
-  var firstBookableDate = new Date(bookingStart);
-  while (firstBookableDate <= bookingEnd && !isWeekend(firstBookableDate)) firstBookableDate.setDate(firstBookableDate.getDate() + 1);
-  var calendarFirstMonth = new Date(firstBookableDate.getFullYear(), firstBookableDate.getMonth(), 1);
+  var baseBookingWindowDays = { ride: programs.ride.bookingWindow, play: programs.play.bookingWindow };
+  var baseCancelMinutes = { ride: programs.ride.cancelMinutes, play: programs.play.cancelMinutes };
+  var operationExceptions = [];
+  var bookingStart, bookingEnd, calendarFirstMonth;
+
+  function applyBookingWindowOverrides() {
+    try {
+      var adminState = JSON.parse(window.localStorage.getItem("letsrunPlayAdminDemoV3") || "null");
+      var catalog = adminState && adminState.catalog;
+      operationExceptions = adminState && Array.isArray(adminState.operationExceptions) ? adminState.operationExceptions : [];
+      Object.keys(baseBookingWindowDays).forEach(function (key) {
+        var override = catalog && catalog.programOverrides && catalog.programOverrides[key];
+        var added = catalog && (catalog.addedPrograms || []).find(function (item) { return item.key === key; });
+        var source = override || added;
+        programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
+        programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
+      });
+    } catch (error) { /* keep base booking window if admin storage is unavailable */ }
+  }
+
+  function refreshBookingWindow(programKey) {
+    applyBookingWindowOverrides();
+    var days = (programs[programKey] && programs[programKey].bookingWindow) || 14;
+    bookingStart = new Date();
+    bookingStart.setHours(0, 0, 0, 0);
+    bookingEnd = new Date(bookingStart);
+    bookingEnd.setDate(bookingEnd.getDate() + days);
+    var firstBookableDate = new Date(bookingStart);
+    while (firstBookableDate <= bookingEnd && !isWeekend(firstBookableDate)) firstBookableDate.setDate(firstBookableDate.getDate() + 1);
+    calendarFirstMonth = new Date(firstBookableDate.getFullYear(), firstBookableDate.getMonth(), 1);
+  }
+
+  refreshBookingWindow(initialProgramKey);
   var calendarMonth = new Date(calendarFirstMonth);
 
   function dateKey(date) {
     return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+  }
+
+  function operationExceptionFor(dateKeyValue) {
+    return operationExceptions.find(function (item) { return item.status !== "open" && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === state.programKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
   }
 
   function formatBookingDate(date) {
@@ -215,13 +248,81 @@
     byId("ticket-window-session").textContent = formatTime(timing.sessionStart, false);
     byId("ticket-window-close").textContent = formatTime(timing.entryClose, false);
     byId("ticket-name").textContent = ticketReservation.name;
+    byId("ticket-admission-title").textContent = ticketReservation.name + " 입장권";
     byId("ticket-date").textContent = ticketReservation.date;
     byId("ticket-time").textContent = ticketReservation.time;
     byId("ticket-people").textContent = ticketReservation.qty + "명";
     byId("ticket-admission-count").textContent = "총 " + ticketReservation.qty + "명";
     byId("ticket-reservation-number").textContent = ticketReservation.id;
     byId("ticket-price").textContent = money(ticketReservation.price);
-    byId("ticket-citizen-discount").hidden = !ticketReservation.discount;
+    byId("ticket-citizen-discount").hidden = !ticketDiscountQty(ticketReservation);
+    renderTicketCancellation(timing, now);
+  }
+
+  function ticketDiscountQty(reservation) {
+    if (Number.isInteger(reservation.discountQty)) return Math.max(0, Math.min(reservation.qty, reservation.discountQty));
+    return reservation.discount ? reservation.qty : 0;
+  }
+
+  function ticketCancellationDeadline(reservation) {
+    var programData = programs[reservation.programKey] || programs.ride;
+    var cancelMinutes = Number.isFinite(programData.cancelMinutes) ? programData.cancelMinutes : 10;
+    return new Date(ticketSessionStart(reservation).getTime() - cancelMinutes * 60000);
+  }
+
+  function formatCancellationDeadline(date) {
+    return date.getFullYear() + "." + String(date.getMonth() + 1).padStart(2, "0") + "." + String(date.getDate()).padStart(2, "0") + " " + formatTime(date, false);
+  }
+
+  function ticketCanCancel(reservation, timing, now) {
+    return timing.accessState === "upcoming" && now < ticketCancellationDeadline(reservation) && reservation.qty > 0;
+  }
+
+  function cancelUnitPrice(reservation, isDiscounted) {
+    var programData = programs[reservation.programKey] || programs.ride;
+    var rate = programData.discountPolicy ? programData.discountPolicy.rate : 0;
+    return Math.round(programData.price * (isDiscounted ? 1 - rate : 1));
+  }
+
+  function renderTicketCancelOptions() {
+    var wrap = byId("ticket-cancel-options"); wrap.replaceChildren();
+    var discountQty = ticketDiscountQty(ticketReservation);
+    for (var index = 0; index < ticketReservation.qty; index += 1) {
+      var discounted = index < discountQty;
+      var label = document.createElement("label"); label.className = "ticket-cancel-option";
+      label.innerHTML = '<input type="checkbox" data-discounted="' + discounted + '" data-amount="' + cancelUnitPrice(ticketReservation, discounted) + '"><span><strong>' + (index + 1) + '번째 입장권</strong><small>' + (discounted ? "과천시민 50% 할인" : "정상가") + ' · ' + money(cancelUnitPrice(ticketReservation, discounted)) + '</small></span>';
+      label.querySelector("input").addEventListener("change", updateTicketCancelSelection);
+      wrap.append(label);
+    }
+    updateTicketCancelSelection();
+  }
+
+  function updateTicketCancelSelection() {
+    var selected = Array.from(document.querySelectorAll("#ticket-cancel-options input:checked"));
+    var refund = selected.reduce(function (sum, input) { return sum + Number(input.dataset.amount); }, 0);
+    byId("ticket-cancel-count").textContent = selected.length + "명";
+    byId("ticket-refund-preview").textContent = money(refund);
+    byId("confirm-ticket-cancel").disabled = !selected.length;
+  }
+
+  function renderTicketRefundHistory() {
+    var history = Array.isArray(ticketReservation.cancellationHistory) ? ticketReservation.cancellationHistory : [];
+    byId("ticket-refund-history").hidden = !history.length;
+    byId("ticket-price-label").textContent = history.length ? "결제 잔액" : "결제 금액";
+    byId("ticket-confirmation-message").textContent = history.length ? "부분 취소 내역이 있습니다." : "예약이 확정되었습니다.";
+    byId("ticket-refund-history-list").innerHTML = history.map(function (item) {
+      var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? "할인 " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
+      return '<article><span><strong>' + item.qty + '명 부분 취소 · 환불 접수</strong><small>' + escapeHtml(detail) + ' · ' + new Date(item.createdAt).toLocaleString("ko-KR") + '</small></span><b>−' + money(item.amount) + '</b></article>';
+    }).join("");
+  }
+
+  function renderTicketCancellation(timing, now) {
+    var canCancel = ticketCanCancel(ticketReservation, timing, now);
+    var deadline = ticketCancellationDeadline(ticketReservation);
+    byId("open-ticket-cancel").disabled = !canCancel;
+    byId("ticket-cancel-deadline").textContent = canCancel ? formatCancellationDeadline(deadline) + "까지 취소할 수 있어요." : timing.accessState !== "upcoming" ? "입장 대기 상태에서만 취소할 수 있어요." : "관리자가 설정한 취소 가능 시간이 지났어요.";
+    if (!canCancel) byId("ticket-cancel-panel").hidden = true;
+    renderTicketRefundHistory();
   }
 
   function isWeekend(date) {
@@ -235,6 +336,7 @@
   var currentPrice = function () { return program.price; };
   var amount = function () { return Math.round(currentPrice() * state.qty * (state.discount ? program.discountPolicy.rate : 1)); };
   var reservationStorageKey = "ponylandBookingStoreV2";
+  var demoCancellationStorageKey = "ponylandDemoTicketCancellationsV1";
   var currentMember = readMember();
   var checkoutSnapshot = "";
   var completedOrder = null;
@@ -277,6 +379,46 @@
       notify("저장하지 못했습니다. 결제는 완료되지 않았으며 장바구니는 유지됩니다.");
       return false;
     }
+  }
+
+  function readDemoCancellations() {
+    try { return JSON.parse(window.sessionStorage.getItem(demoCancellationStorageKey) || "{}"); }
+    catch (error) { return {}; }
+  }
+
+  function saveDemoCancellation(reservation) {
+    try { var saved = readDemoCancellations(); saved[reservation.id] = reservation; window.sessionStorage.setItem(demoCancellationStorageKey, JSON.stringify(saved)); }
+    catch (error) { notify("티켓 취소 내역을 저장하지 못했습니다."); }
+  }
+
+  function applyPartialTicketCancellation() {
+    var selected = Array.from(document.querySelectorAll("#ticket-cancel-options input:checked"));
+    if (!selected.length || !ticketReservation) return;
+    var discountedCancelled = selected.filter(function (input) { return input.dataset.discounted === "true"; }).length;
+    var regularCancelled = selected.length - discountedCancelled;
+    var refundAmount = selected.reduce(function (sum, input) { return sum + Number(input.dataset.amount); }, 0);
+    var historyItem = { createdAt: new Date().toISOString(), qty: selected.length, discountQty: discountedCancelled, regularQty: regularCancelled, amount: refundAmount, status: "refund_requested" };
+    var updated = Object.assign({}, ticketReservation, {
+      qty: ticketReservation.qty - selected.length,
+      price: Math.max(0, ticketReservation.price - refundAmount),
+      discountQty: Math.max(0, ticketDiscountQty(ticketReservation) - discountedCancelled),
+      cancellationHistory: (ticketReservation.cancellationHistory || []).concat(historyItem)
+    });
+    updated.discount = updated.discountQty > 0;
+    if (updated.qty === 0) updated.status = "cancelled";
+
+    var store = readStore();
+    var storedIndex = store && store.reservations.findIndex(function (item) { return item.id === ticketReservation.id; });
+    if (store && storedIndex >= 0) {
+      store.reservations[storedIndex] = updated; store.revision += 1;
+      if (!writeStore(store)) return;
+    } else saveDemoCancellation(updated);
+
+    ticketReservation = updated;
+    byId("ticket-cancel-panel").hidden = true;
+    notify(selected.length + "명 취소를 접수했습니다. 환불은 카드사 영업일 기준 5~7일이 걸릴 수 있습니다.");
+    if (!updated.qty) { showMyTickets(); return; }
+    updateTicketAccess(); renderTicketList();
   }
 
   function withStoreLock(action) {
@@ -422,6 +564,8 @@
     byId("complete-payment").disabled = isPaying || !cart.length || !!error;
     var cartedProgramKeys = cart.map(function (item) { return item.programKey; });
     var addLinks = document.querySelectorAll("#cart-program-links [data-program-key]");
+    var addProgramsLabel = document.querySelector("#cart-program-links > span");
+    if (addProgramsLabel) addProgramsLabel.textContent = cart.length ? "다른 체험 추가" : "체험 둘러보기";
     addLinks.forEach(function (link) {
       link.hidden = cartedProgramKeys.includes(link.getAttribute("data-program-key"));
     });
@@ -514,17 +658,21 @@
     var endedDate = new Date(now);
     endedDate.setDate(endedDate.getDate() - 1);
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
-    return [
+    var defaults = [
       { id: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive },
-      { id: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 1, price: 4000, discount: false },
+      { id: ticketReservationId(upcomingDate, secondSlot) + "-4", programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2 },
       { id: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false }
     ];
+    var savedCancellations = readDemoCancellations();
+    return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
   }
 
   function ticketListReservations(now) {
     now = now || new Date();
     var reservations = readReservations();
-    var visibleReservations = reservations.slice();
+    var visibleReservations = reservations.filter(function (reservation) {
+      return ticketTiming(reservation, now).accessState !== "upcoming";
+    });
     var includedStates = {};
     visibleReservations.forEach(function (reservation) {
       includedStates[ticketTiming(reservation, now).accessState] = true;
@@ -590,7 +738,8 @@
       body.append(status);
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-      var metaText = reservation.qty + "명 · " + money(reservation.price) + (reservation.discount ? " · 과천시민 할인" : "");
+      var discountedQty = ticketDiscountQty(reservation);
+      var metaText = reservation.qty + "명 · " + money(reservation.price) + (discountedQty ? " · 과천시민 할인 " + discountedQty + "명" : "");
       var meta = createTextElement("span", "ticket-list-card__meta", metaText);
       body.append(meta);
       card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
@@ -673,15 +822,16 @@
   function selectProgram(key, reset) {
     state.programKey = ["ride", "play"].includes(key) ? key : "ride";
     program = programs[state.programKey];
+    refreshBookingWindow(state.programKey);
     if (reset !== false) {
       state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false;
       calendarMonth = new Date(calendarFirstMonth);
     }
     byId("citizen-discount").checked = state.discount;
     byId("date-picker").open = false;
-    byId("booking-program-tag").textContent = program.tag;
-    byId("booking-page-title").textContent = program.name + " 예약";
-    byId("booking-page-description").textContent = program.subtitle;
+    byId("booking-program-tag").textContent = "렛츠런파크 체험";
+    byId("booking-page-title").textContent = "렛츠런파크 체험 예약";
+    byId("booking-page-description").textContent = "원하는 체험과 이용 일정을 선택해 예약해보세요.";
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;
     byId("product-unit-price").textContent = money(program.price);
@@ -692,6 +842,8 @@
 
   function renderCalendar() {
     var grid = byId("calendar-grid");
+    var windowNote = byId("booking-window-note");
+    if (windowNote) windowNote.textContent = "오늘부터 " + (program.bookingWindow || 14) + "일 이내 운영일 예약 가능 · 휴장일 제외";
     var year = calendarMonth.getFullYear();
     var month = calendarMonth.getMonth();
     var firstWeekday = new Date(year, month, 1).getDay();
@@ -709,7 +861,8 @@
     for (var day = 1; day <= lastDate; day += 1) {
       var date = new Date(year, month, day);
       var key = dateKey(date);
-      var available = date >= bookingStart && date <= bookingEnd && isWeekend(date);
+      var operationException = operationExceptionFor(key);
+      var available = date >= bookingStart && date <= bookingEnd && isWeekend(date) && !operationException;
       var selected = key === state.dateKey;
       var today = key === dateKey(bookingStart);
       var classNames = [];
@@ -776,7 +929,7 @@
       label.classList.toggle("is-done", labelStep < progress);
       label.querySelector("i").textContent = labelStep < progress ? "✓" : labelStep;
     });
-    document.title = (step === 1 ? program.name + " 예약" : step === 4 ? "장바구니" : step === 2 ? "예약 내용 확인" : "예약 완료") + " | 포니랜드";
+    document.title = (step === 1 ? "체험 예약" : step === 4 ? "장바구니" : step === 2 ? "예약 내용 확인" : "예약 완료") + " | 렛츠런파크";
     if (options.history !== false) {
       var url = new URL(window.location.href);
       url.searchParams.delete("program"); url.searchParams.delete("product"); url.searchParams.delete("view");
@@ -882,6 +1035,15 @@
     renderTicketList();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+  byId("open-ticket-cancel").addEventListener("click", function () {
+    if (!ticketReservation) return;
+    var now = new Date();
+    if (!ticketCanCancel(ticketReservation, ticketTiming(ticketReservation, now), now)) { updateTicketAccess(); return; }
+    renderTicketCancelOptions(); byId("ticket-cancel-panel").hidden = false;
+    byId("ticket-cancel-panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+  byId("close-ticket-cancel").addEventListener("click", function () { byId("ticket-cancel-panel").hidden = true; });
+  byId("confirm-ticket-cancel").addEventListener("click", applyPartialTicketCancellation);
   byId("header-logout").addEventListener("click", function () {
     try { window.sessionStorage.removeItem("ponylandDemoMember"); } catch (error) { /* ignore */ }
     currentMember = null;
@@ -904,6 +1066,7 @@
   });
 
   window.addEventListener("storage", function (event) {
+    if (event.key === "letsrunPlayAdminDemoV3") { refreshBookingWindow(state.programKey); renderCalendar(); syncProgramExtras(); }
     if (event.key !== reservationStorageKey && event.key !== null) return;
     var store = readStore();
     var latestCart = JSON.stringify(ownCart(store));

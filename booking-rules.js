@@ -102,7 +102,8 @@
         var program = programFor(item, programs), policy = program && program.discountPolicy;
         if (!policy || !policy.id || !policy.maxQtyPerDate) return;
         var key = policy.id + "|" + item.dateKey;
-        totals[key] = (totals[key] || 0) + (Number.isInteger(item.qty) ? item.qty : 0);
+        var discountedQty = Number.isInteger(item.discountQty) ? item.discountQty : item.qty;
+        totals[key] = (totals[key] || 0) + (Number.isInteger(discountedQty) ? discountedQty : 0);
       });
     }
     tally(reservations);
@@ -126,12 +127,14 @@
     var discountError = discountLimitError(items, reservations, memberId, programs);
     if (discountError) return discountError;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var lastDay = new Date(today); lastDay.setDate(lastDay.getDate() + 14);
     var checked = [];
     for (var i = 0; i < items.length; i += 1) {
       var item = items[i];
       if (!item || item.memberId !== memberId) return "현재 로그인한 계정의 장바구니만 결제할 수 있습니다.";
       try { quoteItem(item, programs); } catch (error) { return error.message; }
+      var itemProgram = programFor(item, programs);
+      var bookingWindowDays = itemProgram && Number.isFinite(itemProgram.bookingWindow) && itemProgram.bookingWindow > 0 ? itemProgram.bookingWindow : 14;
+      var lastDay = new Date(today); lastDay.setDate(lastDay.getDate() + bookingWindowDays);
       var range = interval(item), date = new Date(range.start);
       var midnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       if (range.start <= now.getTime() || midnight < today || midnight > lastDay || (date.getDay() !== 0 && date.getDay() !== 6)) {
@@ -152,6 +155,7 @@
     var tickets = cart.map(function (item, index) {
       return Object.assign(quoteItem(item, programs), {
         id: orderId + "-" + (index + 1), orderId: orderId,
+        discountQty: item.discount ? item.qty : 0,
         status: "confirmed", createdAt: now.toISOString(), paymentMethod: "demo-card"
       });
     });
