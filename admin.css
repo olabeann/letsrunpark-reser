@@ -37,3 +37,4 @@
 .developer-policy-dialog .policy-group.is-pending>header{background:#fff9e7}
 @media(max-width:997px){.developer-policy-body{padding:14px}.developer-policy-tabs{padding:10px 14px}.policy-flow-list{grid-template-columns:1fr}.developer-policy-dialog>form>header,.developer-policy-dialog footer{padding:16px}.developer-policy-dialog footer>span{display:none}}
 @media(max-width:560px){.developer-policy-tabs button{grid-template-columns:34px 1fr;padding:0 10px}.developer-policy-tabs button small{display:none}.developer-policy-tabs span{font-size:10px}.developer-policy-dialog>form>header h2{font-size:20px}.developer-policy-dialog>form>header p{display:none}.policy-rule{grid-template-columns:1fr;gap:4px}.policy-rule dd{font-size:10px}}
+#detail-image-preview{width:100%;max-width:220px;height:120px;object-fit:cover;border-radius:9px;margin-top:10px;border:1px solid var(--admin-line)}

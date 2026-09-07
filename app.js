@@ -401,6 +401,7 @@
     byId("cart-count").textContent = cart.length;
     byId("header-cart-count").textContent = cart.length;
     byId("view-cart").hidden = cart.length === 0;
+    byId("header-logout").hidden = !currentMember;
     byId("cart-total").textContent = money(total);
     byId("cart-subtotal").textContent = money(subtotal);
     byId("cart-discount").textContent = (subtotal > total ? "−" : "") + money(subtotal - total);
@@ -419,6 +420,12 @@
     byId("cart-page-error").hidden = !error;
     byId("to-checkout").disabled = !cart.length || !store || !!error;
     byId("complete-payment").disabled = isPaying || !cart.length || !!error;
+    var cartedProgramKeys = cart.map(function (item) { return item.programKey; });
+    var addLinks = document.querySelectorAll("#cart-program-links [data-program-key]");
+    addLinks.forEach(function (link) {
+      link.hidden = cartedProgramKeys.includes(link.getAttribute("data-program-key"));
+    });
+    byId("cart-program-links").hidden = Array.from(addLinks).every(function (link) { return link.hidden; });
   }
 
   function startCheckout() {
@@ -548,7 +555,6 @@
     var list = byId("ticket-list");
     ticketReservations = ticketListReservations();
     list.replaceChildren();
-    byId("ticket-count").textContent = ticketReservations.length + "개의 티켓";
 
     if (!ticketReservations.length) {
       var empty = document.createElement("div");
@@ -676,7 +682,6 @@
     byId("booking-program-tag").textContent = program.tag;
     byId("booking-page-title").textContent = program.name + " 예약";
     byId("booking-page-description").textContent = program.subtitle;
-    byId("booking-program-character").src = program.character;
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;
     byId("product-unit-price").textContent = money(program.price);
@@ -876,6 +881,16 @@
     byId("my-tickets-list-view").hidden = false;
     renderTicketList();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  byId("header-logout").addEventListener("click", function () {
+    try { window.sessionStorage.removeItem("ponylandDemoMember"); } catch (error) { /* ignore */ }
+    currentMember = null;
+    checkoutSnapshot = ""; completedOrder = null; ticketReservation = null; ticketReservations = [];
+    notify("로그아웃했습니다.");
+    selectProgram(program.key); goToStep(1); syncProgramExtras(); renderCart();
+  });
+  byId("member-withdraw").addEventListener("click", function () {
+    window.confirm("회원탈퇴 시 이 계정의 예약·장바구니를 포함한 전체 내역이 삭제됩니다. 계속할까요?");
   });
   document.querySelectorAll(".payment-options button").forEach(function (button) {
     button.addEventListener("click", function () {

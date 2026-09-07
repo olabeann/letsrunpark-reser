@@ -8,6 +8,7 @@
   var deletedReservationIds = [];
   var activeProgramKey = null;
   var activeSessionKey = null;
+  var pendingImageDataUrl = null;
   var sessionProgramKey = null;
   var organization = {
     "서울": ["홍보부", "브랜드총괄부", "발매운영부", "서울고객안전부", "공원화사업추진TF"],
@@ -238,7 +239,7 @@
       var appliedDiscounts = discountPolicies.filter(function (discount) { return discountAppliesToProgram(discount, item); }).map(function (discount) { return discount.name; });
       var row = document.createElement("tr"); row.dataset.programKey = item.key;
       row.innerHTML = '<td><strong>' + escapeHtml(item.location || "서울") + '</strong><small>' + escapeHtml(item.department || "담당 부서 미지정") + '</small></td>' +
-        '<td><strong>' + escapeHtml(item.programName) + '</strong><small>' + escapeHtml(item.programType || "기타") + '</small></td>' +
+        '<td><strong>' + escapeHtml(item.programName) + '</strong></td>' +
         '<td><strong>' + money(item.price || 0) + '</strong></td>' +
         '<td><strong>' + escapeHtml(weekdayText(item.saleDays)) + '</strong><small>' + escapeHtml((item.saleStartDate || "미설정") + " ~ " + (item.saleEndDate || "미설정")) + '</small></td>' +
         '<td><strong>' + sessions.length + '개</strong><small>판매중 ' + activeSessions.length + '개 · 온라인 수량 설정</small></td>' +
@@ -259,9 +260,13 @@
     refreshProgramInputs();
     byId("detail-location").value = item.location || "서울";
     refreshDepartmentSelect("detail-department", byId("detail-location").value, item.department || organization[byId("detail-location").value][0]);
-    byId("detail-program-type").value = item.programType || "기타";
     byId("detail-program").value = item.programName || "";
     byId("detail-price").value = item.price || 0;
+    pendingImageDataUrl = null;
+    byId("detail-image").value = "";
+    var imagePreview = byId("detail-image-preview");
+    imagePreview.src = item.image || "";
+    imagePreview.hidden = !item.image;
     byId("detail-notice").value = item.noticeText || "";
     byId("detail-sale-start").value = item.saleStartDate || "";
     byId("detail-sale-end").value = item.saleEndDate || "";
@@ -325,6 +330,7 @@
   function saveProductDetail(event) {
     var programName = byId("detail-program").value.trim();
     if (!programName) { event.preventDefault(); notify("프로그램명을 입력해주세요."); return; }
+    if (!pendingImageDataUrl) { event.preventDefault(); notify("대표 이미지를 업로드해주세요."); return; }
     var existing = activeProgramKey ? programCatalog().find(function (item) { return item.key === activeProgramKey; }) : null;
     var location = byId("detail-location").value;
     var department = byId("detail-department").value;
@@ -351,14 +357,14 @@
       key: activeProgramKey || "custom-program-" + Date.now(),
       programKey: activeProgramKey || "custom-program-" + Date.now(),
       programName: programName,
-      location: location, department: department, programType: byId("detail-program-type").value,
+      location: location, department: department, programType: (existing && existing.programType) || "기타",
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
       bookingWindow: existing && existing.bookingWindow != null ? existing.bookingWindow : defaultBookingWindow,
       bookingStartDate: bookingStartDate, bookingEndDate: bookingEndDate,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
-      price: Number(byId("detail-price").value) || 0, image: (existing && existing.image) || "assets/pony/cover.jpg",
+      price: Number(byId("detail-price").value) || 0, image: pendingImageDataUrl,
       noticeText: byId("detail-notice").value.trim(),
       discountIds: discountIds, active: existing ? existing.active : true
     });
@@ -635,6 +641,18 @@
   byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
   byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
   byId("open-discounts-from-product").addEventListener("click", function () { openDiscountManager(); notify("할인을 저장한 뒤 프로그램 수정 화면에서 적용할 수 있습니다."); });
+  byId("detail-image").addEventListener("change", function (event) {
+    var file = event.target.files && event.target.files[0];
+    var imagePreview = byId("detail-image-preview");
+    if (!file) { pendingImageDataUrl = null; imagePreview.src = ""; imagePreview.hidden = true; return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      pendingImageDataUrl = reader.result;
+      imagePreview.src = pendingImageDataUrl;
+      imagePreview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  });
   byId("save-product-detail").addEventListener("click", saveProductDetail);
   byId("program-edit-back").addEventListener("click", function () { showView("programs"); });
   byId("program-sessions-back").addEventListener("click", function () { showView("programs"); });
