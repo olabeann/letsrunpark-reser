@@ -825,13 +825,14 @@
     button.addEventListener("click", function () { goToStep(1); });
   });
   function openDeveloperPolicy() {
+    if (window.DeveloperPolicy) { window.DeveloperPolicy.toggle(); return; }
     var dialog = byId("developer-policy-dialog");
     if (dialog && !dialog.open) dialog.showModal();
   }
   var developerPolicyButton = byId("open-developer-policy");
   if (developerPolicyButton) developerPolicyButton.addEventListener("click", openDeveloperPolicy);
   document.addEventListener("keydown", function (event) {
-    if (event.altKey && !event.metaKey && !event.ctrlKey && event.key.toLowerCase() === "p") {
+    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
       event.preventDefault();
       openDeveloperPolicy();
     }

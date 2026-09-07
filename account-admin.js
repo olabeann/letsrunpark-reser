@@ -131,4 +131,10 @@
   byId("account-location").addEventListener("change", function () { refreshDepartments(byId("account-location").value, ""); });
   byId("generate-account-password").addEventListener("click", generatePassword);
   byId("save-admin-account").addEventListener("click", saveAccount);
+  document.addEventListener("keydown", function (event) {
+    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
+      event.preventDefault();
+      if (window.DeveloperPolicy) window.DeveloperPolicy.toggle();
+    }
+  });
 })();
