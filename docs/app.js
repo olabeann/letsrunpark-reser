@@ -721,7 +721,12 @@
   function ticketListReservations(now) {
     now = now || new Date();
     var reservations = readReservations();
-    var visibleReservations = reservations.length ? reservations.slice() : defaultTicketReservations(now);
+    // Demo samples always show one ticket per status (upcoming/active/ended) so the three
+    // states stay visible for reference even after the account has its own real bookings.
+    var reservedIds = {};
+    reservations.forEach(function (item) { reservedIds[item.id] = true; });
+    var samples = defaultTicketReservations(now).filter(function (item) { return !reservedIds[item.id]; });
+    var visibleReservations = reservations.concat(samples);
     var stateOrder = { upcoming: 0, active: 1, ended: 2 };
     return visibleReservations.sort(function (first, second) {
       return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
@@ -875,7 +880,7 @@
     }
     byId("citizen-discount").checked = state.discount;
     byId("date-picker").open = false;
-    byId("booking-program-tag").textContent = "체험";
+    byId("booking-program-tag").textContent = "렛츠런파크 체험";
     byId("booking-page-title").textContent = "체험 예약";
     byId("booking-page-description").textContent = "원하는 체험과 이용 일정을 선택해 예약해보세요.";
     byId("product-title").textContent = program.name;
