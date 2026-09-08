@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>빈 화면 확인 · 렛츠런파크</title>
   <link rel="stylesheet" href="tokens.css">
-  <link rel="stylesheet" href="empty-states.css?v=20260908-2">
+  <link rel="stylesheet" href="empty-states.css?v=20260908-4">
 </head>
 <body>
   <header class="empty-gallery-header">
@@ -15,6 +15,7 @@
   <main>
     <nav class="empty-gallery-tabs" role="tablist" aria-label="빈 화면 유형">
       <button role="tab" aria-selected="true" data-tab="customer">사용자 예약</button>
+      <button role="tab" aria-selected="false" data-tab="customer-tickets">사용자 · 내 티켓</button>
       <button role="tab" aria-selected="false" data-tab="reservation">예약·티켓</button>
       <button role="tab" aria-selected="false" data-tab="program">프로그램·회차</button>
       <button role="tab" aria-selected="false" data-tab="operation">운영·정산</button>
@@ -24,10 +25,23 @@
     <section class="empty-gallery-panel is-active" data-panel="customer">
       <header><h2>사용자 예약 화면</h2><p>장바구니에 담긴 체험이 없을 때</p></header>
       <article class="customer-empty-screen">
-        <header><div class="customer-empty-brand"><img src="assets/logo/pony-land.png" alt=""><b>렛츠런파크 서울</b></div><button type="button">예약 조회</button></header>
-        <div class="customer-empty-body">
-          <div class="customer-empty-title"><h3>장바구니 <span>0</span></h3><span>예약 옵션으로 →</span></div>
-          <div class="customer-empty-content"><i>＋</i><strong>장바구니가 비어 있어요.</strong><p>원하는 체험과 이용 일정을 선택해 담아보세요.</p><button type="button">체험 둘러보기</button></div>
+        <div class="customer-empty-title"><h3>장바구니 <span>0</span></h3><span>예약 옵션으로 →</span></div>
+        <div class="customer-empty-layout">
+          <div class="customer-empty-main">
+            <div class="customer-empty-content"><i>＋</i><strong>장바구니가 비어 있어요</strong><p>마음에 드는 체험을 담아보세요.</p></div>
+            <nav class="customer-empty-programs" aria-label="체험 둘러보기"><span>체험 둘러보기</span><button type="button">포니 타기</button><button type="button">포니랑 놀기</button></nav>
+          </div>
+          <aside class="customer-empty-summary"><h3>결제 금액</h3><dl><div><dt>상품 금액</dt><dd>0원</dd></div><div><dt>할인 금액</dt><dd>0원</dd></div></dl><div class="customer-empty-total"><span>총 결제 예정 금액</span><strong>0원</strong></div><button type="button" disabled>0개 상품 주문하기</button><small>프로그램·날짜·회차별로 티켓이 발급됩니다.</small></aside>
+        </div>
+      </article>
+    </section>
+
+    <section class="empty-gallery-panel" data-panel="customer-tickets">
+      <header><h2>사용자 · 내 티켓</h2><p>예약한 티켓이 아직 없을 때</p></header>
+      <article class="customer-ticket-empty-screen">
+        <div class="customer-ticket-empty-wrap">
+          <header class="customer-ticket-empty-head"><h3>내 티켓</h3><p>예약한 티켓을 선택하면 실시간 입장 상태를 확인할 수 있어요.</p></header>
+          <div class="customer-ticket-empty-content"><i aria-hidden="true">□</i><strong>아직 예약한 티켓이 없어요.</strong><p>예약을 완료하면 이곳에서 입장권을 확인할 수 있습니다.</p><button type="button">예약하러 가기</button></div>
         </div>
       </article>
     </section>
@@ -37,7 +51,6 @@
       <div class="empty-gallery-grid">
         <article class="screen-card"><div class="mock-filters"><span>예약번호 검색</span><span>전체 지역</span><span>전체 상태</span></div><div class="screen-empty"><i>⌕</i><strong>검색 결과가 없습니다.</strong><p>검색어나 필터 조건을 변경해 다시 확인해주세요.</p><button class="is-secondary">검색 조건 초기화</button></div></article>
         <article class="screen-card"><div class="screen-card__bar"><b>예약 목록</b><span>0</span></div><div class="screen-empty"><i>□</i><strong>예약내역이 없습니다.</strong><p>예약이 접수되면 이곳에 표시됩니다.</p></div></article>
-        <article class="screen-card"><div class="screen-card__bar"><b>내 티켓</b></div><div class="screen-empty"><i>♧</i><strong>예약내역이 없습니다.</strong><p>예약을 완료하면 이곳에서 티켓을 확인할 수 있습니다.</p><button>예약하기</button></div></article>
       </div>
     </section>
 

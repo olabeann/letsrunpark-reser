@@ -11,7 +11,7 @@ const accountAdmin = readFileSync(resolve(__dirname, '../account-admin.html'), '
 test('each relevant screen loads the keyboard-only shared policy viewer', () => {
   for (const html of [storefront, admin, accountAdmin]) {
     assert.match(html, /class="developer-policy-keys" role="tablist"/);
-    assert.match(html, /developer-policy\.js\?v=20260908-policyfix1/);
+    assert.match(html, /developer-policy\.js\?v=[^"']+/);
     assert.match(html, /서비스 정책 · FE · BE/);
     assert.doesNotMatch(html, /id="open-developer-policy"/);
   }
@@ -45,4 +45,6 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /className = "policy-marker"/);
   assert.match(source, /className = "policy-inspector"/);
   assert.match(source, /window\.DeveloperPolicy = createInspector/);
+  assert.match(source, /data-policy-all>전체 정책 보기/);
+  assert.match(source, /dialog\.showModal\(\)/);
 });

@@ -297,8 +297,9 @@
       var policyTitle = context === "account" ? "계정 정책" : context === "admin" ? "관리 정책" : "예약 정책";
       panel.innerHTML = '<header><div><b>P</b><span><strong>' + policyTitle + ' ' + topics.length + '개</strong><small>표시된 영역을 누르면 상세가 열립니다.</small></span></div><button type="button" data-policy-close aria-label="정책 보기 종료">종료</button></header><nav class="policy-inspector-list" aria-label="현재 화면 정책">' + topics.map(function (topic, index) {
         return '<button type="button" data-inspector-topic="' + index + '"><small>' + topic.key + '</small><strong>' + escapeHtml(topic.title) + '</strong><span>' + escapeHtml(topic.summary) + '</span></button>';
-      }).join("") + '</nav><footer><span>정책 키 클릭 또는 <kbd>Alt</kbd>+<kbd>P</kbd></span><button type="button" data-policy-close>정책 보기 종료</button></footer>';
+      }).join("") + '</nav><footer><span>정책 키 클릭 또는 <kbd>Alt</kbd>+<kbd>P</kbd></span><div class="policy-inspector-actions"><button type="button" data-policy-all>전체 정책 보기</button><button type="button" data-policy-close>정책 보기 종료</button></div></footer>';
       panel.querySelectorAll("[data-policy-close]").forEach(function (button) { button.addEventListener("click", close); });
+      panel.querySelector("[data-policy-all]").addEventListener("click", openAllPolicies);
       panel.querySelectorAll("[data-inspector-topic]").forEach(function (button) {
         button.addEventListener("click", function () { showTopic(Number(button.dataset.inspectorTopic)); });
       });
@@ -308,11 +309,18 @@
       activeTopic = index;
       var topic = topics[index];
       panel.classList.add("is-detail");
-      panel.innerHTML = '<header><button class="policy-inspector-back" type="button" aria-label="정책 목록으로">‹</button><div><small>' + topic.key + '</small><strong>' + escapeHtml(topic.title) + '</strong></div><button type="button" data-policy-close aria-label="상세 닫기">×</button></header><div class="policy-inspector-detail">' + renderTopic(topic, context, true) + '</div><footer><span>' + topic.key + ' · FE와 BE 연결 정책</span><button type="button" data-policy-index>목록 보기</button></footer>';
+      panel.innerHTML = '<header><button class="policy-inspector-back" type="button" aria-label="정책 목록으로">‹</button><div><small>' + topic.key + '</small><strong>' + escapeHtml(topic.title) + '</strong></div><button type="button" data-policy-close aria-label="상세 닫기">×</button></header><div class="policy-inspector-detail">' + renderTopic(topic, context, true) + '</div><footer><span>' + topic.key + ' · FE와 BE 연결 정책</span><div class="policy-inspector-actions"><button type="button" data-policy-all>전체 정책 보기</button><button type="button" data-policy-index>목록 보기</button></div></footer>';
       panel.querySelector("[data-policy-close]").addEventListener("click", renderIndex);
       panel.querySelector(".policy-inspector-back").addEventListener("click", renderIndex);
       panel.querySelector("[data-policy-index]").addEventListener("click", renderIndex);
+      panel.querySelector("[data-policy-all]").addEventListener("click", openAllPolicies);
       panel.scrollTop = 0;
+    }
+
+    function openAllPolicies() {
+      var dialog = document.getElementById("developer-policy-dialog");
+      close();
+      if (dialog && !dialog.open) dialog.showModal();
     }
 
     function buildMarkers() {
