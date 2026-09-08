@@ -152,6 +152,8 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .table-status.is-review {background:#fff0f2;color:#d64e62}
 .table-status.is-cancelled {background:#f1f2f4;color:#747980}
 .reservation-table input {accent-color:var(--admin-blue)}
+.reservation-table{min-width:1120px}
+.reservation-panel{scroll-margin-top:82px}.table-pagination #reservation-page-buttons{display:flex;gap:4px}.table-pagination button:disabled{cursor:not-allowed;opacity:.4}
 .table-pagination {justify-content:center}
 .table-pagination>span {position:absolute;left:calc(250px + 55px)}
 .table-pagination button.is-current {background:#f3f4f6;color:#202328;border-color:#f3f4f6}
@@ -521,3 +523,23 @@ td small {font-size:11px}
 .policy-inspector-detail{flex:1;padding:14px;overflow:auto;background:#f4f6f5}.policy-inspector-detail .policy-topic-head{padding:15px;border:0;border-radius:9px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff}.policy-inspector-detail .policy-topic-head h3{font-size:18px}.policy-inspector-detail .policy-topic-head>span{display:none}.policy-inspector-detail .policy-lanes{grid-template-columns:1fr}.policy-inspector-detail .policy-lane>header{padding:13px 15px;border:0;border-bottom:1px solid var(--admin-line);display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;background:#fff}.policy-inspector-detail .policy-lane>header>div{min-width:0}.policy-inspector-detail .policy-rule{grid-template-columns:70px minmax(0,1fr)}.policy-inspector-detail .policy-rule dd{font-size:10px}
 .policy-inspector>footer{margin-top:auto;padding:11px 14px;border-top:1px solid #e5e8eb;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff}.policy-inspector>footer span{color:#747b83;font-size:9px}.policy-inspector>footer button{padding:7px 9px;border-radius:7px;background:#1769ff;color:#fff;font-size:9px;font-weight:700}.policy-inspector>footer kbd{min-width:18px;height:17px;font-size:8px}
 @media(max-width:760px){.policy-inspector,.policy-inspector.is-detail{inset:auto 8px 8px;width:auto;max-height:78vh}.policy-inspector-detail{padding:10px}.policy-inspector-detail .policy-topic-head{padding:13px}.policy-inspector-detail .policy-lane>header{grid-template-columns:34px minmax(0,1fr) auto}.policy-target{outline-offset:3px}}
+
+/* Readable policy typography shared by the modal and the in-page inspector. */
+.developer-policy-dialog header p{font-size:14px;line-height:1.5}.developer-policy-keys b{font-size:11px}.developer-policy-keys span{font-size:13px}
+.policy-topic-head small{font-size:11px}.policy-topic-head p{font-size:13px;line-height:1.5}.policy-topic-head>span{font-size:11px}
+.policy-lane>header>b{font-size:11px}.policy-lane>header small{font-size:11px}.policy-lane>header h4{font-size:14px}.policy-lane>header>span{font-size:11px}
+.policy-flow summary{min-height:56px;font-size:14px;line-height:1.45}.policy-flow dl{padding-bottom:18px}.policy-rule{grid-template-columns:88px 1fr;gap:14px;padding:11px 0}.policy-rule dt{font-size:12px}.policy-rule dd,.policy-inspector-detail .policy-rule dd{font-size:13px;line-height:1.65}.policy-lane-empty,.policy-decision>strong{font-size:13px}
+.policy-inspector>header strong{font-size:14px}.policy-inspector>header small{font-size:11px}.policy-inspector-list small{font-size:11px}.policy-inspector-list strong{font-size:14px}.policy-inspector-list span{font-size:12px;line-height:1.55}.policy-inspector>footer span,.policy-inspector>footer button{font-size:11px}
+@media(max-width:560px){.policy-rule{grid-template-columns:1fr;gap:5px}.policy-rule dd,.policy-inspector-detail .policy-rule dd{font-size:13px}}
+
+/* Keep dropdown indicators comfortably inset across admin filters and forms. */
+.admin-page select{appearance:none;-webkit-appearance:none;padding-right:38px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b626a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:16px}
+
+/* Operating-date card follows the shared 12–16px admin type scale. */
+.operation-editor>header h2{font-size:var(--fs-body-lg)}
+.operation-editor>header p{font-size:var(--fs-caption);line-height:1.55}
+.operation-editor form>label>span,.operation-date-range label>span,.operation-editor legend{font-size:var(--fs-caption)}
+.operation-editor input[type=text],.operation-editor input[type=date],.operation-editor select{font-size:var(--fs-label)}
+.operation-editor form>button{font-size:var(--fs-label)}
+.operation-exception-list strong{font-size:var(--fs-caption)}
+.operation-exception-list span,.operation-exception-list button,.operation-exception-list>p{font-size:var(--fs-badge);line-height:1.5}

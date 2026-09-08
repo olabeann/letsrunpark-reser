@@ -93,7 +93,6 @@
       subtitle: "작은 포니와 함께하는 어린이 승마 체험",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
-      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       bookingWindow: 14,
       cancelMinutes: 10,
@@ -112,7 +111,6 @@
       noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.",
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
-      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       bookingWindow: 14,
       cancelMinutes: 10,
@@ -123,7 +121,6 @@
       name: "포니 승마체험",
       price: 5000,
       image: "assets/pony/cover.jpg",
-      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       experiences: {
         ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg" },
@@ -307,12 +304,21 @@
 
   function renderTicketRefundHistory() {
     var history = Array.isArray(ticketReservation.cancellationHistory) ? ticketReservation.cancellationHistory : [];
+    var cancelledQty = history.reduce(function (sum, item) { return sum + Number(item.qty || 0); }, 0);
+    var refundedAmount = history.reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+    var originalQty = Number(ticketReservation.qty || 0) + cancelledQty;
+    var originalPrice = Number(ticketReservation.price || 0) + refundedAmount;
     byId("ticket-refund-history").hidden = !history.length;
     byId("ticket-price-label").textContent = history.length ? "결제 잔액" : "결제 금액";
-    byId("ticket-confirmation-message").textContent = history.length ? "부분 취소 내역이 있습니다." : "예약이 확정되었습니다.";
+    byId("ticket-confirmation-message").textContent = history.length ? originalQty + "명 중 " + cancelledQty + "명 취소 · " + ticketReservation.qty + "명 이용 가능" : "예약이 확정되었습니다.";
+    byId("ticket-refund-summary-text").textContent = history.length ? "총 " + originalQty + "명 중 " + cancelledQty + "명의 취소를 접수했어요." : "";
+    byId("ticket-original-price").textContent = money(originalPrice);
+    byId("ticket-refunded-price").textContent = "−" + money(refundedAmount);
+    byId("ticket-remaining-price").textContent = money(ticketReservation.price);
     byId("ticket-refund-history-list").innerHTML = history.map(function (item) {
-      var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? "할인 " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
-      return '<article><span><strong>' + item.qty + '명 부분 취소 · 환불 접수</strong><small>' + escapeHtml(detail) + ' · ' + new Date(item.createdAt).toLocaleString("ko-KR") + '</small></span><b>−' + money(item.amount) + '</b></article>';
+      var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? "과천시민 할인 " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
+      var requestedAt = new Date(item.createdAt).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+      return '<article><span><strong>' + item.qty + '명 취소</strong><small>' + escapeHtml(detail) + '</small><small>접수 ' + escapeHtml(requestedAt) + '</small></span><div><em>환불 예정</em><b>−' + money(item.amount) + '</b></div></article>';
     }).join("");
   }
 
@@ -770,6 +776,7 @@
     byId("my-tickets-list-view").hidden = false;
     byId("ticket-detail-view").hidden = true;
     renderTicketList();
+    if (window.DeveloperPolicy) window.DeveloperPolicy.refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -939,6 +946,7 @@
       else if (step === 3) url.searchParams.set("view", "complete");
       if (url.href !== window.location.href) window.history[options.replace ? "replaceState" : "pushState"](null, "", url);
     }
+    if (window.DeveloperPolicy) window.DeveloperPolicy.refresh();
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 

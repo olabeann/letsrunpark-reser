@@ -78,3 +78,25 @@
  .shop-checkout{padding-top:20px}.shop-checkout>h1{font-size:25px}.checkout-items{padding-inline:16px}.reservation-complete{padding-inline:16px}.reservation-complete h1{font-size:26px}.cart-added-dialog{padding:30px 20px 22px}.cart-added-dialog h2{font-size:20px}.added-actions .btn{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.shop-product-card,.shop-product-photo img{transition:none}}
+
+/* Ticket cancellation summary: derived entirely from the existing cancellation history. */
+.ticket-refund-history{width:min(760px,calc(100% - 32px));margin:24px auto 0;padding:28px;text-align:left;background:var(--white);border-radius:var(--r-card)}
+.ticket-refund-history__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:0;border:0;color:var(--ink)}
+.ticket-refund-history__head h3{margin:0;font-size:var(--fs-h3)}
+.ticket-refund-history__head p{margin:8px 0 0;color:var(--grey);font-size:var(--fs-caption)}
+.ticket-refund-status{flex:0 0 auto;padding:6px 10px;border-radius:var(--r-full);background:var(--yellow-100);color:var(--yellow-700);font-size:var(--fs-badge);font-weight:var(--fw-bold)}
+.ticket-refund-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin:22px 0;background:var(--line);border-radius:var(--r-md);overflow:hidden}
+.ticket-refund-summary>div{padding:16px;background:var(--bg)}
+.ticket-refund-summary dt{color:var(--grey);font-size:var(--fs-badge)}
+.ticket-refund-summary dd{margin:7px 0 0;font-size:var(--fs-body-lg);font-weight:var(--fw-bold)}
+.ticket-refund-summary>div:nth-child(2) dd{color:var(--coral-700)}
+.ticket-refund-history-list article{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0;border-top:1px solid var(--line)}
+.ticket-refund-history-list article>span,.ticket-refund-history-list article>div{display:flex;flex-direction:column;gap:5px}
+.ticket-refund-history-list article strong{font-size:var(--fs-label)}
+.ticket-refund-history-list article small{color:var(--grey);font-size:var(--fs-badge)}
+.ticket-refund-history-list article>div{text-align:right;flex:0 0 auto}
+.ticket-refund-history-list article em{color:var(--grey);font-size:var(--fs-badge);font-style:normal}
+.ticket-refund-history-list article b{color:var(--coral-700);font-size:var(--fs-body)}
+.ticket-refund-help{margin:0;padding:16px;border-radius:var(--r-md);background:var(--yellow-100);color:var(--grey);font-size:var(--fs-caption);line-height:1.65}
+.ticket-refund-help strong{color:var(--ink)}
+@media(max-width:640px){.ticket-refund-history{margin-top:16px;padding:20px 16px}.ticket-refund-summary{grid-template-columns:1fr}.ticket-refund-summary>div{display:flex;align-items:center;justify-content:space-between;padding:13px 14px}.ticket-refund-summary dd{margin:0;font-size:var(--fs-body)}.ticket-refund-history-list article{align-items:flex-start}.ticket-refund-history__head h3{font-size:var(--fs-body-lg)}}
