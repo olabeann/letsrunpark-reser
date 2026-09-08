@@ -79,9 +79,10 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(error([item({ qty: 2, discount: true })]), '');
 });
 
-test('allows uncapped general purchases and enforces per-usage-date citizen discount limits', () => {
+test('caps combined ride/play purchases at 4 and enforces per-usage-date citizen discount limits', () => {
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
-  assert.equal(error([item({ qty: 3 }), play]), '');
+  assert.equal(error([item({ qty: 2 }), play]), '');
+  assert.match(error([item({ qty: 3 }), play]), /최대 4매/);
   assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
   const discountedRide = item({ qty: 1, discount: true });
   const discountedPlay = { ...play, qty: 1, discount: true };
@@ -90,10 +91,10 @@ test('allows uncapped general purchases and enforces per-usage-date citizen disc
   assert.equal(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), '');
 });
 
-test('has no daily general purchase cap and resets the discount cap per usage date', () => {
+test('blocks re-booking the same session and resets the discount cap per usage date', () => {
   const usedOnSameDate = [
-    item({ id: 'used-1', qty: 2 }),
-    item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 }),
+    item({ id: 'used-1', qty: 1 }),
+    item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1 }),
   ];
   assert.match(error([item({ qty: 1 })], usedOnSameDate), /겹칩니다/);
   assert.equal(error([item({ dateKey: '2026-08-30', qty: 4 })], usedOnSameDate), '');
@@ -106,11 +107,24 @@ test('blocks a cart that mixes more than one usage date', () => {
   assert.match(error([item(), item({ id: 'other-date', dateKey: '2026-08-30' })]), /하나의 이용일만/);
 });
 
-test('blocks mixed regions or departments and expired inventory holds', () => {
+test('blocks mixed regions or departments', () => {
   const busanPrograms = { ...programs, busan: { ...programs.ride, key: 'busan', region: '부산경남' } };
   const otherRegion = item({ id: 'other-region', programKey: 'busan', time: '10:20~10:45' });
   assert.match(rules.validationError([item(), otherRegion], [], memberId, busanPrograms, now), /같은 지역과 담당부서/);
-  assert.match(error([item({ expiresAt: new Date(now.getTime() - 1000).toISOString() })]), /점유 시간이 만료/);
+});
+
+test('caps combined ride and play purchases at 4 per usage date across cart and reservations', () => {
+  const ride = item({ qty: 2 });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2, price: 8000 });
+  assert.equal(error([ride, play]), '');
+  const savedRide = item({ id: 'saved-ride', qty: 3 });
+  assert.match(error([play], [savedRide]), /최대 4매/);
+  assert.match(error([ride, play, item({ id: 'extra', time: '11:00~11:20', qty: 1 })]), /최대 4매/);
+});
+
+test('fails payment when another member already paid for the same session', () => {
+  const store = { revision: 1, reservations: [item({ id: 'paid-1', memberId: 'other', qty: 8 })], carts: { [memberId]: [item({ qty: 1 })] } };
+  assert.throws(() => rules.buildOrder(store, memberId, programs, now, 'GP-1'), (err) => err.code === 'SESSION_TAKEN');
 });
 
 test('keeps ride and play as independent sellable programs in one cart', () => {

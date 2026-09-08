@@ -74,17 +74,26 @@
             <header><button id="operation-month-prev" type="button" aria-label="이전 달">‹</button><h2 id="operation-month-title">2026년 9월</h2><button id="operation-month-next" type="button" aria-label="다음 달">›</button></header>
             <div class="operation-weekdays" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
             <div class="operation-calendar" id="operation-calendar" aria-label="운영일 예외 캘린더"></div>
-            <footer><span><i class="is-operating"></i>운영일</span><span><i class="is-closed"></i>휴장일</span><small>날짜를 누르면 휴장 시작일과 종료일에 입력됩니다.</small></footer>
+            <footer><span><i class="is-operating"></i>운영일</span><span><i class="is-partial"></i>일부 휴장</span><span><i class="is-closed"></i>휴장일</span><small>날짜를 누르면 오른쪽에서 프로그램별로 바로 처리할 수 있습니다.</small></footer>
           </section>
           <section class="admin-panel operation-editor">
-            <header><div><h2>휴장일 등록</h2><p>연속된 휴장 기간은 시작일과 종료일을 함께 지정하세요.</p></div></header>
-            <form id="operation-exception-form">
-              <label><span>대상 지역</span><select id="operation-region"><option>서울</option><option>부산경남</option><option>제주</option></select></label>
-              <label><span>대상 프로그램</span><select id="operation-program"><option value="all">전체 프로그램</option></select></label>
-              <div class="operation-date-range"><label><span>시작일</span><input id="operation-start-date" type="date" required></label><label><span>종료일</span><input id="operation-end-date" type="date" required></label></div>
-              <label><span>휴장 사유</span><input id="operation-reason" type="text" placeholder="예: 시설 점검, 기상 악화"></label>
-              <button class="admin-button admin-button--primary" type="submit">휴장일 등록</button>
-            </form>
+            <header><div><h2>휴장 처리</h2><p>대상 지역을 고른 뒤 달력에서 날짜를 클릭하세요.</p></div></header>
+            <label class="operation-region-field"><span>대상 지역</span><select id="operation-region"><option>서울</option><option>부산경남</option><option>제주</option></select></label>
+            <div class="operation-day-quick" id="operation-day-quick">
+              <strong id="operation-day-quick-title">날짜를 선택하세요</strong>
+              <p id="operation-day-quick-desc">달력에서 날짜를 클릭하면 그날 운영하는 프로그램이 표시됩니다.</p>
+              <ul class="operation-day-programs" id="operation-day-programs" hidden></ul>
+              <button class="admin-button admin-button--ghost" type="button" id="operation-day-close-all" hidden>이 날 전체 휴장으로 전환</button>
+            </div>
+            <details class="operation-range-form">
+              <summary>여러 날짜를 한 번에 휴장 처리</summary>
+              <form id="operation-exception-form">
+                <label><span>대상 프로그램</span><select id="operation-program"><option value="all">전체 프로그램</option></select></label>
+                <div class="operation-date-range"><label><span>시작일</span><input id="operation-start-date" type="date" required></label><label><span>종료일</span><input id="operation-end-date" type="date" required></label></div>
+                <label><span>휴장 사유</span><input id="operation-reason" type="text" placeholder="예: 시설 점검, 기상 악화"></label>
+                <button class="admin-button admin-button--primary" type="submit">휴장 기간 등록</button>
+              </form>
+            </details>
             <div class="operation-exception-list" id="operation-exception-list"></div>
           </section>
         </div>

@@ -137,9 +137,6 @@
     if (dateError) return dateError;
     var scopeError = cartScopeError(items, programs);
     if (scopeError) return scopeError;
-    if (items.some(function (item) { return item.expiresAt && new Date(item.expiresAt).getTime() <= now.getTime(); })) {
-      return "장바구니 재고 점유 시간이 만료되었습니다. 일정을 다시 선택해주세요.";
-    }
     var purchaseError = purchaseLimitError(items, reservations, memberId, programs);
     if (purchaseError) return purchaseError;
     var discountError = discountLimitError(items, reservations, memberId, programs);
@@ -165,10 +162,37 @@
     return "";
   }
 
+  // Seats are never reserved ahead of payment; availability is only settled at the
+  // payment instant by comparing the requested seats against seats already paid for.
+  function slotCapacity(slot) {
+    if (Number.isFinite(slot.capacity)) return slot.capacity;
+    var match = /([0-9]+)\s*자리/.exec(slot.stock || "");
+    return match ? Number(match[1]) : Infinity;
+  }
+
+  function capacityConflict(items, reservations, programs) {
+    return items.find(function (item) {
+      var program = programFor(item, programs);
+      var slot = program && program.slots && program.slots.find(function (candidate) { return candidate.time === item.time; });
+      if (!slot) return false;
+      var capacity = slotCapacity(slot);
+      var paidSeats = reservations.filter(function (entry) {
+        return isActive(entry) && entry.programKey === item.programKey && entry.dateKey === item.dateKey && entry.time === item.time;
+      }).reduce(function (sum, entry) { return sum + (Number.isInteger(entry.qty) ? entry.qty : 0); }, 0);
+      return paidSeats + item.qty > capacity;
+    }) || null;
+  }
+
   function buildOrder(store, memberId, programs, now, orderId) {
     var cart = store.carts[memberId] || [];
     var error = validationError(cart, store.reservations, memberId, programs, now);
     if (error) throw new Error(error);
+    var conflict = capacityConflict(cart, store.reservations, programs);
+    if (conflict) {
+      var conflictError = new Error(conflict.name + " " + conflict.time + " 회차는 다른 결제로 이미 마감되었습니다.");
+      conflictError.code = "SESSION_TAKEN";
+      throw conflictError;
+    }
     if (store.reservations.some(function (item) { return item.orderId === orderId; })) throw new Error("이미 처리된 결제입니다.");
     var tickets = cart.map(function (item, index) {
       var quoted = quoteItem(item, programs);

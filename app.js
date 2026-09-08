@@ -96,6 +96,7 @@
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
       cancelMinutes: 10,
       slots: ponySlots
@@ -116,6 +117,7 @@
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
       cancelMinutes: 10,
       slots: ponySlots
@@ -459,10 +461,7 @@
 
   function ownCart(store) {
     if (!currentMember || !store) return [];
-    var now = Date.now();
-    return (store.carts[currentMember.id] || []).filter(function (item) {
-      return !item.expiresAt || new Date(item.expiresAt).getTime() > now;
-    });
+    return store.carts[currentMember.id] || [];
   }
 
   function makeCartItem() {
@@ -477,8 +476,7 @@
       time: state.time,
       qty: state.qty,
       price: amount(),
-      discount: state.discount,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+      discount: state.discount
     };
   }
 
@@ -518,10 +516,13 @@
       if (!item) return;
       if (delta === null) cart = cart.filter(function (entry) { return entry.id !== id; });
       else {
-        var changed = Object.assign({}, item, { qty: item.qty + delta, expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() });
+        var changed = Object.assign({}, item, { qty: item.qty + delta });
         try { changed = BookingRules.quoteItem(changed, programs); }
         catch (error) { notify(error.message); return; }
-        cart = cart.map(function (entry) { return entry.id === id ? changed : entry; });
+        var nextCart = cart.map(function (entry) { return entry.id === id ? changed : entry; });
+        var limitError = BookingRules.validationError(nextCart, store.reservations, memberId, programs, new Date());
+        if (limitError) { notify(limitError); return; }
+        cart = nextCart;
       }
       store.carts[memberId] = cart; store.revision += 1;
       if (writeStore(store)) { checkoutSnapshot = state.step === 2 ? JSON.stringify(cart) : ""; byId("terms").checked = false; }
@@ -542,10 +543,6 @@
       body.append(createTextElement("strong", "", item.name));
       body.append(createTextElement("p", "", item.date + " · " + item.time));
       body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · 과천시민 할인" : "")));
-      if (editable && item.expiresAt) {
-        var remaining = Math.max(0, Math.ceil((new Date(item.expiresAt).getTime() - Date.now()) / 60000));
-        body.append(createTextElement("small", "cart-item__hold", "재고 점유 " + remaining + "분 남음"));
-      }
       card.append(thumbnail, body, createTextElement("strong", "cart-item__price", money(item.price)));
       if (editable) {
         var actions = document.createElement("div"); actions.className = "cart-item__actions";
@@ -569,10 +566,6 @@
 
   function renderCart() {
     var store = readStore(), cart = ownCart(store);
-    if (store && currentMember && (store.carts[currentMember.id] || []).length !== cart.length) {
-      store.carts[currentMember.id] = cart; store.revision += 1; writeStore(store);
-      notify("장바구니의 재고 점유 시간이 만료되어 해당 상품을 비웠습니다.");
-    }
     var pricedCart = cart.map(function (item) {
       try { return BookingRules.quoteItem(item, programs); } catch (error) { return item; }
     });
@@ -648,8 +641,10 @@
         byId("complete-count").textContent = order.tickets.length + "개 회차의 예약이 완료되었어요.";
         goToStep(3); notify("결제가 완료되었습니다.");
       });
-    } catch (error) { notify(error.message || "결제 처리 중 문제가 생겼습니다. 다시 시도해주세요."); }
-    finally { isPaying = false; renderSlots(); update(); renderCart(); }
+    } catch (error) {
+      if (error && error.code === "SESSION_TAKEN") { window.location.href = "payment-failed.html?product=" + encodeURIComponent(program.key); return; }
+      notify(error.message || "결제 처리 중 문제가 생겼습니다. 다시 시도해주세요.");
+    } finally { isPaying = false; renderSlots(); update(); renderCart(); }
   }
 
   function createTextElement(tagName, className, textContent) {

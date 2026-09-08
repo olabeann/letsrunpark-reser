@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>결제 실패 · 렛츠런파크</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="error.css?v=20260908-1">
+</head>
+<body>
+  <header class="error-header">
+    <a href="index.html" aria-label="렛츠런파크 예약 홈"><span>LET'S RUN PARK</span><strong>렛츠런파크 예약</strong></a>
+    <a class="error-header__home" href="index.html">처음으로</a>
+  </header>
+  <main class="error-page">
+    <section class="error-card" aria-labelledby="error-title">
+      <span class="error-code">PAYMENT FAILED</span>
+      <div class="error-icon" aria-hidden="true">!</div>
+      <h1 id="error-title">선택된 시간은 이미 결제가 완료 되었어요.</h1>
+      <p>다른 시간을 선택해주세요.</p>
+      <div class="error-actions">
+        <a id="back-to-booking" href="index.html">예약 페이지로 이동</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    var product = new URLSearchParams(window.location.search).get("product");
+    if (product) document.getElementById("back-to-booking").href = "index.html?product=" + encodeURIComponent(product);
+  </script>
+</body>
+</html>
