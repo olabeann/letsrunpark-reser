@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>렛츠런파크 체험 예약</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260908-policyall1"><link rel="stylesheet" href="styles.css?v=20260908-policyfix1">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260908-policywrap1"><link rel="stylesheet" href="styles.css?v=20260908-policyfix1">
 </head>
 <body data-page="booking" class="shop-page">
   <header class="reservation-header shop-header">
@@ -22,7 +22,7 @@
       <div class="developer-policy-legacy" hidden>
         <section><h3>회원</h3><ul><li>네이버·카카오 로그인만 제공하며 비회원 예약은 허용하지 않습니다.</li><li>로그인 제공자가 다르면 별도 계정으로 식별하고 계정 통합은 제공하지 않습니다.</li><li>한 계정으로 여러 어린이의 티켓을 예약할 수 있습니다.</li></ul></section>
         <section><h3>프로그램·회차 구조</h3><ul><li>프로그램을 먼저 등록하고 그 하위에 반복 회차를 등록합니다.</li><li>프로그램에는 지역·부서·유형·명칭·기본 가격·운영 일정·노출 기간·판매 기간·취소 가능 시간·할인을 저장합니다.</li><li>회차에는 시작·종료 시간, 온라인 판매 수량, 판매 상태만 저장합니다.</li><li>회차명은 시간순으로 자동 생성하며 사용자 안내문과 현장 판매 수량은 입력받지 않습니다.</li><li>현장 키오스크는 API 미연동이므로 온라인 관리자에서 현장 재고를 관리하지 않습니다.</li></ul></section>
-        <section><h3>예약·재고</h3><ul><li>일반 구매에는 계정별 일일 수량 한도를 두지 않고 회차 잔여 수량만 적용합니다.</li><li>모든 지역의 기존 예약과 장바구니를 합산해 시간이 겹치는 결제를 차단합니다.</li><li>한 장바구니에는 동일 이용일·지역·담당부서의 비중복 회차만 담을 수 있습니다.</li><li>장바구니 수량은 마지막 변경부터 10분간 재고를 점유하며 삭제·결제·만료 시 해제합니다.</li><li>결제 직전에 재고·시간 충돌·할인 사용량을 서버에서 다시 검증합니다.</li></ul></section>
+        <section><h3>예약·재고</h3><ul><li>일반 구매에는 계정별 일일 수량 한도를 두지 않고 회차 잔여 수량만 적용합니다.</li><li>모든 지역의 기존 예약과 장바구니를 합산해 시간이 겹치는 결제를 차단합니다.</li><li>한 장바구니에는 동일 이용일·지역·담당부서의 비중복 회차만 담을 수 있습니다.</li><li>장바구니는 재고를 미리 점유하지 않으며, 같은 회차를 여러 사용자가 동시에 담아도 결제 전까지는 서로 막지 않습니다.</li><li>결제는 먼저 완료한 순서대로 확정되며, 몇 초 차이로 결제가 밀린 사용자에게는 "이미 결제가 완료된 회차입니다."라고 안내합니다.</li><li>결제 직전에 재고·시간 충돌·할인 사용량을 서버에서 다시 검증합니다.</li></ul></section>
         <section><h3>할인·취소</h3><ul><li>할인은 정책별 이용일 한도를 적용하며 환불 완료 시 취소 티켓 수만큼 한도를 복원합니다.</li><li>온라인 할인 증빙 기능은 제공하지 않습니다.</li><li>부분취소는 선택 티켓에 저장된 실제 결제액을 그대로 환불해 재계산·원 단위 반올림하지 않습니다.</li><li>사용자 취소 마감은 프로그램별로 관리자가 설정합니다.</li><li>회차 종료 시 입장 확인 없이 이용 완료 처리하며 입장 여부와 노쇼는 별도 관리하지 않습니다.</li></ul></section>
         <section><h3>계정·권한</h3><ul><li>통합 관리자와 서울·부산경남·제주 지역별 관리자 계정을 발급합니다.</li><li>지역 계정 ID는 seoul_admin·busan_admin·jeju_admin을 기본값으로 사용합니다.</li><li>지역 관리자는 자기 지역 데이터를 생성·조회·수정·삭제할 수 있고, 다른 지역은 조회만 가능합니다.</li><li>통합 관리자는 모든 지역 CRUD와 지역 계정 발급·중지·비밀번호 재발급이 가능합니다.</li><li>임시 비밀번호는 안전하게 생성해 최초 전달 후 원문을 다시 노출하지 않으며 분실 시 재발급합니다.</li><li>모든 서버 API에서 로그인 계정의 소속 지역과 요청 대상 지역을 검증합니다.</li></ul></section>
         <section><h3>티켓·정산</h3><ul><li>같은 프로그램·같은 시간대의 복수 인원은 한 티켓에 인원수로 표시합니다.</li><li>다른 프로그램 또는 다른 시간대는 별도 티켓으로 표시합니다.</li><li>주문에는 결제 시점의 프로그램명·가격·할인 정보를 스냅샷으로 보관합니다.</li><li>정산은 서비스 제공 완료일 기준이며 지역·부서·프로그램별로 구분합니다.</li></ul></section>
@@ -34,7 +34,7 @@
     <div class="reservation-steps shop-steps" hidden><span data-step-label="1"><i>1</i>예약 선택</span><b></b><span data-step-label="2"><i>2</i>내용 확인</span><b></b><span data-step-label="3"><i>3</i>예약 완료</span></div>
     <section class="booking-stage is-visible" data-booking-step="1" aria-labelledby="booking-page-title">
       <div class="shop-container booking-flow">
-        <header class="booking-program-head"><div><small id="booking-program-tag">렛츠런파크 체험</small><h1 id="booking-page-title">렛츠런파크 체험 예약</h1><p id="booking-page-description">원하는 체험과 이용 일정을 선택해 예약해보세요.</p></div></header>
+        <header class="booking-program-head"><div><small id="booking-program-tag">체험</small><h1 id="booking-page-title">체험 예약</h1><p id="booking-page-description">원하는 체험과 이용 일정을 선택해 예약해보세요.</p></div></header>
         <div class="booking-flow__layout">
           <div class="product-options booking-form">
             <div class="option-field booking-first-field"><h2><span aria-hidden="true">01</span>체험 선택</h2><div class="program-picker chips" id="program-picker" role="group" aria-label="체험 선택"><button type="button" class="chip" data-program-key="ride" aria-pressed="false"><strong>포니 타기</strong><small>5,000원</small></button><button type="button" class="chip" data-program-key="play" aria-pressed="false"><strong>포니랑 놀기</strong><small>4,000원</small></button></div></div>
@@ -99,6 +99,6 @@
       </div>
     </section>
   </main>
-  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260908-cartcap1"></script><script src="developer-policy.js?v=20260908-policyall1"></script><script src="app.js?v=20260908-cartcap1"></script><script src="demo-controls.js"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260908-cartcap1"></script><script src="developer-policy.js?v=20260908-policycartmerge1"></script><script src="app.js?v=20260908-cartcap1"></script><script src="demo-controls.js"></script>
 </body>
 </html>

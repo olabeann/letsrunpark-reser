@@ -459,6 +459,17 @@
     return prefix + "-" + (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
   }
 
+  var orderSeqStorageKey = "letsrunPlayOrderSeqV1";
+  // GP-YYMMDD-NNNNN: 결제일 기준 날짜별 5자리 순번. 짧고 사람이 읽기 쉬우며, 날짜+순번 조합으로 중복이 나지 않는다.
+  function nextOrderId(now) {
+    var day = dateKey(now).slice(2).replace(/-/g, "");
+    var seqState = null;
+    try { seqState = JSON.parse(localStorage.getItem(orderSeqStorageKey) || "null"); } catch (error) { seqState = null; }
+    var seq = (seqState && seqState.day === day ? seqState.seq : 0) + 1;
+    try { localStorage.setItem(orderSeqStorageKey, JSON.stringify({ day: day, seq: seq })); } catch (error) {}
+    return "GP-" + day + "-" + String(seq).padStart(5, "0");
+  }
+
   function ownCart(store) {
     if (!currentMember || !store) return [];
     return store.carts[currentMember.id] || [];
@@ -484,6 +495,7 @@
     if (!currentMember) { openLoginDialog(continueToCheckout ? "reserve" : "add"); return; }
     var item = makeCartItem();
     var added = false;
+    var addedToExisting = false;
     try { await withStoreLock(function () {
       if (!currentMember || currentMember.id !== item.memberId) return;
       var store = readStore(); if (!store) return;
@@ -491,18 +503,21 @@
       var matchingItem = cart.find(function (entry) {
         return entry.programKey === item.programKey && entry.dateKey === item.dateKey && entry.time === item.time;
       });
-      if (matchingItem) item.id = matchingItem.id;
+      // Re-adding a slot already in the cart tops up its quantity instead of overwriting it,
+      // so picking the same time twice behaves like using the cart's +/- stepper.
+      if (matchingItem) { item.id = matchingItem.id; item.qty = matchingItem.qty + item.qty; }
       var nextCart = matchingItem ? cart.map(function (entry) { return entry.id === matchingItem.id ? item : entry; }) : cart.concat(item);
       var error = BookingRules.validationError(nextCart, store.reservations, currentMember.id, programs, new Date());
       if (error) { notify(error); return; }
       store.carts[currentMember.id] = nextCart.map(function (entry) { return BookingRules.quoteItem(entry, programs); });
       store.revision += 1;
       added = writeStore(store);
+      addedToExisting = !!matchingItem;
     }); } catch (error) { notify("장바구니에 담지 못했습니다. 다시 시도해주세요."); }
     renderSlots(); update(); renderCart();
     if (added) {
       if (continueToCheckout) startCheckout();
-      else notify("장바구니에 담았습니다.");
+      else notify(addedToExisting ? "장바구니에 담긴 인원을 추가했습니다." : "장바구니에 담았습니다.");
     }
   }
 
@@ -631,7 +646,7 @@
           checkoutSnapshot = JSON.stringify(ownCart(store)); byId("terms").checked = false;
           notify("예약 정보가 변경되었습니다. 금액과 일정을 다시 확인하고 동의해주세요."); return;
         }
-        var order = BookingRules.buildOrder(store, memberId, programs, new Date(), newId("GP"));
+        var order = BookingRules.buildOrder(store, memberId, programs, new Date(), nextOrderId(new Date()));
         // One storage write commits all session tickets and clears the cart together.
         if (!writeStore(order.store)) return;
         completedOrder = order; ticketReservation = null;
@@ -716,7 +731,13 @@
   function hasTimeConflict(dateValue, timeValue) {
     if (!currentMember) return false;
     var store = readStore(); if (!store) return true;
-    return !!BookingRules.findConflict({ dateKey: dateValue, time: timeValue, programKey: program.key }, store.reservations.concat(ownCart(store)), currentMember.id);
+    // A cart entry for the exact same program/date/time is this same slot being re-selected to
+    // adjust quantity (addToCart merges it), not a real scheduling conflict, so don't block it.
+    // Confirmed reservations for that exact slot still block reselecting it (already purchased).
+    var cartWithoutSameSlot = ownCart(store).filter(function (item) {
+      return !(item.programKey === program.key && item.dateKey === dateValue && item.time === timeValue);
+    });
+    return !!BookingRules.findConflict({ dateKey: dateValue, time: timeValue, programKey: program.key }, store.reservations.concat(cartWithoutSameSlot), currentMember.id);
   }
 
   function notifyTimeConflict() {
@@ -854,8 +875,8 @@
     }
     byId("citizen-discount").checked = state.discount;
     byId("date-picker").open = false;
-    byId("booking-program-tag").textContent = "렛츠런파크 체험";
-    byId("booking-page-title").textContent = "렛츠런파크 체험 예약";
+    byId("booking-program-tag").textContent = "체험";
+    byId("booking-page-title").textContent = "체험 예약";
     byId("booking-page-description").textContent = "원하는 체험과 이용 일정을 선택해 예약해보세요.";
     byId("product-title").textContent = program.name;
     byId("product-subtitle").textContent = program.subtitle;

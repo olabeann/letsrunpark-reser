@@ -23,7 +23,7 @@
         <label><span>비밀번호</span><input id="admin-login-password" type="password" autocomplete="current-password" placeholder="비밀번호를 입력해주세요" required></label>
         <p class="admin-login__error" id="admin-login-error" role="alert" hidden>아이디 또는 비밀번호를 확인해주세요.</p>
         <button type="submit">로그인</button>
-        <aside><strong>로그인 안내</strong><span>아이디 admin · 비밀번호 1234</span></aside>
+        <ul class="admin-login__demo-accounts"><li><strong>admin / 1234</strong> — 통합 운영 관리자 (전체 지역 CRUD)</li><li><strong>seoul / seoul1234</strong> — 서울 지역 관리자 (서울 CRUD · 그 외 조회만)</li><li><strong>busan / busan1234</strong> — 부산경남 지역 관리자</li><li><strong>jeju / jeju1234</strong> — 제주 지역 관리자</li></ul>
       </form>
     </div>
   </section>
@@ -85,16 +85,7 @@
               <ul class="operation-day-programs" id="operation-day-programs" hidden></ul>
               <button class="admin-button admin-button--ghost" type="button" id="operation-day-close-all" hidden>이 날 전체 휴장으로 전환</button>
             </div>
-            <details class="operation-range-form">
-              <summary>여러 날짜를 한 번에 휴장 처리</summary>
-              <form id="operation-exception-form">
-                <label><span>대상 프로그램</span><select id="operation-program"><option value="all">전체 프로그램</option></select></label>
-                <div class="operation-date-range"><label><span>시작일</span><input id="operation-start-date" type="date" required></label><label><span>종료일</span><input id="operation-end-date" type="date" required></label></div>
-                <label><span>휴장 사유</span><input id="operation-reason" type="text" placeholder="예: 시설 점검, 기상 악화"></label>
-                <button class="admin-button admin-button--primary" type="submit">휴장 기간 등록</button>
-              </form>
-            </details>
-            <div class="operation-exception-list" id="operation-exception-list"></div>
+            <div class="operation-schedule-list"><h3>운영 일정</h3><div class="operation-exception-list" id="operation-exception-list"></div></div>
           </section>
         </div>
       </section>
@@ -135,6 +126,6 @@
 
   <dialog class="cancel-dialog" id="cancel-dialog"><form method="dialog"><header><div><small>개별 티켓 취소</small><h2>선택한 티켓을 취소할까요?</h2></div><button value="close" aria-label="닫기">×</button></header><div class="cancel-dialog__body"><div class="refund-preview"><span><small>취소 대상</small><strong id="refund-count">1명</strong></span><span><small>환불 예정 금액</small><strong id="refund-amount">5,000원</strong></span></div><label><span>취소 사유</span><select id="cancel-reason"><option value="">사유를 선택해주세요</option><option>고객 요청</option><option>기상 악화</option><option>운영사 사정</option><option>중복 결제</option><option>기타</option></select></label><label><span>관리자 메모</span><textarea id="cancel-memo" rows="3" placeholder="처리 근거를 남겨주세요. (선택)"></textarea></label></div><footer><button class="admin-button admin-button--ghost" value="close">돌아가기</button><button class="admin-button admin-button--danger" id="confirm-cancel" type="button">취소 요청</button></footer></form></dialog>
   <div class="toast" id="admin-toast" role="status"></div>
-  <script src="developer-policy.js?v=20260908-emptystate2"></script><script src="admin.js?v=20260908-emptystate1"></script>
+  <script src="developer-policy.js?v=20260908-policycartmerge1"></script><script src="admin.js?v=20260908-emptystate1"></script>
 </body>
 </html>

@@ -303,6 +303,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .discount-policy-list span strong {font-size:10px}.discount-policy-list span small {margin-top:4px;font-size:9px;color:#757d85}
 .discount-policy-list em {padding:4px 6px;border-radius:10px;background:#eaf7ee;color:#21884d;font-size:8px;font-style:normal;font-weight:800}
 .discount-policy-list em.is-off {background:#f0f1f2;color:#7f858b}
+.discount-policy-list>button.is-readonly span small {color:#a14e2f}
 .discount-manager>section {padding:20px;overflow:auto}
 .discount-form-grid {display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .discount-form-grid>label>span,.discount-form-grid legend {display:block;margin-bottom:6px;font-size:9px;color:#70777f;font-weight:700}
@@ -447,6 +448,17 @@ td small {font-size:11px}
 .reservation-drawer>header h2 {font-size:17px}
 .drawer-section h3 {font-size:14px}
 .drawer-section>p,.payment-detail,.history-list {font-size:12px}
+.drawer-summary dt{font-size:11px}
+.drawer-summary dd{font-size:13px}
+.individual-ticket strong{font-size:12px}
+.individual-ticket small{font-size:11px}
+.individual-ticket>span:last-child{font-size:10px}
+.payment-detail div{font-size:12px}
+.history-list li{font-size:11px}
+.reservation-drawer>header small{font-size:11px}
+.reservation-drawer>header h2{font-size:17px}
+.reservation-drawer>footer span{font-size:10px}
+.reservation-drawer>footer strong{font-size:14px}
 .page-head,.page-head__actions {flex-wrap:wrap}
 @media(max-width:1100px){.page-head__actions{width:100%;justify-content:flex-start}.reservation-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.reservation-filter>button{width:100%}}
 
@@ -589,19 +601,20 @@ td small {font-size:11px}
 .operation-program-head button{padding:5px 9px;border-radius:14px;font-size:var(--fs-badge);font-weight:700;background:#eef0ef;color:#4f5955;flex:0 0 auto}
 .operation-day-programs>li.is-closed .operation-program-head button{background:#f4d9cd;color:#a14e2f}
 .operation-session-toggle{margin-top:8px}
-.operation-session-toggle>summary{cursor:pointer;color:var(--admin-muted);font-size:var(--fs-badge);list-style:none}
+.operation-session-toggle>summary{cursor:pointer;display:inline-flex;align-items:center;padding:7px 11px;border:1px solid var(--admin-line);border-radius:14px;background:#fff;color:#4f5955;font-size:var(--fs-badge);font-weight:700;list-style:none}
 .operation-session-toggle>summary::-webkit-details-marker{display:none}
 .operation-session-toggle>summary:before{content:"▸ ";display:inline-block}
 .operation-session-toggle[open]>summary:before{content:"▾ "}
+.operation-session-toggle>summary:hover{background:#f4f6f5}
 .operation-session-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .operation-session-chip{padding:6px 9px;border-radius:14px;border:1px solid var(--admin-line);background:#fafbfa;font-size:var(--fs-badge);font-weight:600;color:#4f5955}
 .operation-session-chip.is-closed{background:#f4d9cd;border-color:#e6b79f;color:#a14e2f}
 .operation-session-chip:disabled{opacity:.6;cursor:default}
 .operation-day-quick .admin-button{width:100%;margin-top:12px}
-.operation-range-form{margin:14px 18px 0}
-.operation-range-form>summary{cursor:pointer;padding:11px 12px;border:1px solid var(--admin-line);border-radius:8px;font-size:var(--fs-caption);font-weight:700;color:#555b62;list-style:none}
-.operation-range-form>summary::-webkit-details-marker{display:none}
-.operation-range-form>summary:before{content:"+ ";color:var(--admin-green)}
-.operation-range-form[open]>summary:before{content:"− "}
-.operation-range-form form{padding:14px 0 0}
+.row-readonly{color:var(--admin-muted);font-size:10px}
+.admin-login__demo-accounts{list-style:none;margin:20px 0 0;padding:12px 14px;border-radius:9px;background:#f4f7fb;font-size:11px;color:#69717a;display:flex;flex-direction:column;gap:6px}
+.admin-login__demo-accounts strong{color:#34393f}
+.operation-schedule-list{margin:16px 18px 0}
+.operation-schedule-list>h3{margin:0 0 8px;font-size:var(--fs-caption);font-weight:700;color:#555b62}
+.operation-schedule-list .operation-exception-list{margin:0}
 .operation-exception-list span,.operation-exception-list button,.operation-exception-list>p{font-size:var(--fs-badge);line-height:1.5}
