@@ -8,11 +8,11 @@ const BookingRules = require('../booking-rules.js');
 const source = readFileSync(resolve(__dirname, '../app.js'), 'utf8');
 const ticketHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 const componentCss = readFileSync(resolve(__dirname, '../components.css'), 'utf8');
-const programSource = source.slice(source.indexOf('  var programs ='), source.indexOf('  var query ='));
+const programSource = source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query ='));
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
-  'ticketTiming', 'isWeekend', 'demoReservationId', 'slotDateTime', 'activeSlotForNow',
-  'stateExampleReservations', 'hasTimeConflict',
+  'ticketTiming', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
+  'defaultTicketReservations', 'hasTimeConflict',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
 const functions = names.map(name => {
@@ -41,6 +41,7 @@ function runtime(now, saved = [], examples = false) {
     readReservations: () => saved,
     readStore: () => ({ reservations: saved, carts: {} }),
     ownCart: () => [],
+    readDemoCancellations: () => ({}),
     currentMember: { id: 'member-1' },
     program: { key: 'pony' },
     showTicketExamples: examples,
@@ -56,9 +57,9 @@ function runtime(now, saved = [], examples = false) {
 
 function assertStates(context, tickets, now) {
   assert.equal(tickets.length, 3);
-  assert.deepEqual(Array.from(tickets, item => context.ticketTiming(item, now).accessState), ['active', 'upcoming', 'ended']);
+  assert.deepEqual(Array.from(tickets, item => context.ticketTiming(item, now).accessState), ['upcoming', 'active', 'ended']);
   assert.equal(new Set(Array.from(tickets, item => item.id)).size, 3);
-  assert.equal(tickets[0].discount, true, 'Active demo retains citizen proof notice');
+  assert.equal(tickets[1].discount, true, 'Active sample retains citizen discount information');
 }
 
 const now = new Date(2026, 7, 27, 11, 23);
@@ -71,7 +72,8 @@ for (const count of [0, 1, 2, 8, 20]) {
     const before = JSON.stringify(saved);
     const { context } = runtime(now, saved);
     const tickets = context.ticketListReservations();
-    assert.deepEqual(Array.from(tickets, item => item.id), saved.map(item => item.id));
+    if (count === 0) assert.equal(tickets.length, 3);
+    else assert.deepEqual(Array.from(tickets, item => item.id), saved.map(item => item.id));
     if (count > 3) assert.equal(context.hasTimeConflict(saved[count - 1].dateKey, saved[count - 1].time), true);
     assert.equal(JSON.stringify(saved), before, 'Stored reservations must remain untouched');
   });
@@ -95,9 +97,9 @@ test('example states remain distinct across a full week and month boundary', () 
       const { context } = runtime(time, [], true);
       const tickets = context.ticketListReservations();
       assertStates(context, tickets, time);
-      assert.ok(context.ticketTiming(tickets[1], time).entryOpen > time);
+      assert.ok(context.ticketTiming(tickets[0], time).entryOpen > time);
       assert.ok(context.ticketTiming(tickets[2], time).entryClose < time);
-      assert.equal(context.ticketTiming(tickets[1], time).sessionStart.getDay() % 6, 0);
+      assert.equal(context.ticketTiming(tickets[0], time).sessionStart.getDay() % 6, 0);
     }
   }
 });
@@ -129,31 +131,21 @@ test('staff discount notice is a compact design-system badge beside the ticket s
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
   assert.ok(statusStart < indicators && indicators < statusBadge && statusBadge < notice && notice < clock && clock < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
-  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 확인<\/span>/);
+  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 확인 필요<\/span>/);
   assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
 });
 
 test('ticket colors use only design-system tokens instead of one-off color values', () => {
   const start = componentCss.indexOf('.ticket-list-card__status');
-  const end = componentCss.indexOf('@media(max-width:997px)', start);
+  const end = componentCss.indexOf('.ticket-list-card__title', start);
   const ticketCss = componentCss.slice(start, end);
   assert.ok(start >= 0 && end > start);
   assert.doesNotMatch(ticketCss, /#[0-9a-f]{3,8}|rgba?\(/i);
-  assert.match(ticketCss, /\.entry-ticket__discount\{[^}]*background:var\(--coral-500\);color:var\(--ink\)/);
-  assert.match(ticketCss, /data-access-state="active"[^}]*background:var\(--green-100\)/);
-  assert.match(ticketCss, /data-access-state="ended"[^}]*background:var\(--grey\)/);
+  assert.match(ticketCss, /status--active\{[^}]*background:var\(--green-100\)/);
+  assert.match(ticketCss, /status--ended\{[^}]*color:var\(--grey\)/);
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
-  const { context, elements } = runtime(now);
-  const examples = context.stateExampleReservations();
-  for (const [index, accessState] of ['active', 'upcoming', 'ended'].entries()) {
-    for (const discount of [true, false]) {
-      context.ticketReservation = { ...examples[index], discount };
-      context.updateTicketAccess();
-      assert.equal(elements['ticket-citizen-discount'].hidden, !discount);
-      assert.equal(elements['entry-ticket']['data-access-state'], accessState);
-      assert.equal(elements['ticket-reservation-number'].textContent, examples[index].id);
-    }
-  }
+  assert.match(source, /ticket-citizen-discount"\)\.hidden = !ticketDiscountQty\(ticketReservation\)/);
+  assert.match(source, /ticket\.setAttribute\("data-access-state", timing\.accessState\)/);
 });

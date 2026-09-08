@@ -92,7 +92,8 @@
   backdrop-filter:none;
 }
 .topbar-path {font-size:11px}
-.topbar-actions button {border-color:#e3e6e9;background:#fff}
+.topbar-actions{display:flex;align-items:center;gap:8px}.topbar-actions button {border-color:#e3e6e9;background:#fff}
+.topbar-actions kbd{margin-left:7px;color:#747d87;font-size:9px}
 .topbar-actions>a {background:#fff;border:1px solid #e1e4e8;color:#33383e}
 .system-state i {background:var(--admin-blue);box-shadow:none}
 .admin-shell main {max-width:none;padding:30px 38px 70px}
@@ -233,6 +234,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .row-save:hover,.row-detail:hover {border-color:#1769ff;color:#1769ff}
 .row-actions {display:flex;align-items:center;gap:6px;white-space:nowrap}
 .empty-table {padding:42px!important;text-align:center!important;color:#78847e}
+.empty-table strong,.empty-table small{display:block}.empty-table strong{color:var(--admin-ink);font-size:14px}.empty-table small{margin-top:7px;font-size:12px}
 .kiosk-dialog {width:min(760px,calc(100vw - 32px));padding:0;border:1px solid #dfe3e7;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
 .kiosk-dialog::backdrop {background:rgba(24,28,33,.42)}
 .kiosk-dialog header {display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e7e9ec}

@@ -31,7 +31,7 @@
   var demoReservations = [
     { id: "GP-260902-1042", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
     { id: "GP-260902-1036", orderId: "PAY-260902-3012", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:20~10:45", qty: 2, price: 4000, discount: true, status: "부분 취소", createdAt: "2026-09-02 10:36", method: "신용카드", tickets: ["confirmed", "cancelled"], cancellationEvents: [{ source: "customer", qty: 1, amount: 2000, reason: "고객 직접 취소", createdAt: "2026-09-03 14:20" }] },
-    { id: "GP-260902-1019", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, status: "취소 처리 중", paymentStatus: "환불 확인 필요", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["review"] },
+    { id: "GP-260902-1019", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, status: "취소 완료", paymentStatus: "전액 환불 완료", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["cancelled"] },
     { id: "GP-260902-0951", orderId: "PAY-260902-2971", memberId: "demo:네이버:1", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "13:20~13:45", qty: 4, price: 16000, discount: false, status: "예약 확정", createdAt: "2026-09-02 09:51", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed", "confirmed"] },
     { id: "GP-260902-0927", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "14:20~14:45", qty: 2, price: 5000, discount: true, status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed", "confirmed"] },
     { id: "GP-260901-1844", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"], cancellationEvents: [{ source: "admin", qty: 1, amount: 4000, reason: "운영사 사정", createdAt: "2026-09-02 09:10", actor: "박지윤 매니저" }] }
@@ -112,7 +112,7 @@
       if (Array.isArray(state.reservations)) {
         state.reservations.forEach(function (saved) {
           var target = demoReservations.find(function (item) { return item.id === saved.id; });
-          if (target && Array.isArray(saved.tickets)) { target.tickets = saved.tickets; target.status = saved.status === "환불 확인" ? "취소 처리 중" : saved.status; target.paymentStatus = saved.paymentStatus || (saved.status === "환불 확인" ? "환불 확인 필요" : target.paymentStatus); if (Array.isArray(saved.cancellationEvents)) target.cancellationEvents = saved.cancellationEvents; }
+          if (target && Array.isArray(saved.tickets)) { target.tickets = saved.tickets.map(function (ticket) { return ticket === "review" ? "cancelled" : ticket; }); target.status = saved.status === "환불 확인" || saved.status === "취소 처리 중" ? "취소 완료" : saved.status; target.paymentStatus = saved.status === "환불 확인" || saved.status === "취소 처리 중" ? "전액 환불 완료" : saved.paymentStatus || target.paymentStatus; if (Array.isArray(saved.cancellationEvents)) target.cancellationEvents = saved.cancellationEvents; }
         });
       }
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
@@ -174,7 +174,6 @@
 
   function statusClass(status) {
     if (status === "부분 취소") return "is-partial";
-    if (status === "취소 처리 중") return "is-review";
     if (status === "취소 완료") return "is-cancelled";
     return "";
   }
@@ -208,6 +207,12 @@
     }).sort(function (a, b) { return (b.createdTimestamp || Date.parse(b.createdAt) || 0) - (a.createdTimestamp || Date.parse(a.createdAt) || 0); });
   }
 
+  function hasReservationFilters() {
+    return ["reservation-search", "reservation-location", "reservation-department", "reservation-date", "reservation-program", "reservation-status"].some(function (id) {
+      return Boolean(byId(id).value);
+    });
+  }
+
   function renderReservations() {
     var items = filteredReservations(); var body = byId("reservation-table-body"); body.replaceChildren();
     var totalPages = Math.max(1, Math.ceil(items.length / reservationPageSize));
@@ -215,7 +220,13 @@
     var startIndex = (reservationPage - 1) * reservationPageSize;
     var pageItems = items.slice(startIndex, startIndex + reservationPageSize);
     pageItems.forEach(function (item) { body.append(reservationRow(item, true)); });
-    if (!items.length) { var row = document.createElement("tr"); row.innerHTML = '<td colspan="9" style="padding:42px;text-align:center;color:#78847e">조건에 맞는 예약이 없습니다.</td>'; body.append(row); }
+    if (!items.length) {
+      var row = document.createElement("tr");
+      var emptyTitle = hasReservationFilters() ? "검색 결과가 없습니다." : "예약내역이 없습니다.";
+      var emptyHelp = hasReservationFilters() ? "검색어나 필터 조건을 변경해 다시 확인해주세요." : "예약이 접수되면 이곳에 표시됩니다.";
+      row.innerHTML = '<td colspan="9" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
+      body.append(row);
+    }
     byId("reservation-count").textContent = items.length;
     byId("reservation-range").textContent = items.length ? (startIndex + 1) + "–" + (startIndex + pageItems.length) + " / " + items.length + "건 · 페이지당 " + reservationPageSize + "건" : "0건 · 페이지당 " + reservationPageSize + "건";
     byId("reservation-prev-page").disabled = reservationPage === 1;
@@ -360,7 +371,7 @@
       row.querySelector(".row-detail").addEventListener("click", function () { openProductDialog(item); });
       body.append(row);
     });
-    if (!visiblePrograms.length) body.innerHTML = '<tr><td colspan="8" class="empty-table">조건에 맞는 프로그램이 없습니다.</td></tr>';
+    if (!visiblePrograms.length) body.innerHTML = '<tr><td colspan="8" class="empty-table"><strong>검색 결과가 없습니다.</strong><small>프로그램명이나 지역·부서 조건을 변경해 다시 확인해주세요.</small></td></tr>';
   }
 
   function openProductDialog(item) {
@@ -716,7 +727,6 @@
   function ticketUnitPrice(reservation) { return reservation.qty ? Math.floor(reservation.price / reservation.qty) : 0; }
   function ticketRefundTotal(reservation) { return reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length * ticketUnitPrice(reservation); }
   function paymentStatusLabel(reservation) {
-    if (reservation.tickets.some(function (ticket) { return ticket === "review"; })) return "환불 확인 필요";
     var cancelled = reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length;
     if (cancelled === reservation.tickets.length) return "전액 환불 완료";
     if (cancelled > 0) return "부분 환불 완료";
@@ -727,7 +737,7 @@
     var list = byId("individual-tickets"); list.replaceChildren();
     activeReservation.tickets.forEach(function (status, index) {
       var label = document.createElement("label"); label.className = "individual-ticket" + (status !== "confirmed" ? " is-cancelled" : "");
-      var statusText = status === "confirmed" ? "예약 유효" : status === "review" ? "환불 확인 필요" : "취소 완료";
+      var statusText = status === "confirmed" ? "예약 유효" : "취소 완료";
       label.innerHTML = '<input type="checkbox" value="' + index + '" ' + (status !== "confirmed" ? "disabled" : "") + '><span><strong>' + escapeHtml(activeReservation.id) + '-T' + String(index + 1).padStart(2, "0") + '</strong><small>배분 결제액 ' + money(ticketUnitPrice(activeReservation)) + '</small></span><span>' + statusText + '</span>';
       label.querySelector("input").addEventListener("change", updateSelectedTickets); list.append(label);
     });

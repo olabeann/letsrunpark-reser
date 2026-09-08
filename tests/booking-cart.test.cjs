@@ -79,9 +79,9 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(error([item({ qty: 2, discount: true })]), '');
 });
 
-test('enforces the confirmed cross-program cart and per-usage-date citizen discount limits', () => {
+test('allows uncapped general purchases and enforces per-usage-date citizen discount limits', () => {
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
-  assert.match(error([item({ qty: 3 }), play]), /최대 4매/);
+  assert.equal(error([item({ qty: 3 }), play]), '');
   assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
   const discountedRide = item({ qty: 1, discount: true });
   const discountedPlay = { ...play, qty: 1, discount: true };
@@ -90,12 +90,12 @@ test('enforces the confirmed cross-program cart and per-usage-date citizen disco
   assert.equal(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), '');
 });
 
-test('resets the 4-ticket purchase cap and 2-ticket discount cap per usage date, not per order', () => {
+test('has no daily general purchase cap and resets the discount cap per usage date', () => {
   const usedOnSameDate = [
     item({ id: 'used-1', qty: 2 }),
     item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 }),
   ];
-  assert.match(error([item({ qty: 1 })], usedOnSameDate), /최대 4매/);
+  assert.match(error([item({ qty: 1 })], usedOnSameDate), /겹칩니다/);
   assert.equal(error([item({ dateKey: '2026-08-30', qty: 4 })], usedOnSameDate), '');
   const usedDiscountSameDate = [item({ id: 'used-discount', qty: 2, discount: true })];
   assert.match(error([item({ qty: 1, discount: true })], usedDiscountSameDate), /최대 2매/);
@@ -104,6 +104,13 @@ test('resets the 4-ticket purchase cap and 2-ticket discount cap per usage date,
 
 test('blocks a cart that mixes more than one usage date', () => {
   assert.match(error([item(), item({ id: 'other-date', dateKey: '2026-08-30' })]), /하나의 이용일만/);
+});
+
+test('blocks mixed regions or departments and expired inventory holds', () => {
+  const busanPrograms = { ...programs, busan: { ...programs.ride, key: 'busan', region: '부산경남' } };
+  const otherRegion = item({ id: 'other-region', programKey: 'busan', time: '10:20~10:45' });
+  assert.match(rules.validationError([item(), otherRegion], [], memberId, busanPrograms, now), /같은 지역과 담당부서/);
+  assert.match(error([item({ expiresAt: new Date(now.getTime() - 1000).toISOString() })]), /점유 시간이 만료/);
 });
 
 test('keeps ride and play as independent sellable programs in one cart', () => {
@@ -122,6 +129,7 @@ test('checkout recalculates prices and atomically produces one order with separa
   assert.deepEqual(order.tickets.map(ticket => ticket.orderId), ['order-1', 'order-1']);
   assert.equal(new Set(order.tickets.map(ticket => ticket.id)).size, 2);
   assert.equal(order.tickets[0].qty, 2, 'One customer ticket groups the session headcount');
+  assert.deepEqual(order.tickets[0].unitAmounts, [2500, 2500], 'Each ticket keeps its paid amount snapshot');
   assert.equal(order.store.carts[memberId].length, 0);
   assert.deepEqual(order.store.carts.other, before.carts.other);
   assert.equal(order.store.revision, 4);
@@ -214,7 +222,7 @@ test('opening another program resets date, session, headcount and discount optio
       if (!elements.has(id)) elements.set(id, { replaceChildren() {}, append() {} });
       return elements.get(id);
     },
-    createTextElement: () => ({}), renderCalendar() {}, renderSlots() {}, update() {},
+    createTextElement: () => ({}), refreshBookingWindow() {}, renderCalendar() {}, renderSlots() {}, update() {},
   });
   vm.runInContext(appFunction('selectProgram'), runtime);
   runtime.selectProgram('play');

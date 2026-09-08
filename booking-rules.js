@@ -71,6 +71,19 @@
     return "";
   }
 
+  function cartScopeError(items, programs) {
+    if (items.length < 2) return "";
+    var firstProgram = programFor(items[0], programs) || {};
+    var firstRegion = items[0].region || firstProgram.region || firstProgram.location;
+    var firstDepartment = items[0].department || firstProgram.department;
+    var mixed = items.some(function (item) {
+      var program = programFor(item, programs) || {};
+      return (item.region || program.region || program.location) !== firstRegion ||
+        (item.department || program.department) !== firstDepartment;
+    });
+    return mixed ? "장바구니에는 같은 지역과 담당부서의 체험만 담을 수 있습니다. 다른 지역 또는 부서는 먼저 결제하거나 장바구니를 비워주세요." : "";
+  }
+
   function purchaseLimitError(items, reservations, memberId, programs) {
     var totals = {};
     function tally(list) {
@@ -122,6 +135,11 @@
     if (!items.length) return "장바구니에 프로그램을 담아주세요.";
     var dateError = cartDateError(items);
     if (dateError) return dateError;
+    var scopeError = cartScopeError(items, programs);
+    if (scopeError) return scopeError;
+    if (items.some(function (item) { return item.expiresAt && new Date(item.expiresAt).getTime() <= now.getTime(); })) {
+      return "장바구니 재고 점유 시간이 만료되었습니다. 일정을 다시 선택해주세요.";
+    }
     var purchaseError = purchaseLimitError(items, reservations, memberId, programs);
     if (purchaseError) return purchaseError;
     var discountError = discountLimitError(items, reservations, memberId, programs);
@@ -153,9 +171,15 @@
     if (error) throw new Error(error);
     if (store.reservations.some(function (item) { return item.orderId === orderId; })) throw new Error("이미 처리된 결제입니다.");
     var tickets = cart.map(function (item, index) {
-      return Object.assign(quoteItem(item, programs), {
+      var quoted = quoteItem(item, programs);
+      var discountedQty = item.discount ? item.qty : 0;
+      var unitAmount = Math.floor(quoted.price / quoted.qty);
+      var unitAmounts = Array.from({ length: quoted.qty }, function (_, unitIndex) {
+        return unitAmount + (unitIndex < quoted.price % quoted.qty ? 1 : 0);
+      });
+      return Object.assign(quoted, {
         id: orderId + "-" + (index + 1), orderId: orderId,
-        discountQty: item.discount ? item.qty : 0,
+        discountQty: discountedQty, unitAmounts: unitAmounts,
         status: "confirmed", createdAt: now.toISOString(), paymentMethod: "demo-card"
       });
     });

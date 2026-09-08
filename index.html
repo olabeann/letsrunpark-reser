@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>렛츠런파크 체험 예약</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260908-policytype1"><link rel="stylesheet" href="styles.css?v=20260907-devpolicy11">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260908-emptystate1"><link rel="stylesheet" href="styles.css?v=20260908-policyfix1">
 </head>
 <body data-page="booking" class="shop-page">
   <header class="reservation-header shop-header">
@@ -82,23 +82,23 @@
             </section>
             <section class="entry-ticket__window"><div><small>입장 시작</small><strong id="ticket-window-open">09:50</strong></div><i></i><div><small>예약 회차</small><strong id="ticket-window-session">10:00</strong></div><i></i><div><small>입장 마감</small><strong id="ticket-window-close">10:20</strong></div></section>
             <p class="entry-ticket__note">입장 가능 시간은 회차 시작 10분 전부터 회차 종료 전까지입니다. 시간과 티켓 상태는 자동으로 갱신됩니다.</p>
-            <section class="ticket-cancellation" id="ticket-cancellation"><div class="ticket-cancellation__intro"><div><strong>예약을 변경해야 하나요?</strong><small id="ticket-cancel-deadline"></small></div><button id="open-ticket-cancel" type="button">예약 취소</button></div><div class="ticket-cancellation__panel" id="ticket-cancel-panel" hidden><header><div><h3>취소할 인원을 선택해주세요</h3><p>정상가와 할인 적용 인원을 구분해 원하는 티켓만 취소할 수 있어요.</p></div><button id="close-ticket-cancel" type="button" aria-label="취소 선택 닫기">×</button></header><div class="ticket-cancel-options" id="ticket-cancel-options"></div><div class="ticket-cancel-summary"><span>선택 인원 <b id="ticket-cancel-count">0명</b></span><span>환불 예정 금액 <strong id="ticket-refund-preview">0원</strong></span></div><p class="ticket-refund-notice">환불 완료까지 카드사 영업일 기준 5~7일이 걸릴 수 있습니다.</p><button class="btn btn--dark" id="confirm-ticket-cancel" type="button" disabled>선택 취소 · 환불 신청</button></div></section>
+            <section class="ticket-cancellation" id="ticket-cancellation"><div class="ticket-cancellation__intro"><div><strong>예약을 변경해야 하나요?</strong><small id="ticket-cancel-deadline"></small></div><button id="open-ticket-cancel" type="button">취소 요청</button></div><div class="ticket-cancellation__panel" id="ticket-cancel-panel" hidden><header><div><h3>취소할 인원을 선택해주세요</h3><p>정상가와 할인 적용 인원을 구분해 원하는 티켓만 취소할 수 있어요.</p></div><button id="close-ticket-cancel" type="button" aria-label="취소 선택 닫기">×</button></header><div class="ticket-cancel-options" id="ticket-cancel-options"></div><div class="ticket-cancel-summary"><span>선택 인원 <b id="ticket-cancel-count">0명</b></span><span>환불 예정 금액 <strong id="ticket-refund-preview">0원</strong></span></div><p class="ticket-refund-notice">환불 완료까지 카드사 영업일 기준 5~7일이 걸릴 수 있습니다.</p><button class="btn btn--dark" id="confirm-ticket-cancel" type="button" disabled>선택 취소 요청</button></div></section>
             <footer class="entry-ticket__footer"><span id="ticket-confirmation-message">예약이 확정되었습니다.</span><div><small id="ticket-price-label">결제 금액</small><strong id="ticket-price">10,000원</strong></div></footer>
             <section class="ticket-refund-history" id="ticket-refund-history" hidden>
-              <header class="ticket-refund-history__head"><div><h3>취소·환불 내역</h3><p id="ticket-refund-summary-text"></p></div><span class="ticket-refund-status">환불 접수</span></header>
+              <header class="ticket-refund-history__head"><div><h3>취소·환불 내역</h3><p id="ticket-refund-summary-text"></p></div><span class="ticket-refund-status">취소 완료</span></header>
               <dl class="ticket-refund-summary">
                 <div><dt>원 결제금액</dt><dd id="ticket-original-price">0원</dd></div>
-                <div><dt>환불 예정금액</dt><dd id="ticket-refunded-price">0원</dd></div>
+                <div><dt>환불 완료금액</dt><dd id="ticket-refunded-price">0원</dd></div>
                 <div><dt>남은 결제금액</dt><dd id="ticket-remaining-price">0원</dd></div>
               </dl>
               <div class="ticket-refund-history-list" id="ticket-refund-history-list"></div>
-              <p class="ticket-refund-help"><strong>환불 접수가 완료되었습니다.</strong> 카드사 반영까지 영업일 기준 5~7일이 걸릴 수 있습니다.</p>
+              <p class="ticket-refund-help"><strong>취소·환불 처리가 완료되었습니다.</strong> 카드사 내역 반영까지 영업일 기준 5~7일이 걸릴 수 있습니다.</p>
             </section>
           </article>
         </div>
       </div>
     </section>
   </main>
-  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260907-perday2"></script><script src="developer-policy.js?v=20260908-policyfixed1"></script><script src="app.js?v=20260907-devpolicy19"></script><script src="demo-controls.js"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260908-policyfix1"></script><script src="developer-policy.js?v=20260908-emptystate2"></script><script src="app.js?v=20260908-policyfix1"></script><script src="demo-controls.js"></script>
 </body>
 </html>
