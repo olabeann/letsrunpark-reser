@@ -464,14 +464,14 @@
   }
 
   var orderSeqStorageKey = "letsrunPlayOrderSeqV1";
-  // GP-YYMMDD-NNNNN: 결제일 기준 날짜별 5자리 순번. 짧고 사람이 읽기 쉬우며, 날짜+순번 조합으로 중복이 나지 않는다.
+  // LRP-YYMMDD-NNNNN: 결제일 기준 날짜별 5자리 순번. 짧고 사람이 읽기 쉬우며, 날짜+순번 조합으로 중복이 나지 않는다.
   function nextOrderId(now) {
     var day = dateKey(now).slice(2).replace(/-/g, "");
     var seqState = null;
     try { seqState = JSON.parse(localStorage.getItem(orderSeqStorageKey) || "null"); } catch (error) { seqState = null; }
     var seq = (seqState && seqState.day === day ? seqState.seq : 0) + 1;
     try { localStorage.setItem(orderSeqStorageKey, JSON.stringify({ day: day, seq: seq })); } catch (error) {}
-    return "GP-" + day + "-" + String(seq).padStart(5, "0");
+    return "LRP-" + day + "-" + String(seq).padStart(5, "0");
   }
 
   function ownCart(store) {
@@ -675,7 +675,7 @@
   }
 
   function ticketReservationId(date, time) {
-    return "GP-" + dateKey(date).slice(2).replace(/-/g, "") + "-" + time.split("~")[0].replace(":", "");
+    return "LRP-" + dateKey(date).slice(2).replace(/-/g, "") + "-" + time.split("~")[0].replace(":", "");
   }
 
   function slotDateTime(date, timeText) {

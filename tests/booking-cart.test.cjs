@@ -124,7 +124,7 @@ test('caps combined ride and play purchases at 4 per usage date across cart and 
 
 test('fails payment when another member already paid for the same session', () => {
   const store = { revision: 1, reservations: [item({ id: 'paid-1', memberId: 'other', qty: 8 })], carts: { [memberId]: [item({ qty: 1 })] } };
-  assert.throws(() => rules.buildOrder(store, memberId, programs, now, 'GP-1'), (err) => err.code === 'SESSION_TAKEN');
+  assert.throws(() => rules.buildOrder(store, memberId, programs, now, 'LRP-1'), (err) => err.code === 'SESSION_TAKEN');
 });
 
 test('keeps ride and play as independent sellable programs in one cart', () => {
