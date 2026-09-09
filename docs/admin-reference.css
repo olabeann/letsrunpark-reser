@@ -631,6 +631,6 @@ td small {font-size:11px}
 .operation-closure-refund-toggle>span{display:block}
 .operation-closure-refund-toggle strong{display:block;font-size:12.5px;font-weight:800;color:#b3261e;line-height:1.5}
 .operation-closure-refund-toggle small{display:block;margin-top:5px;font-size:10.5px;font-weight:500;color:#8a5c56;line-height:1.55}
-.operation-closure-message{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;color:#555b62;font-size:11px;line-height:1.6}
-.operation-closure-message i{display:grid;flex:0 0 18px;height:18px;place-items:center;border-radius:50%;background:#fff0ec;color:#b44b3a;font-size:10px;font-style:normal;font-weight:800}
+.operation-closure-message{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:14px 0 0;color:#555b62;font-size:11px;line-height:1.6}
+.operation-closure-message i{display:grid;flex:0 0 32px;width:32px;height:32px;place-items:center;border-radius:50%;background:#fff0ec;color:#b44b3a;font-size:17px;font-style:normal;font-weight:800}
 @media(max-width:560px){.session-row{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}.session-row .session-delete{grid-column:4;grid-row:3}}
