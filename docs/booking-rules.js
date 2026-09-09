@@ -49,7 +49,7 @@
     var slot = program.slots.find(function (candidate) { return candidate.time === item.time; });
     if (!slot || slot.disabled || !interval(item)) throw new Error("예약 가능한 날짜와 회차를 다시 선택해주세요.");
     if (typeof item.discount !== "boolean" || (item.discount && !discountPolicy)) throw new Error("할인 정보를 다시 확인해주세요.");
-    var maxQty = Math.min(item.discount ? discountPolicy.maxQty : 4, slot.capacity || 4);
+    var maxQty = Math.min(item.discount ? discountPolicy.maxQty : 4, Number.isInteger(slot.capacity) ? slot.capacity : 4);
     var discountRate = item.discount ? discountPolicy.rate : 0;
     if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > maxQty) throw new Error("회차별 인원과 할인 적용 수량을 확인해주세요.");
     return Object.assign({}, item, {

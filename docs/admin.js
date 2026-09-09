@@ -200,7 +200,7 @@
     try {
       var store = JSON.parse(localStorage.getItem(reservationStoreKey) || "null");
       if (!store || !Array.isArray(store.reservations)) return [];
-      return store.reservations.filter(function (item) { return item && item.id && item.qty; }).map(function (item, index) {
+      return store.reservations.filter(function (item) { return item && item.id && Number.isInteger(item.qty); }).map(function (item, index) {
         return {
           id: item.id, orderId: item.orderId || "PAY-ORDER-" + (index + 1), memberId: item.memberId,
           location: item.location || "서울", department: item.department || "공원화사업추진TF",
@@ -846,10 +846,12 @@
   function cancelReservationForClosure(item, reason) {
     var demoMatch = demoReservations.find(function (candidate) { return candidate.id === item.id; });
     if (demoMatch) {
+      var remainingQty = (demoMatch.tickets || []).filter(function (ticket) { return ticket === "confirmed"; }).length;
+      var refundAmount = remainingQty * ticketUnitPrice(demoMatch);
       demoMatch.status = "취소 완료";
       demoMatch.tickets = (demoMatch.tickets || []).map(function () { return "cancelled"; });
       demoMatch.cancellationEvents = demoMatch.cancellationEvents || [];
-      demoMatch.cancellationEvents.push({ source: "admin", qty: item.qty, amount: item.price, reason: reason, createdAt: new Date().toLocaleString("ko-KR") });
+      demoMatch.cancellationEvents.push({ source: "admin", qty: remainingQty, amount: refundAmount, reason: reason, createdAt: new Date().toLocaleString("ko-KR") });
       return;
     }
     try {
@@ -1283,7 +1285,12 @@
   }
 
   function ticketUnitPrice(reservation) { return reservation.qty ? Math.floor(reservation.price / reservation.qty) : 0; }
-  function ticketRefundTotal(reservation) { return reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length * ticketUnitPrice(reservation); }
+  function ticketRefundTotal(reservation) {
+    var cancelledCount = reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length;
+    if (!cancelledCount) return 0;
+    if (cancelledCount === reservation.tickets.length) return reservation.price;
+    return cancelledCount * ticketUnitPrice(reservation);
+  }
   function paymentStatusLabel(reservation) {
     var cancelled = reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length;
     if (cancelled === reservation.tickets.length) return "전액 환불 완료";

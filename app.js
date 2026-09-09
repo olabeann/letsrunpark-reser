@@ -966,7 +966,7 @@
   function selectedMaxQty() {
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
     var policy = selectedDiscountPolicy();
-    return Math.min(policy ? policy.maxQty : 4, slot && slot.capacity || 4);
+    return Math.min(policy ? policy.maxQty : 4, slot && Number.isInteger(slot.capacity) ? slot.capacity : 4);
   }
 
   function renderDiscountOptions() {
@@ -1023,7 +1023,11 @@
       selectProgram(route.get("product"), state.programKey !== route.get("product"));
       goToStep(1, { history: false });
     } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
-    else if (["cart", "checkout", "complete"].includes(route.get("view"))) {
+    else if (route.get("view") === "complete") {
+      // Completed-order receipt isn't persisted across reloads; a stale link can't be replayed into the cart.
+      selectProgram(state.programKey, false);
+      goToStep(1, { history: false });
+    } else if (["cart", "checkout"].includes(route.get("view"))) {
       // Returning to checkout always requires a fresh review from the cart.
       renderCart(); goToStep(4, { replace: true });
     } else {
@@ -1065,7 +1069,7 @@
   var developerPolicyButton = byId("open-developer-policy");
   if (developerPolicyButton) developerPolicyButton.addEventListener("click", openDeveloperPolicy);
   document.addEventListener("keydown", function (event) {
-    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
+    if (event.altKey && !event.metaKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
       event.preventDefault();
       openDeveloperPolicy();
     }
