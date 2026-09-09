@@ -622,4 +622,9 @@ td small {font-size:11px}
 .session-row{grid-template-columns:34px minmax(0,1fr) auto auto auto}
 .session-row .session-delete{color:#b42318;border-color:#efc5c1}
 .session-row .session-delete:disabled{color:#8a9098;border-color:#e1e3e6;cursor:not-allowed}
+.operation-closure-summary{padding:12px 14px;border-radius:8px;background:#f4f7fb}
+.operation-closure-summary strong,.operation-closure-summary span{display:block}
+.operation-closure-summary strong{font-size:12px}.operation-closure-summary span{margin-top:5px;color:#69717a;font-size:10px}
+.operation-closure-message{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;color:#555b62;font-size:11px;line-height:1.6}
+.operation-closure-message i{display:grid;flex:0 0 18px;height:18px;place-items:center;border-radius:50%;background:#fff0ec;color:#b44b3a;font-size:10px;font-style:normal;font-weight:800}
 @media(max-width:560px){.session-row{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}.session-row .session-delete{grid-column:4;grid-row:3}}

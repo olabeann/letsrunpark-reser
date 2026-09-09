@@ -15,6 +15,7 @@
   var operationExceptions = [];
   var operationCalendarMonth = new Date(2026, 8, 1);
   var selectedOperationDateKey = null;
+  var pendingOperationClosureAction = null;
   var reservationPage = 1;
   var reservationPageSize = 20;
   var organization = {
@@ -382,7 +383,7 @@
       closeAllButton.hidden = true;
       return;
     }
-    byId("operation-day-quick-desc").textContent = "프로그램 전체 또는 회차 단위로 바로 휴장 처리하거나, 이 날 전체를 한 번에 휴장으로 전환할 수 있습니다.";
+    byId("operation-day-quick-desc").textContent = "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
       var programClosed = closures.some(function (closure) { return closure.programKey === item.key && !closure.sessionKey; });
@@ -441,12 +442,15 @@
     if (existing) {
       removeMatchingExceptions(region, dateKey, programItem.key);
       notify(programItem.programName + " 운영을 다시 시작합니다.");
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
     } else {
-      removeMatchingExceptions(region, dateKey, programItem.key);
-      operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
-      notify(programItem.programName + "를 이 날만 휴장 처리했습니다.");
+      requestOperationClosure("프로그램 휴장 확인", programItem.programName + " 전체 회차", region, dateKey, programItem, null, function () {
+        removeMatchingExceptions(region, dateKey, programItem.key);
+        operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
+        saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+        notify(programItem.programName + "를 이 날만 휴장 처리했습니다.");
+      });
     }
-    saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
   }
 
   function toggleSessionClosureForDate(programItem, session, dateKey, region) {
@@ -455,26 +459,30 @@
     if (existing) {
       operationExceptions = operationExceptions.filter(function (item) { return item.id !== existing.id; });
       notify(programItem.programName + " " + session.start + "~" + session.end + " 회차 운영을 다시 시작합니다.");
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
     } else {
-      operationExceptions.push({ id: "operation-" + Date.now() + "-" + session.key, region: region, programKey: programItem.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
-      notify(programItem.programName + " " + session.start + "~" + session.end + " 회차를 휴장 처리했습니다.");
-      var activeSessions = sessionsForProgram(programItem.key).filter(function (item) { return item.active !== false; });
-      var allSessionsClosed = activeSessions.every(function (item) { return item.key === session.key || operationExceptions.some(function (closure) { return closure.region === region && closure.programKey === programItem.key && closure.sessionKey === item.key && closure.startDate === dateKey && closure.endDate === dateKey; }); });
-      if (allSessionsClosed) {
-        removeMatchingExceptions(region, dateKey, programItem.key);
-        operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
-        notify(programItem.programName + "의 모든 회차가 휴장 처리되어 프로그램 전체 휴장으로 정리했습니다.");
-      }
+      requestOperationClosure("회차 휴장 확인", programItem.programName + " · " + session.start + "~" + session.end, region, dateKey, programItem, session, function () {
+        operationExceptions.push({ id: "operation-" + Date.now() + "-" + session.key, region: region, programKey: programItem.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+        var activeSessions = sessionsForProgram(programItem.key).filter(function (item) { return item.active !== false; });
+        var allSessionsClosed = activeSessions.every(function (item) { return item.key === session.key || operationExceptions.some(function (closure) { return closure.region === region && closure.programKey === programItem.key && closure.sessionKey === item.key && closure.startDate === dateKey && closure.endDate === dateKey; }); });
+        if (allSessionsClosed) {
+          removeMatchingExceptions(region, dateKey, programItem.key);
+          operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
+        }
+        saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+        notify(programItem.programName + " " + session.start + "~" + session.end + " 회차를 휴장 처리했습니다.");
+      });
     }
-    saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
   }
 
   function closeAllProgramsForDate(operatingPrograms, dateKey, region) {
     if (!canManageRegion(region)) return;
-    operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey); });
-    operationExceptions.push({ id: "operation-" + Date.now() + "-all", region: region, programKey: "all", startDate: dateKey, endDate: dateKey, status: "closed", reason: "일괄 휴장 처리" });
-    saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
-    notify("이 날을 전체 휴장으로 전환했습니다.");
+    requestOperationClosure("전체 휴장 확인", operatingPrograms.length + "개 프로그램 전체 회차", region, dateKey, null, null, function () {
+      operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey); });
+      operationExceptions.push({ id: "operation-" + Date.now() + "-all", region: region, programKey: "all", startDate: dateKey, endDate: dateKey, status: "closed", reason: "일괄 휴장 처리" });
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+      notify("이 날을 전체 휴장으로 전환했습니다.");
+    });
   }
 
   function showView(viewName) {
@@ -717,6 +725,37 @@
       return (item.programKey === session.programKey || item.program === program.programName || item.name === program.programName) && times.indexOf(String(item.time || "").replace(/\s/g, "")) !== -1;
     });
     return hasHistory ? "예약 이력이 있어 삭제가 제한됩니다. ‘숨김’으로 판매를 중지할 수 있습니다." : "";
+  }
+
+  function operationClosureImpact(region, dateKey, programItem, session) {
+    var programName = programItem ? programItem.programName : "";
+    var sessionTime = session ? (session.start + "~" + session.end).replace(/\s/g, "") : "";
+    return allReservations().filter(function (item) {
+      if (!item || item.location !== region || item.dateKey !== dateKey || item.status === "취소 완료") return false;
+      if (programItem && item.programKey !== programItem.key && item.program !== programName && item.name !== programName) return false;
+      return !session || String(item.time || "").replace(/\s/g, "") === sessionTime;
+    }).reduce(function (impact, item) {
+      impact.orders += 1;
+      impact.people += Array.isArray(item.tickets) ? item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length : Number(item.qty || 0);
+      return impact;
+    }, { orders: 0, people: 0 });
+  }
+
+  function requestOperationClosure(title, scope, region, dateKey, programItem, session, action) {
+    var impact = operationClosureImpact(region, dateKey, programItem, session);
+    pendingOperationClosureAction = action;
+    byId("operation-closure-confirm-title").textContent = title;
+    byId("operation-closure-confirm-scope").textContent = dateKey + " · " + region + " · " + scope;
+    byId("operation-closure-impact").textContent = impact.orders ? "현재 유효 예약 " + impact.orders + "건 · " + impact.people + "명이 있습니다." : "현재 유효 예약은 없습니다.";
+    byId("operation-closure-confirm-dialog").showModal();
+  }
+
+  function confirmOperationClosure() {
+    if (!pendingOperationClosureAction) return;
+    var action = pendingOperationClosureAction;
+    pendingOperationClosureAction = null;
+    byId("operation-closure-confirm-dialog").close();
+    action();
   }
 
   function deleteSession(session) {
@@ -1187,6 +1226,8 @@
     byId("operation-cancel-dialog").showModal();
   });
   byId("confirm-operation-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").close(); notify("선택한 회차를 운영 취소하고 대상 예약의 환불 처리를 시작했습니다."); });
+  byId("confirm-operation-closure").addEventListener("click", confirmOperationClosure);
+  byId("operation-closure-confirm-dialog").addEventListener("close", function () { pendingOperationClosureAction = null; });
   byId("apply-settlement").addEventListener("click", function () { renderSettlementSummary(); notify("선택한 기간의 정산 내역을 조회했습니다."); });
   byId("settlement-drawer-close").addEventListener("click", closeSettlementDrawer);
   byId("settlement-drawer-confirm").addEventListener("click", closeSettlementDrawer);
