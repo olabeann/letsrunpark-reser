@@ -610,7 +610,9 @@ td small {font-size:11px}
 .operation-session-chip{padding:6px 9px;border-radius:14px;border:1px solid var(--admin-line);background:#fafbfa;font-size:var(--fs-badge);font-weight:600;color:#4f5955}
 .operation-session-chip.is-closed{background:#f4d9cd;border-color:#e6b79f;color:#a14e2f}
 .operation-session-chip:disabled{opacity:.6;cursor:default}
-.operation-day-quick .admin-button{width:100%;margin-top:12px}
+.operation-close-all-btn{width:100%;margin-top:12px;height:44px;border:1px solid #f0c3b3;border-radius:10px;background:#fff4f0;color:#a14e2f;font-size:var(--fs-caption);font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background .15s ease,border-color .15s ease}
+.operation-close-all-btn:hover{background:#fbe4da;border-color:#e6a98d}
+.operation-close-all-btn i{width:8px;height:8px;border-radius:50%;background:#c2543b;display:inline-block}
 .row-readonly{color:var(--admin-muted);font-size:10px}
 .admin-login__demo-accounts{list-style:none;margin:20px 0 0;padding:12px 14px;border-radius:9px;background:#f4f7fb;font-size:11px;color:#69717a;display:flex;flex-direction:column;gap:6px}
 .admin-login__demo-accounts strong{color:#34393f}

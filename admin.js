@@ -331,8 +331,18 @@
     if (!list) return;
     list.replaceChildren();
     var region = byId("operation-region").value;
-    var items = operationExceptions.filter(function (item) { return item.region === region; }).slice().reverse();
-    if (!items.length) { list.innerHTML = "<p>등록된 운영 예외가 없습니다.</p>"; return; }
+    var heading = byId("operation-exception-heading");
+    if (!selectedOperationDateKey) {
+      if (heading) heading.textContent = "운영 일정";
+      list.innerHTML = "<p>달력에서 날짜를 선택하면 해당 일의 운영 일정을 확인할 수 있습니다.</p>";
+      return;
+    }
+    if (heading) {
+      var labelDate = new Date(selectedOperationDateKey + "T00:00:00");
+      heading.textContent = "운영 일정 · " + (labelDate.getMonth() + 1) + "월 " + labelDate.getDate() + "일";
+    }
+    var items = closuresForDate(selectedOperationDateKey, region).slice().reverse();
+    if (!items.length) { list.innerHTML = "<p>이 날 등록된 운영 예외가 없습니다.</p>"; return; }
     items.forEach(function (item) {
       var article = document.createElement("article");
       var programName = item.programKey === "all" ? "전체 프로그램" : ((programCatalog().find(function (programItem) { return programItem.key === item.programKey; }) || {}).programName || "삭제된 프로그램");
@@ -390,6 +400,7 @@
     selectedOperationDateKey = dateKey;
     renderOperationCalendar();
     renderOperationDayQuick(dateKey);
+    renderOperationExceptions();
   }
 
   function renderOperationDayQuick(dateKey) {
