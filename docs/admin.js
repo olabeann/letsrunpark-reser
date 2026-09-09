@@ -126,7 +126,7 @@
       '<label><span>1매당 최대 할인 금액</span><span class="discount-input-suffix"><input id="discount-max-amount" type="number" min="0" step="100" value="0"><em>원</em></span><small class="field-help">정률 할인에만 적용됩니다. 0원은 상한 없음입니다.</small></label>' +
       '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>수량 한도는 계정당 이용일마다 합산하며, 증빙은 현장에서 확인합니다.</small></div>' +
       '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
-      '<label><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
+      '<label style="grid-column:1"><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
       '<label><span>할인 적용 종료일</span><input id="discount-end-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 종료일 제한이 없습니다.</small></label>' +
       '<fieldset class="field-wide"><legend>적용 프로그램</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
       '<label class="policy-toggle field-wide"><input id="discount-active" type="checkbox" checked><span><strong>할인 활성화</strong><small>활성화한 할인만 신규 예약에 적용됩니다. 기존 예약의 할인 금액은 변경되지 않습니다.</small></span></label>';
@@ -151,8 +151,7 @@
       }
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
       discountPolicies = discountPolicies.map(function (discount) {
-        var normalized = Object.assign({ maxAmount: 0, maxQty: 0, scope: "unlimited", proof: "none", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
-        return discount.id === "gwacheon" ? Object.assign(normalized, { name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "day", proof: "onsite", stackable: false }) : normalized;
+        return Object.assign({ maxAmount: 0, maxQty: 1, scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
       });
       if (state.catalog && typeof state.catalog === "object") {
         catalogState.programOverrides = state.catalog.programOverrides || {};
@@ -761,13 +760,11 @@
   }
 
   function updateDiscountConstraintFields() {
-    var isFixedPolicy = byId("discount-id").value === "gwacheon";
     var isPercent = byId("discount-type").value === "percent";
     byId("discount-value-label").textContent = isPercent ? "할인율" : "할인 금액";
     byId("discount-value-unit").textContent = isPercent ? "%" : "원";
     byId("discount-value").max = isPercent ? "100" : "";
-    byId("discount-max-amount").disabled = isFixedPolicy || !isPercent;
-    byId("discount-max-qty").disabled = isFixedPolicy;
+    byId("discount-max-amount").disabled = !isPercent;
     if (!isPercent) {
       if (Number(byId("discount-max-amount").value) > 0) byId("discount-max-amount").dataset.lastValue = byId("discount-max-amount").value;
       byId("discount-max-amount").value = 0;
@@ -795,7 +792,6 @@
   }
 
   function editDiscountPolicy(discount) {
-    var isFixed = !!discount && discount.id === "gwacheon";
     var isEditable = !discount || discountEditableByAccount(discount);
     byId("discount-id").value = discount ? discount.id : "";
     delete byId("discount-max-amount").dataset.lastValue;
@@ -807,9 +803,9 @@
     byId("discount-max-qty").value = discount ? discount.maxQty || 0 : 1;
     byId("discount-start-date").value = discount ? discount.startDate || "" : "";
     byId("discount-end-date").value = discount ? discount.endDate || "" : "";
-    byId("discount-name").disabled = isFixed || !isEditable;
-    byId("discount-type").disabled = isFixed || !isEditable;
-    byId("discount-value").disabled = isFixed || !isEditable;
+    byId("discount-name").disabled = !isEditable;
+    byId("discount-type").disabled = !isEditable;
+    byId("discount-value").disabled = !isEditable;
     byId("discount-max-amount").disabled = !isEditable;
     byId("discount-max-qty").disabled = !isEditable;
     byId("discount-start-date").disabled = !isEditable;
@@ -850,12 +846,11 @@
     var name = byId("discount-name").value.trim();
     if (!name) { notify("할인명을 입력해주세요."); return; }
     var id = byId("discount-id").value || "discount-" + Date.now();
-    var isFixed = id === "gwacheon";
-    var type = isFixed ? "percent" : byId("discount-type").value;
-    var value = isFixed ? 50 : Number(byId("discount-value").value);
-    var maxAmount = isFixed || type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
+    var type = byId("discount-type").value;
+    var value = Number(byId("discount-value").value);
+    var maxAmount = type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
     var scope = "day";
-    var maxQty = isFixed ? 2 : Number(byId("discount-max-qty").value);
+    var maxQty = Number(byId("discount-max-qty").value);
     var startDate = byId("discount-start-date").value;
     var endDate = byId("discount-end-date").value;
     if (!Number.isFinite(value) || value <= 0 || (type === "percent" && value > 100)) { notify(type === "percent" ? "할인율은 1~100%로 입력해주세요." : "할인 금액은 1원 이상 입력해주세요."); return; }
@@ -867,7 +862,7 @@
     if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
     var existing = discountPolicies.find(function (discount) { return discount.id === id; });
     var saved = {
-      id: id, name: isFixed ? "과천시민 할인" : name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty,
+      id: id, name: name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty,
       scope: scope, proof: "onsite",
       startDate: startDate, endDate: endDate, stackable: false, restoreOnCancel: existing ? existing.restoreOnCancel : true,
       allPrograms: allPrograms, programs: selectedPrograms, active: byId("discount-active").checked

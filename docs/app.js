@@ -353,12 +353,16 @@
     return date.getDay() === 0 || date.getDay() === 6;
   }
 
-  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, programKey: initialProgramKey, paymentMethod: "card", step: 0 };
+  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, discountPolicyId: "", programKey: initialProgramKey, paymentMethod: "card", step: 0 };
   var byId = function (id) { return document.getElementById(id); };
   var money = function (value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; };
   var currentName = function () { return program.name; };
   var currentPrice = function () { return program.price; };
-  var amount = function () { return Math.round(currentPrice() * state.qty * (state.discount ? program.discountPolicy.rate : 1)); };
+  var selectedDiscountPolicy = function () {
+    var policies = Array.isArray(program.discountPolicies) ? program.discountPolicies : program.discountPolicy ? [program.discountPolicy] : [];
+    return policies.find(function (policy) { return policy.id === state.discountPolicyId; }) || null;
+  };
+  var amount = function () { var policy = selectedDiscountPolicy(); return Math.round(currentPrice() * state.qty * (policy ? 1 - policy.rate : 1)); };
   var reservationStorageKey = "ponylandBookingStoreV2";
   var demoCancellationStorageKey = "ponylandDemoTicketCancellationsV1";
   var currentMember = readMember();
@@ -487,7 +491,8 @@
       time: state.time,
       qty: state.qty,
       price: amount(),
-      discount: state.discount
+      discount: state.discount,
+      discountPolicyId: state.discountPolicyId
     };
   }
 
@@ -875,10 +880,10 @@
     program = programs[state.programKey];
     refreshBookingWindow(state.programKey);
     if (reset !== false) {
-      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false;
+      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false; state.discountPolicyId = "";
       calendarMonth = new Date(calendarFirstMonth);
     }
-    byId("citizen-discount").checked = state.discount;
+    if (typeof renderDiscountOptions === "function") renderDiscountOptions();
     byId("date-picker").open = false;
     byId("booking-program-tag").textContent = "렛츠런파크 체험";
     byId("booking-page-title").textContent = "체험 예약";
@@ -960,7 +965,25 @@
 
   function selectedMaxQty() {
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
-    return Math.min(state.discount ? 2 : 4, slot && slot.capacity || 4);
+    var policy = selectedDiscountPolicy();
+    return Math.min(policy ? policy.maxQty : 4, slot && slot.capacity || 4);
+  }
+
+  function renderDiscountOptions() {
+    var wrap = byId("booking-discount-options");
+    var policies = Array.isArray(program.discountPolicies) ? program.discountPolicies : program.discountPolicy ? [program.discountPolicy] : [];
+    wrap.innerHTML = '<label class="discount-check"><input type="radio" name="booking-discount" value="" ' + (!state.discountPolicyId ? "checked" : "") + '> 할인 미적용</label>' + policies.map(function (policy) {
+      return '<label class="discount-check"><input type="radio" name="booking-discount" value="' + policy.id + '" ' + (state.discountPolicyId === policy.id ? "checked" : "") + '> ' + policy.label + ' <span>· 최대 ' + policy.maxQty + '매</span></label>';
+    }).join("");
+    wrap.querySelectorAll('input[name="booking-discount"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        state.discountPolicyId = input.value;
+        state.discount = !!input.value;
+        var policy = selectedDiscountPolicy();
+        if (policy && state.qty > policy.maxQty) state.qty = policy.maxQty;
+        update();
+      });
+    });
   }
 
   function goToStep(step, options) {
@@ -1067,7 +1090,6 @@
 
   byId("qty-minus").addEventListener("click", function () { state.qty = Math.max(1, state.qty - 1); update(); });
   byId("qty-plus").addEventListener("click", function () { state.qty = Math.min(selectedMaxQty(), state.qty + 1); update(); });
-  byId("citizen-discount").addEventListener("change", function (event) { state.discount = event.target.checked; if (state.discount && state.qty > 2) state.qty = 2; update(); });
   byId("add-to-cart").addEventListener("click", function () { addToCart(false); });
   byId("book-now").addEventListener("click", function () { addToCart(true); });
   byId("to-checkout").addEventListener("click", startCheckout);

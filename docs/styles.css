@@ -99,4 +99,5 @@
 .ticket-refund-history-list article b{color:var(--coral-700);font-size:var(--fs-body)}
 .ticket-refund-help{margin:0;padding:16px;border-radius:var(--r-md);background:var(--yellow-100);color:var(--grey);font-size:var(--fs-caption);line-height:1.65}
 .ticket-refund-help strong{color:var(--ink)}
+.discount-options{border:0;padding:0;margin:var(--sp-4) 0 0;display:grid;gap:8px}.discount-options legend{font-size:var(--fs-caption);font-weight:var(--fw-semibold);margin-bottom:8px}.discount-options .discount-check{display:flex;align-items:center;gap:7px;margin-top:0;cursor:pointer}.discount-options .discount-check:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}.discount-options .discount-check span{margin-left:auto}
 @media(max-width:640px){.ticket-refund-history{margin-top:16px;padding:20px 16px}.ticket-refund-summary{grid-template-columns:1fr}.ticket-refund-summary>div{display:flex;align-items:center;justify-content:space-between;padding:13px 14px}.ticket-refund-summary dd{margin:0;font-size:var(--fs-body)}.ticket-refund-history-list article{align-items:flex-start}.ticket-refund-history__head h3{font-size:var(--fs-body-lg)}}
