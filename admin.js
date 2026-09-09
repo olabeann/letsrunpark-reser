@@ -17,6 +17,7 @@
   var selectedOperationDateKey = null;
   var pendingOperationClosureAction = null;
   var pendingOperationClosureImpact = null;
+  var pendingProgramDeletion = null;
   var reservationPage = 1;
   var reservationPageSize = 20;
   var organization = {
@@ -43,6 +44,29 @@
     var isRegionLocked = currentAccount && currentAccount.scope === "region";
     select.disabled = isRegionLocked;
     if (isRegionLocked) select.value = currentAccount.region;
+  }
+
+  // Region-scoped accounts should only ever see their own region/department in filter
+  // dropdowns — not "전체 지역" plus every other region's options.
+  function lockLocationFilterSelect(locationId, departmentId) {
+    var locationSelect = byId(locationId); if (!locationSelect) return;
+    var isRegionLocked = currentAccount && currentAccount.scope === "region";
+    if (isRegionLocked) {
+      locationSelect.innerHTML = '<option>' + escapeHtml(currentAccount.region) + '</option>';
+      locationSelect.value = currentAccount.region;
+      locationSelect.disabled = true;
+      if (departmentId) refreshDepartmentSelect(departmentId, currentAccount.region, "");
+    } else {
+      locationSelect.innerHTML = '<option value="">전체 지역</option>' + Object.keys(organization).map(function (region) { return '<option>' + escapeHtml(region) + '</option>'; }).join("");
+      locationSelect.value = "";
+      locationSelect.disabled = false;
+      if (departmentId) refreshDepartmentSelect(departmentId, "", "");
+    }
+  }
+
+  function lockAccountFilterSelects() {
+    lockLocationFilterSelect("reservation-location", "reservation-department");
+    lockLocationFilterSelect("kiosk-location-filter", "kiosk-department-filter");
   }
 
   var defaultBookingWindow = 14;
@@ -199,12 +223,24 @@
     });
   }
 
+  function confirmDelete(message, onConfirm, confirmLabel) {
+    var dialog = byId("generic-confirm-dialog");
+    byId("generic-confirm-message").innerHTML = message;
+    var actionButton = byId("generic-confirm-action");
+    actionButton.textContent = confirmLabel || "삭제";
+    var freshButton = actionButton.cloneNode(true);
+    actionButton.parentNode.replaceChild(freshButton, actionButton);
+    freshButton.addEventListener("click", function () { dialog.close(); onConfirm(); });
+    dialog.showModal();
+  }
+
   function deleteReservation(id) {
-    if (!confirm(id + " 예약을 목록에서 삭제할까요? 되돌릴 수 없습니다.")) return;
-    deletedReservationIds.push(id);
-    saveDemoState();
-    renderReservations();
-    notify(id + " 예약을 삭제했습니다.");
+    confirmDelete(escapeHtml(id) + " 예약을 목록에서 삭제할까요? 삭제해도 고객 환불 등은 자동으로 처리되지 않으니, 필요한 경우 별도로 처리해주세요.", function () {
+      deletedReservationIds.push(id);
+      saveDemoState();
+      renderReservations();
+      notify(id + " 예약을 삭제했습니다.");
+    });
   }
 
   function statusClass(status) {
@@ -302,7 +338,11 @@
       var session = item.sessionKey ? sessionsForProgram(item.programKey).find(function (sessionItem) { return sessionItem.key === item.sessionKey; }) : null;
       var scopeLabel = session ? programName + " · " + session.start + "~" + session.end + " 회차" : programName;
       article.innerHTML = "<strong>휴장 · " + escapeHtml(item.startDate === item.endDate ? item.startDate : item.startDate + " ~ " + item.endDate) + "</strong><span>" + escapeHtml(scopeLabel + " · " + (item.reason || "사유 미입력")) + "</span><button type=\"button\">삭제</button>";
-      article.querySelector("button").addEventListener("click", function () { operationExceptions = operationExceptions.filter(function (saved) { return saved.id !== item.id; }); saveDemoState(); renderOperationCalendar(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); renderOperationExceptions(); notify("운영 예외를 삭제했습니다."); });
+      article.querySelector("button").addEventListener("click", function () {
+        confirmDelete("<strong>본 내용을 삭제할까요?</strong><br>삭제하는 경우 해당 회차가 오픈되어있다면, 고객 예약 화면에서 즉시 노출됩니다.", function () {
+          operationExceptions = operationExceptions.filter(function (saved) { return saved.id !== item.id; }); saveDemoState(); renderOperationCalendar(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); renderOperationExceptions(); notify("운영 예외를 삭제했습니다.");
+        });
+      });
       list.append(article);
     });
   }
@@ -332,12 +372,12 @@
       var closures = closuresForDate(key, region);
       var isClosed = closures.some(function (item) { return item.programKey === "all"; });
       var closedOperatingCount = operatingPrograms.filter(function (item) { return isProgramFullyClosed(item, closures); }).length;
-      var isPartial = !isClosed && closedOperatingCount > 0;
       if (operatingPrograms.length && closedOperatingCount === operatingPrograms.length) isClosed = true;
-      var isOperating = operatingPrograms.length > 0 && !isClosed;
+      var isPartial = !isClosed && closures.length > 0;
+      var isOperating = operatingPrograms.length > 0 && !isClosed && !isPartial;
       var button = document.createElement("button"); button.type = "button";
       button.className = "operation-day" + (date.getMonth() !== month ? " is-outside" : "") + (isClosed ? " is-closed" : isPartial ? " is-partial" : isOperating ? " is-operating" : "") + (key === selectedOperationDateKey ? " is-selected" : "");
-      var stateLabel = isClosed ? "휴장" : isPartial ? "휴장 " + closedOperatingCount + "/" + operatingPrograms.length : isOperating ? "운영" : "";
+      var stateLabel = isClosed ? "휴장" : isPartial ? "일부 휴장" : isOperating ? "운영" : "";
       button.innerHTML = "<span>" + date.getDate() + "</span>" + (stateLabel ? "<small>" + stateLabel + "</small>" : "");
       button.setAttribute("aria-label", key + (stateLabel ? " " + stateLabel : " 미운영"));
       (function (selectedKey) { button.addEventListener("click", function () { selectOperationDate(selectedKey); }); })(key);
@@ -503,7 +543,7 @@
     var basePrograms = Object.keys(programs).map(function (key) {
       return Object.assign({ key: key, programKey: key, programName: programs[key].name }, programs[key], catalogState.programOverrides[key] || {});
     });
-    return basePrograms.concat(catalogState.addedPrograms);
+    return basePrograms.concat(catalogState.addedPrograms).filter(function (item) { return !item.deleted; });
   }
 
   function sessionsForProgram(programKey) {
@@ -543,11 +583,12 @@
         '<td><strong>' + sessions.length + '개</strong><small>판매중 ' + activeSessions.length + '개</small></td>' +
         '<td>' + escapeHtml(appliedDiscounts.length ? appliedDiscounts.join(", ") : "미적용") + '</td>' +
         '<td><button class="row-state ' + (!item.active ? 'is-off' : '') + '" type="button"' + (canManage ? "" : " disabled") + '>' + (item.active ? '판매중' : '숨김') + '</button></td>' +
-        '<td>' + (canManage ? '<div class="row-actions"><button class="row-detail" type="button">프로그램 수정</button><button class="row-sessions" type="button">회차 관리</button></div>' : '<span class="row-readonly">조회만 가능</span>') + '</td>';
+        '<td>' + (canManage ? '<div class="row-actions"><button class="row-detail" type="button">프로그램 수정</button><button class="row-sessions" type="button">회차 관리</button><button class="row-delete" type="button">삭제</button></div>' : '<span class="row-readonly">조회만 가능</span>') + '</td>';
       if (canManage) {
         row.querySelector(".row-state").addEventListener("click", function () { var saved = Object.assign({}, item, { active: !item.active }); persistProgram(saved); notify(saved.active ? "프로그램 판매를 시작했습니다." : "프로그램을 숨겼습니다."); });
         row.querySelector(".row-sessions").addEventListener("click", function () { openSessionManager(item.key); });
         row.querySelector(".row-detail").addEventListener("click", function () { openProductDialog(item); });
+        row.querySelector(".row-delete").addEventListener("click", function () { requestProgramDeletion(item); });
       }
       body.append(row);
     });
@@ -607,6 +648,18 @@
     return (discount.programs || []).some(function (name) { return ownNames.includes(name); });
   }
 
+  // For the 할인 관리 list specifically: a region account should only see discounts it
+  // actually owns (scoped to its own programs). Discounts belonging to other regions —
+  // including another region's "모든 프로그램에 적용" discounts — are hidden entirely
+  // rather than shown read-only, so the list looks empty instead of leaking other regions'
+  // discount names.
+  function discountManageableByAccount(discount) {
+    if (!currentAccount || currentAccount.scope === "all") return true;
+    if (discount.allPrograms) return false;
+    var ownNames = manageableProgramNames();
+    return (discount.programs || []).some(function (name) { return ownNames.includes(name); });
+  }
+
   // A region account may only edit a discount that is entirely scoped to its own programs;
   // discounts spanning other regions (or "모든 프로그램에 적용") are shown read-only.
   function discountEditableByAccount(discount) {
@@ -656,6 +709,38 @@
       if (addedIndex === -1) catalogState.addedPrograms.push(program); else catalogState.addedPrograms[addedIndex] = program;
     } else catalogState.programOverrides[program.key] = program;
     saveDemoState(); renderKioskProducts();
+  }
+
+  function requestProgramDeletion(program) {
+    if (!canManageRegion(program.location)) { notify("해당 지역의 프로그램을 삭제할 권한이 없습니다."); return; }
+    var sessions = sessionsForProgram(program.key);
+    var affectedReservations = allReservations().filter(function (item) {
+      if (!item || item.status === "취소 완료") return false;
+      return item.programKey === program.key || item.program === program.programName || item.name === program.programName;
+    });
+    pendingProgramDeletion = program;
+    byId("program-delete-confirm-scope").textContent = (program.location || "서울") + " · " + program.programName;
+    byId("program-delete-impact").textContent = sessions.length + "개 회차 · 진행 중인 예약 " + affectedReservations.length + "건에 영향을 줄 수 있습니다.";
+    byId("program-delete-confirm-dialog").showModal();
+  }
+
+  function confirmProgramDeletion() {
+    var program = pendingProgramDeletion;
+    byId("program-delete-confirm-dialog").close();
+    if (!program) return;
+    pendingProgramDeletion = null;
+    sessionsForProgram(program.key).forEach(function (session) {
+      persistSession(Object.assign({}, session, { deleted: true, active: false }));
+    });
+    var region = byId("operation-region");
+    var closureRegion = region && region.value === program.location ? region.value : program.location;
+    operationExceptions = operationExceptions.filter(function (item) { return !(item.region === closureRegion && item.programKey === program.key); });
+    operationExceptions.push({ id: "operation-" + Date.now() + "-" + program.key, region: closureRegion, programKey: program.key, startDate: "2020-01-01", endDate: "2099-12-31", status: "closed", reason: "프로그램 삭제로 인한 영구 휴장" });
+    persistProgram(Object.assign({}, program, { deleted: true, active: false }));
+    if (activeProgramKey === program.key) { activeProgramKey = null; byId("product-dialog").close(); byId("session-dialog").close(); }
+    saveDemoState(); renderKioskProducts(); renderOperationCalendar(); renderOperationExceptions();
+    if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey);
+    notify(program.programName + " 프로그램을 삭제했습니다. 기존 예약은 자동으로 환불되지 않으며, 이 프로그램으로는 신규 예약을 받을 수 없습니다.");
   }
 
   function saveProductDetail(event) {
@@ -828,12 +913,13 @@
   function deleteSession(session) {
     var reason = sessionDeletionReason(session);
     if (reason) { notify(reason); return; }
-    if (!confirm(session.start + "~" + session.end + " 회차를 삭제할까요?")) return;
-    reason = sessionDeletionReason(session);
-    if (reason) { notify(reason); return; }
-    if (activeSessionKey === session.key) { activeSessionKey = null; byId("session-editor").hidden = true; }
-    persistSession(Object.assign({}, session, { deleted: true, active: false }));
-    notify("회차를 삭제했습니다.");
+    confirmDelete(escapeHtml(session.start + "~" + session.end) + " 회차를 삭제할까요?", function () {
+      var reasonNow = sessionDeletionReason(session);
+      if (reasonNow) { notify(reasonNow); return; }
+      if (activeSessionKey === session.key) { activeSessionKey = null; byId("session-editor").hidden = true; }
+      persistSession(Object.assign({}, session, { deleted: true, active: false }));
+      notify("회차를 삭제했습니다.");
+    });
   }
 
   function openSessionManager(programKey) {
@@ -936,7 +1022,7 @@
   }
 
   function visibleDiscountPolicies() {
-    return discountPolicies.filter(discountVisibleToAccount);
+    return discountPolicies.filter(discountManageableByAccount);
   }
 
   function editDiscountPolicy(discount) {
@@ -963,6 +1049,7 @@
     byId("discount-active").checked = discount ? discount.active : true;
     byId("discount-active").disabled = !isEditable;
     byId("save-discount-policy").hidden = !isEditable;
+    byId("delete-discount-policy").hidden = !isEditable || !discount;
     updateDiscountConstraintFields();
     renderDiscountProgramOptions(discount ? discount.programs || [] : []);
     if (!isEditable) document.querySelectorAll("#discount-program-options input").forEach(function (input) { input.disabled = true; });
@@ -982,6 +1069,25 @@
       list.append(button);
     });
     if (!visibleDiscountPolicies().length) list.innerHTML = '<p class="empty-table"><strong>표시할 할인이 없습니다.</strong><small>담당 지역의 프로그램에 적용된 할인만 표시합니다.</small></p>';
+  }
+
+  function deleteDiscountPolicy() {
+    var id = byId("discount-id").value;
+    if (!id) return;
+    var discount = discountPolicies.find(function (item) { return item.id === id; });
+    if (!discount || !discountEditableByAccount(discount)) return;
+    confirmDelete(escapeHtml(discount.name) + " 할인을 삭제할까요? 되돌릴 수 없습니다.", function () {
+      discountPolicies = discountPolicies.filter(function (item) { return item.id !== id; });
+      programCatalog().forEach(function (program) {
+        if (!Array.isArray(program.discountIds) || !program.discountIds.includes(id)) return;
+        persistProgram(Object.assign({}, program, { discountIds: program.discountIds.filter(function (discountId) { return discountId !== id; }) }));
+      });
+      saveDemoState(); renderDiscountPolicies(); renderKioskProducts();
+      editDiscountPolicy(visibleDiscountPolicies()[0] || null); renderDiscountPolicies();
+      var currentProgram = activeProgramKey ? programCatalog().find(function (program) { return program.key === activeProgramKey; }) : null;
+      if (currentProgram) renderProductDiscountOptions(currentProgram);
+      notify(discount.name + " 할인을 삭제했습니다.");
+    });
   }
 
   function openDiscountManager(discountId) {
@@ -1046,7 +1152,12 @@
     select.innerHTML = '<option value="">전체 지역 · 부서</option>' + options.map(function (item) { return '<option value="' + escapeHtml(item.scope) + '">' + escapeHtml(item.scope) + '</option>'; }).join("");
     var isRegionLocked = currentAccount && currentAccount.scope === "region";
     if (isRegionLocked && options.length === 1) { select.value = options[0].scope; select.disabled = true; }
-    else { select.disabled = false; select.value = options.some(function (item) { return item.scope === selected; }) ? selected : ""; }
+    else if (isRegionLocked) {
+      select.disabled = false;
+      var ownScope = settlementScopeKey(currentAccount.region, currentAccount.department);
+      var keepSelected = options.some(function (item) { return item.scope === selected; }) ? selected : null;
+      select.value = keepSelected || (options.some(function (item) { return item.scope === ownScope; }) ? ownScope : "");
+    } else { select.disabled = false; select.value = options.some(function (item) { return item.scope === selected; }) ? selected : ""; }
   }
 
   function settlementDailyInRange(daily, startDate, endDate) {
@@ -1222,12 +1333,11 @@
   currentAccount = restoreAdminSession();
   setAdminLoginState(!!currentAccount);
   if (currentAccount) renderAdminIdentity();
-  refreshDepartmentSelect("reservation-department", "", "");
-  refreshDepartmentSelect("kiosk-department-filter", "", "");
+  lockAccountFilterSelects();
   renderReservations(); renderKioskProducts();
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
-  byId("admin-logout").addEventListener("click", function () { saveAdminSession("signed-out"); currentAccount = null; setAdminLoginState(false); });
+  byId("admin-logout").addEventListener("click", function () { saveAdminSession("signed-out"); currentAccount = null; setAdminLoginState(false); lockAccountFilterSelects(); });
   byId("admin-login-form").addEventListener("submit", function (event) {
     event.preventDefault();
     var enteredId = byId("admin-login-id").value.trim();
@@ -1236,6 +1346,7 @@
     if (!account) { byId("admin-login-password").focus(); return; }
     currentAccount = account;
     saveAdminSession(account.id); setAdminLoginState(true); renderAdminIdentity();
+    lockAccountFilterSelects();
     renderKioskProducts(); renderReservations(); lockOperationRegionSelect();
     refreshSettlementScopeFilter(); renderSettlementSummary();
     notify("로그인했습니다.");
@@ -1243,7 +1354,7 @@
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
   ["reservation-search", "reservation-department", "reservation-date", "reservation-program", "reservation-status"].forEach(function (id) { byId(id).addEventListener(id === "reservation-search" ? "input" : "change", function () { reservationPage = 1; renderReservations(); }); });
   byId("reservation-location").addEventListener("change", function () { refreshDepartmentSelect("reservation-department", byId("reservation-location").value, ""); reservationPage = 1; renderReservations(); });
-  byId("reset-filters").addEventListener("click", function () { byId("reservation-search").value = ""; byId("reservation-location").value = ""; byId("reservation-date").value = ""; byId("reservation-program").value = ""; byId("reservation-status").value = ""; refreshDepartmentSelect("reservation-department", "", ""); reservationPage = 1; renderReservations(); });
+  byId("reset-filters").addEventListener("click", function () { byId("reservation-search").value = ""; byId("reservation-date").value = ""; byId("reservation-program").value = ""; byId("reservation-status").value = ""; lockLocationFilterSelect("reservation-location", "reservation-department"); reservationPage = 1; renderReservations(); });
   byId("reservation-prev-page").addEventListener("click", function () { if (reservationPage > 1) changeReservationPage(reservationPage - 1); });
   byId("reservation-next-page").addEventListener("click", function () { changeReservationPage(reservationPage + 1); });
   byId("reservation-page-buttons").addEventListener("click", function (event) { var button = event.target.closest("[data-reservation-page]"); if (button) changeReservationPage(Number(button.dataset.reservationPage)); });
@@ -1253,7 +1364,7 @@
   byId("kiosk-product-search-form").addEventListener("submit", function (event) { event.preventDefault(); renderKioskProducts(); });
   byId("kiosk-location-filter").addEventListener("change", function () { refreshDepartmentSelect("kiosk-department-filter", byId("kiosk-location-filter").value, ""); renderKioskProducts(); });
   byId("kiosk-department-filter").addEventListener("change", renderKioskProducts);
-  byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; byId("kiosk-location-filter").value = ""; refreshDepartmentSelect("kiosk-department-filter", "", ""); renderKioskProducts(); notify("전체 프로그램 목록을 새로고침했습니다."); });
+  byId("refresh-products").addEventListener("click", function () { byId("kiosk-product-search").value = ""; lockLocationFilterSelect("kiosk-location-filter", "kiosk-department-filter"); renderKioskProducts(); notify("전체 프로그램 목록을 새로고침했습니다."); });
   byId("add-product").addEventListener("click", function () {
     var ownLocation = currentAccount && currentAccount.scope === "region" ? currentAccount.region : "서울";
     var ownDepartment = currentAccount && currentAccount.scope === "region" ? currentAccount.department : "공원화사업추진TF";
@@ -1265,6 +1376,7 @@
   byId("discount-type").addEventListener("change", updateDiscountConstraintFields);
   byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
   byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
+  byId("delete-discount-policy").addEventListener("click", deleteDiscountPolicy);
   byId("open-discounts-from-product").addEventListener("click", function () { openDiscountManager(); notify("할인을 저장한 뒤 프로그램 수정 화면에서 적용할 수 있습니다."); });
   byId("detail-image").addEventListener("change", function (event) {
     var file = event.target.files && event.target.files[0];
@@ -1284,7 +1396,6 @@
   byId("add-session").addEventListener("click", function () { editSession(null); });
   byId("cancel-session-edit").addEventListener("click", function () { byId("session-editor").hidden = true; activeSessionKey = null; });
   byId("save-session").addEventListener("click", saveSession);
-  byId("scope-button").addEventListener("click", function () { notify("전체 지역의 프로그램은 조회할 수 있고 수정은 담당 부서 권한으로 제한됩니다."); });
   byId("bulk-cancel").addEventListener("click", function () {
     notify("기상·시설 사유로 회차를 일괄 취소·환불하려면 운영 캘린더에서 날짜를 선택하고 휴장 처리해주세요.");
     showView("operations");
@@ -1292,6 +1403,8 @@
   byId("operation-closure-refund").addEventListener("change", updateOperationClosureMessage);
   byId("confirm-operation-closure").addEventListener("click", confirmOperationClosure);
   byId("operation-closure-confirm-dialog").addEventListener("close", function () { pendingOperationClosureAction = null; });
+  byId("confirm-program-delete").addEventListener("click", confirmProgramDeletion);
+  byId("program-delete-confirm-dialog").addEventListener("close", function () { pendingProgramDeletion = null; });
   byId("apply-settlement").addEventListener("click", function () { renderSettlementSummary(); notify("선택한 기간의 정산 내역을 조회했습니다."); });
   byId("settlement-drawer-close").addEventListener("click", closeSettlementDrawer);
   byId("settlement-drawer-confirm").addEventListener("click", closeSettlementDrawer);
