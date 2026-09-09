@@ -9,7 +9,7 @@
   }
 
   document.addEventListener("keydown", function (event) {
-    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
+    if (event.altKey && !event.metaKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
       window.setTimeout(function () {
         if (window.DeveloperPolicy) syncWithPolicy();
         else document.body.classList.toggle("demo-controls-visible");

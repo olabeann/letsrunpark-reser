@@ -897,7 +897,7 @@
     if (refundCheck.checked && !refundCheck.disabled) {
       message.textContent = "휴장 처리 시 신규 예약이 즉시 중단되고, 현재 유효 예약 " + (pendingOperationClosureImpact ? pendingOperationClosureImpact.orders : 0) + "건을 함께 취소·환불 처리합니다.";
     } else {
-      message.textContent = "휴장 처리 시 신규 예약이 즉시 중단됩니다. 기존 예약은 유지되며 자동 취소·환불되지 않습니다.";
+      message.innerHTML = "휴장 처리 시 신규 예약이 즉시 중단됩니다.<br>기존 예약은 유지되며 자동 취소·환불되지 않습니다.";
     }
   }
 
