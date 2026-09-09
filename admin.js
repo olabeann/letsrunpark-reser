@@ -16,6 +16,7 @@
   var operationCalendarMonth = new Date(2026, 8, 1);
   var selectedOperationDateKey = null;
   var pendingOperationClosureAction = null;
+  var pendingOperationClosureImpact = null;
   var reservationPage = 1;
   var reservationPageSize = 20;
   var organization = {
@@ -727,35 +728,101 @@
     return hasHistory ? "예약 이력이 있어 삭제가 제한됩니다. ‘숨김’으로 판매를 중지할 수 있습니다." : "";
   }
 
-  function operationClosureImpact(region, dateKey, programItem, session) {
+  function matchingReservationsForClosure(region, dateKey, programItem, session) {
     var programName = programItem ? programItem.programName : "";
     var sessionTime = session ? (session.start + "~" + session.end).replace(/\s/g, "") : "";
     return allReservations().filter(function (item) {
       if (!item || item.location !== region || item.dateKey !== dateKey || item.status === "취소 완료") return false;
       if (programItem && item.programKey !== programItem.key && item.program !== programName && item.name !== programName) return false;
       return !session || String(item.time || "").replace(/\s/g, "") === sessionTime;
-    }).reduce(function (impact, item) {
+    });
+  }
+
+  function operationClosureImpact(region, dateKey, programItem, session) {
+    return matchingReservationsForClosure(region, dateKey, programItem, session).reduce(function (impact, item) {
       impact.orders += 1;
       impact.people += Array.isArray(item.tickets) ? item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length : Number(item.qty || 0);
       return impact;
     }, { orders: 0, people: 0 });
   }
 
+  function cancelReservationForClosure(item, reason) {
+    var demoMatch = demoReservations.find(function (candidate) { return candidate.id === item.id; });
+    if (demoMatch) {
+      demoMatch.status = "취소 완료";
+      demoMatch.tickets = (demoMatch.tickets || []).map(function () { return "cancelled"; });
+      demoMatch.cancellationEvents = demoMatch.cancellationEvents || [];
+      demoMatch.cancellationEvents.push({ source: "admin", qty: item.qty, amount: item.price, reason: reason, createdAt: new Date().toLocaleString("ko-KR") });
+      return;
+    }
+    try {
+      var store = JSON.parse(localStorage.getItem(reservationStoreKey) || "null");
+      if (!store || !Array.isArray(store.reservations)) return;
+      var target = store.reservations.find(function (candidate) { return candidate.id === item.id; });
+      if (!target) return;
+      target.cancellationHistory = target.cancellationHistory || [];
+      target.cancellationHistory.push({ createdAt: new Date().toISOString(), qty: target.qty, amount: target.price || 0, status: "cancelled", reason: reason });
+      target.status = "cancelled";
+      target.qty = 0;
+      localStorage.setItem(reservationStoreKey, JSON.stringify(store));
+    } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
+  }
+
   function requestOperationClosure(title, scope, region, dateKey, programItem, session, action) {
     var impact = operationClosureImpact(region, dateKey, programItem, session);
     pendingOperationClosureAction = action;
+    pendingOperationClosureImpact = { region: region, dateKey: dateKey, programItem: programItem, session: session, orders: impact.orders };
     byId("operation-closure-confirm-title").textContent = title;
     byId("operation-closure-confirm-scope").textContent = dateKey + " · " + region + " · " + scope;
-    byId("operation-closure-impact").textContent = impact.orders ? "현재 유효 예약 " + impact.orders + "건 · " + impact.people + "명이 있습니다." : "현재 유효 예약은 없습니다.";
+    var impactLine = byId("operation-closure-impact");
+    var refundCheck = byId("operation-closure-refund");
+    var refundLabel = byId("operation-closure-refund-label");
+    if (impact.orders) {
+      impactLine.textContent = "현재 유효 예약 " + impact.orders + "건 · " + impact.people + "명이 있습니다.";
+      refundLabel.hidden = false;
+      refundCheck.disabled = false;
+      refundCheck.checked = false;
+    } else {
+      impactLine.textContent = "현재 유효 예약은 없습니다.";
+      refundLabel.hidden = true;
+      refundCheck.disabled = true;
+      refundCheck.checked = false;
+    }
+    updateOperationClosureMessage();
     byId("operation-closure-confirm-dialog").showModal();
+  }
+
+  function updateOperationClosureMessage() {
+    var refundCheck = byId("operation-closure-refund");
+    var message = byId("operation-closure-message-text");
+    if (refundCheck.checked && !refundCheck.disabled) {
+      message.textContent = "휴장 처리 시 신규 예약이 즉시 중단되고, 현재 유효 예약 " + (pendingOperationClosureImpact ? pendingOperationClosureImpact.orders : 0) + "건을 함께 취소·환불 처리합니다.";
+    } else {
+      message.textContent = "휴장 처리 시 신규 예약이 즉시 중단됩니다. 기존 예약은 유지되며 자동 취소·환불되지 않습니다.";
+    }
   }
 
   function confirmOperationClosure() {
     if (!pendingOperationClosureAction) return;
     var action = pendingOperationClosureAction;
+    var impact = pendingOperationClosureImpact;
+    var refundCheck = byId("operation-closure-refund");
+    var shouldRefund = refundCheck.checked && !refundCheck.disabled;
     pendingOperationClosureAction = null;
+    pendingOperationClosureImpact = null;
     byId("operation-closure-confirm-dialog").close();
+    var cancelledCount = 0;
+    if (shouldRefund && impact) {
+      var matches = matchingReservationsForClosure(impact.region, impact.dateKey, impact.programItem, impact.session);
+      matches.forEach(function (item) { cancelReservationForClosure(item, "기상·운영상 휴장 처리"); });
+      cancelledCount = matches.length;
+    }
     action();
+    if (cancelledCount) {
+      renderReservations();
+      var toast = document.querySelector(".toast");
+      toast.textContent = toast.textContent + " 예약 " + cancelledCount + "건도 함께 취소·환불 처리했습니다.";
+    }
   }
 
   function deleteSession(session) {
@@ -1219,13 +1286,10 @@
   byId("save-session").addEventListener("click", saveSession);
   byId("scope-button").addEventListener("click", function () { notify("전체 지역의 프로그램은 조회할 수 있고 수정은 담당 부서 권한으로 제한됩니다."); });
   byId("bulk-cancel").addEventListener("click", function () {
-    var locationSelect = byId("operation-cancel-location");
-    var isRegionLocked = currentAccount && currentAccount.scope === "region";
-    locationSelect.disabled = isRegionLocked;
-    if (isRegionLocked) locationSelect.value = currentAccount.region;
-    byId("operation-cancel-dialog").showModal();
+    notify("기상·시설 사유로 회차를 일괄 취소·환불하려면 운영 캘린더에서 날짜를 선택하고 휴장 처리해주세요.");
+    showView("operations");
   });
-  byId("confirm-operation-cancel").addEventListener("click", function () { byId("operation-cancel-dialog").close(); notify("선택한 회차를 운영 취소하고 대상 예약의 환불 처리를 시작했습니다."); });
+  byId("operation-closure-refund").addEventListener("change", updateOperationClosureMessage);
   byId("confirm-operation-closure").addEventListener("click", confirmOperationClosure);
   byId("operation-closure-confirm-dialog").addEventListener("close", function () { pendingOperationClosureAction = null; });
   byId("apply-settlement").addEventListener("click", function () { renderSettlementSummary(); notify("선택한 기간의 정산 내역을 조회했습니다."); });
@@ -1261,7 +1325,7 @@
     if (!byId("developer-policy-dialog").open) byId("developer-policy-dialog").showModal();
   }
   document.addEventListener("keydown", function (event) {
-    if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
+    if (event.altKey && !event.metaKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
       event.preventDefault();
       openDeveloperPolicy();
     }

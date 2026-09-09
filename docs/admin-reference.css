@@ -625,6 +625,12 @@ td small {font-size:11px}
 .operation-closure-summary{padding:12px 14px;border-radius:8px;background:#f4f7fb}
 .operation-closure-summary strong,.operation-closure-summary span{display:block}
 .operation-closure-summary strong{font-size:12px}.operation-closure-summary span{margin-top:5px;color:#69717a;font-size:10px}
+.operation-closure-refund-toggle{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:13px 14px;border:1.5px solid #f0b4ac;border-radius:10px;background:#fff5f3;cursor:pointer;transition:border-color .15s,background .15s}
+.operation-closure-refund-toggle:has(input:checked){border-color:#e05263;background:#fdeceb;box-shadow:0 0 0 3px rgba(224,82,99,.12)}
+.operation-closure-refund-toggle input{width:19px;height:19px;margin-top:1px;flex:0 0 19px;accent-color:#e05263}
+.operation-closure-refund-toggle>span{display:block}
+.operation-closure-refund-toggle strong{display:block;font-size:12.5px;font-weight:800;color:#b3261e;line-height:1.5}
+.operation-closure-refund-toggle small{display:block;margin-top:5px;font-size:10.5px;font-weight:500;color:#8a5c56;line-height:1.55}
 .operation-closure-message{display:flex;align-items:flex-start;gap:9px;margin:14px 0 0;color:#555b62;font-size:11px;line-height:1.6}
 .operation-closure-message i{display:grid;flex:0 0 18px;height:18px;place-items:center;border-radius:50%;background:#fff0ec;color:#b44b3a;font-size:10px;font-style:normal;font-weight:800}
 @media(max-width:560px){.session-row{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}.session-row .session-delete{grid-column:4;grid-row:3}}
