@@ -502,7 +502,7 @@
       var key = programKey + "-session-" + index;
       return Object.assign({ key: key, programKey: programKey, start: session[1], end: session[2], capacity: session[4], active: session[5] !== "운영 마감" }, catalogState.sessionOverrides[key] || {});
     });
-    return baseSessions.concat(catalogState.addedSessions.filter(function (session) { return session.programKey === programKey; })).sort(function (a, b) { return (a.start + a.end).localeCompare(b.start + b.end); });
+    return baseSessions.concat(catalogState.addedSessions.filter(function (session) { return session.programKey === programKey; })).filter(function (session) { return !session.deleted; }).sort(function (a, b) { return (a.start + a.end).localeCompare(b.start + b.end); });
   }
 
   function weekdayText(days) {
@@ -531,7 +531,7 @@
         '<td><strong>' + escapeHtml(item.programName) + '</strong></td>' +
         '<td><strong>' + money(item.price || 0) + '</strong></td>' +
         '<td><strong>' + escapeHtml(weekdayText(item.saleDays)) + '</strong><small>' + escapeHtml((item.saleStartDate || "미설정") + " ~ " + (item.saleEndDate || "미설정")) + '</small></td>' +
-        '<td><strong>' + sessions.length + '개</strong><small>판매중 ' + activeSessions.length + '개 · 온라인 수량 설정</small></td>' +
+        '<td><strong>' + sessions.length + '개</strong><small>판매중 ' + activeSessions.length + '개</small></td>' +
         '<td>' + escapeHtml(appliedDiscounts.length ? appliedDiscounts.join(", ") : "미적용") + '</td>' +
         '<td><button class="row-state ' + (!item.active ? 'is-off' : '') + '" type="button"' + (canManage ? "" : " disabled") + '>' + (item.active ? '판매중' : '숨김') + '</button></td>' +
         '<td>' + (canManage ? '<div class="row-actions"><button class="row-detail" type="button">프로그램 수정</button><button class="row-sessions" type="button">회차 관리</button></div>' : '<span class="row-readonly">조회만 가능</span>') + '</td>';
@@ -574,7 +574,7 @@
     var cancelDivisor = cancelUnit === "days" ? 1440 : cancelUnit === "hours" ? 60 : 1;
     byId("detail-cancel-unit").value = cancelUnit;
     byId("detail-cancel-value").value = item.cancelOffsetValue == null ? cancelMinutes / cancelDivisor : item.cancelOffsetValue;
-    renderProductDiscountOptions(item.discountIds || []);
+    renderProductDiscountOptions(item);
     showView("program-edit");
   }
 
@@ -618,14 +618,18 @@
     byId("program-name-options").innerHTML = uniqueProgramNames().map(function (name) { return '<option value="' + escapeHtml(name) + '">'; }).join("");
   }
 
-  function renderProductDiscountOptions(selectedIds) {
+  function renderProductDiscountOptions(program) {
     var wrap = byId("detail-discount-options"); wrap.replaceChildren();
+    var selectedIds = program && Array.isArray(program.discountIds) ? program.discountIds : [];
+    var programName = program ? program.programName : "";
     var activeDiscounts = discountPolicies.filter(function (discount) { return discount.active && discountVisibleToAccount(discount); });
     if (!activeDiscounts.length) { wrap.innerHTML = '<p>등록된 활성 할인이 없습니다.</p>'; return; }
     activeDiscounts.forEach(function (discount) {
       var label = document.createElement("label");
       var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
-      label.innerHTML = '<input type="checkbox" value="' + escapeHtml(discount.id) + '" ' + (discount.allPrograms || selectedIds.includes(discount.id) ? "checked" : "") + (discount.allPrograms ? " disabled" : "") + '><span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + (discount.allPrograms ? "모든 프로그램 자동 적용" : "이 상품에 선택 적용") + '</small></span>';
+      var appliesToProgram = discount.allPrograms || (discount.programs || []).includes(programName) || selectedIds.includes(discount.id);
+      label.innerHTML = '<input type="checkbox" value="' + escapeHtml(discount.id) + '" ' + (appliesToProgram ? "checked" : "") + (discount.allPrograms ? ' aria-disabled="true"' : "") + '><span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + ' · ' + (discount.allPrograms ? "모든 프로그램 자동 적용" : "이 상품에 선택 적용") + '</small></span>';
+      if (discount.allPrograms) label.querySelector("input").addEventListener("click", function (event) { event.preventDefault(); });
       wrap.append(label);
     });
   }
@@ -697,6 +701,35 @@
     saveDemoState(); renderKioskProducts(); renderSessionList();
   }
 
+  function sessionDeletionReason(session) {
+    var program = programCatalog().find(function (item) { return item.key === session.programKey; });
+    if (!program || !canManageRegion(program.location)) return "해당 지역의 회차를 삭제할 권한이 없습니다.";
+    var store;
+    try { store = JSON.parse(localStorage.getItem(reservationStoreKey) || '{"reservations":[]}'); }
+    catch (error) { return "예약 이력을 확인할 수 없어 삭제할 수 없습니다."; }
+    if (!store || !Array.isArray(store.reservations)) return "예약 이력을 확인할 수 없어 삭제할 수 없습니다.";
+    var original = (sessionData[session.programKey] || []).find(function (item, index) { return session.programKey + "-session-" + index === session.key; });
+    var times = [session.start + "~" + session.end];
+    if (original) times.push(original[1] + "~" + original[2]);
+    var hasHistory = demoReservations.concat(store.reservations).some(function (item) {
+      if (!item) return false;
+      if (item.sessionKey === session.key) return true;
+      return (item.programKey === session.programKey || item.program === program.programName || item.name === program.programName) && times.indexOf(String(item.time || "").replace(/\s/g, "")) !== -1;
+    });
+    return hasHistory ? "예약 이력이 있어 삭제가 제한됩니다. ‘숨김’으로 판매를 중지할 수 있습니다." : "";
+  }
+
+  function deleteSession(session) {
+    var reason = sessionDeletionReason(session);
+    if (reason) { notify(reason); return; }
+    if (!confirm(session.start + "~" + session.end + " 회차를 삭제할까요?")) return;
+    reason = sessionDeletionReason(session);
+    if (reason) { notify(reason); return; }
+    if (activeSessionKey === session.key) { activeSessionKey = null; byId("session-editor").hidden = true; }
+    persistSession(Object.assign({}, session, { deleted: true, active: false }));
+    notify("회차를 삭제했습니다.");
+  }
+
   function openSessionManager(programKey) {
     var program = programCatalog().find(function (item) { return item.key === programKey; });
     if (!program) return;
@@ -724,6 +757,15 @@
         notify(saved.active ? (index + 1) + "회차 판매를 시작했습니다." : (index + 1) + "회차를 숨겼습니다.");
       });
       row.querySelector(".session-edit").addEventListener("click", function () { editSession(session, row); });
+      var deleteButton = document.createElement("button");
+      deleteButton.type = "button"; deleteButton.className = "session-delete"; deleteButton.textContent = "삭제";
+      var deletionReason = sessionDeletionReason(session);
+      deleteButton.disabled = !!deletionReason;
+      deleteButton.title = deletionReason || "예약 이력이 없는 회차 삭제";
+      deleteButton.setAttribute("aria-label", (index + 1) + "회차 삭제" + (deletionReason ? ": " + deletionReason : ""));
+      if (deletionReason) row.querySelector("small").textContent += " · " + deletionReason;
+      deleteButton.addEventListener("click", function () { deleteSession(session); });
+      row.append(deleteButton);
       list.append(row);
       if (activeSessionKey === session.key && !editor.hidden) row.after(editor);
     });
@@ -869,7 +911,11 @@
     };
     var index = discountPolicies.findIndex(function (discount) { return discount.id === id; });
     if (index === -1) discountPolicies.push(saved); else discountPolicies[index] = saved;
-    byId("discount-id").value = id; saveDemoState(); renderDiscountPolicies(); renderKioskProducts(); notify(name + " 할인을 저장했습니다.");
+    byId("discount-id").value = id; saveDemoState(); renderDiscountPolicies(); renderKioskProducts();
+    var currentProgram = activeProgramKey ? programCatalog().find(function (program) { return program.key === activeProgramKey; }) : null;
+    if (currentProgram) renderProductDiscountOptions(currentProgram);
+    byId("discount-dialog").close();
+    notify(name + " 할인을 저장했습니다.");
   }
 
   function settlementScopeKey(location, department) { return location + " · " + department; }

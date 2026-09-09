@@ -618,3 +618,8 @@ td small {font-size:11px}
 .operation-schedule-list>h3{margin:0 0 8px;font-size:var(--fs-caption);font-weight:700;color:#555b62}
 .operation-schedule-list .operation-exception-list{margin:0}
 .operation-exception-list span,.operation-exception-list button,.operation-exception-list>p{font-size:var(--fs-badge);line-height:1.5}
+
+.session-row{grid-template-columns:34px minmax(0,1fr) auto auto auto}
+.session-row .session-delete{color:#b42318;border-color:#efc5c1}
+.session-row .session-delete:disabled{color:#8a9098;border-color:#e1e3e6;cursor:not-allowed}
+@media(max-width:560px){.session-row{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}.session-row .session-delete{grid-column:4;grid-row:3}}
