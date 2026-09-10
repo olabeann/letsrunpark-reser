@@ -158,7 +158,13 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .table-status.is-review {background:#fff0f2;color:#d64e62}
 .table-status.is-cancelled {background:#f1f2f4;color:#747980}
 .reservation-table input {accent-color:var(--admin-blue)}
-.reservation-table{min-width:1120px}
+.reservation-table{min-width:1280px}
+.reservation-table th:last-child,.reservation-table td:last-child{width:92px;text-align:right}
+.reservation-table td:nth-child(3) strong,.reservation-table td:nth-child(6) strong,.reservation-table td:nth-child(8) strong{font-weight:400;color:#4d5359}
+.reservation-detail-button{height:32px;padding:0 12px;border:1px solid #cfd8e5;border-radius:7px;background:#fff;color:#1769ff;font-size:10px;font-weight:800;white-space:nowrap}
+.reservation-detail-button:hover{border-color:#1769ff;background:#f4f8ff}
+.reservation-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}.reservation-row-actions .row-delete{white-space:nowrap}
+.receipt-link{color:#1769ff;font-size:11px;font-weight:800}
 .reservation-panel{scroll-margin-top:82px}.table-pagination #reservation-page-buttons{display:flex;gap:4px}.table-pagination button:disabled{cursor:not-allowed;opacity:.4}
 .table-pagination {justify-content:center}
 .table-pagination>span {position:absolute;left:calc(250px + 55px)}
@@ -186,9 +192,14 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .role-members article>span {background:#edf4ff;color:#1769ff}
 .permission-table td:not(:first-child) {color:#1769ff}
 .reservation-drawer {background:#fafbfc}
-.individual-ticket:has(input:checked) {border-color:#8cb3ff;background:#f3f7ff}
+.payment-receipt-dialog{width:min(500px,calc(100vw - 24px));padding:0;border:0;border-radius:4px;color:#0b2345;box-shadow:0 24px 70px rgba(12,27,48,.3)}
+.payment-receipt-dialog::backdrop{background:rgba(20,27,34,.58);backdrop-filter:blur(2px)}
+.payment-receipt-dialog header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:5px solid #e9edf3}.payment-receipt-dialog header h2{margin:0;font-size:18px}.payment-receipt-dialog header>button{font-size:25px;color:#909bab;line-height:1}.payment-receipt-body{padding:14px 20px 20px}.receipt-info{margin:0;padding:8px 0 16px;border-bottom:4px dotted #e3e8f0}.receipt-info:last-child{padding-top:16px;border-bottom:0}.receipt-info div{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;padding:6px 0;font-size:12px;line-height:1.45}.receipt-info dt{color:#193253}.receipt-info dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}.receipt-info--amount{padding-top:14px}.receipt-info .receipt-total{padding-top:8px;font-size:16px}.receipt-info .receipt-total dt,.receipt-info .receipt-total dd{font-weight:900;color:#081f40}@media(max-width:520px){.payment-receipt-dialog header{padding:16px}.payment-receipt-body{padding:10px 16px 16px}.receipt-info div{grid-template-columns:92px minmax(0,1fr);gap:12px}}
+.individual-ticket:has(input:checked) {border-color:#dfe5e1;background:#fff}
+.individual-ticket:not(.is-cancelled) strong{color:#1769ff}
 .individual-ticket input {accent-color:#1769ff}
-.individual-ticket>span:last-child {background:#eaf3ff;color:#1769ff}
+.individual-ticket>span:last-child:not(.ticket-cancelled-status){padding:0;border-radius:0;background:transparent;color:inherit;font-weight:400}
+.individual-ticket>.ticket-cancelled-status{background:#eceeed;color:#6d7772}
 .admin-button--danger {background:#e05263}
 .toast {background:#24272b}
 
@@ -233,7 +244,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .row-state.is-off {border-color:#e1e3e6;background:#f4f5f6;color:#777c82}
 .row-save:hover,.row-detail:hover {border-color:#1769ff;color:#1769ff}
 .row-actions {display:flex;align-items:center;gap:6px;white-space:nowrap}
-.empty-table {padding:42px!important;text-align:center!important;color:#78847e}
+.reservation-table td.empty-table{display:table-cell!important;width:auto!important;height:132px;padding:42px!important;text-align:center!important;vertical-align:middle;color:#78847e}
 .empty-table strong,.empty-table small{display:block}.empty-table strong{color:var(--admin-ink);font-size:14px}.empty-table small{margin-top:7px;font-size:12px}
 .kiosk-dialog {width:min(760px,calc(100vw - 32px));padding:0;border:1px solid #dfe3e7;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
 .kiosk-dialog::backdrop {background:rgba(24,28,33,.42)}
@@ -341,7 +352,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .detail-discount-options strong {font-size:10px}.detail-discount-options small {margin-top:4px;font-size:9px;color:#7b8289}
 .detail-discount-options>p {grid-column:1/-1;margin:0;padding:12px;border-radius:7px;background:#f5f6f7;color:#7b8289;font-size:9px}
 .detail-options>button {margin-top:9px;height:32px;padding:0 10px;border:1px solid #aac7fb;border-radius:6px;background:#fff;color:#1769ff;font-size:9px;font-weight:800}
-.reservation-filter {grid-template-columns:minmax(190px,1.3fr) repeat(5,minmax(120px,.72fr)) 64px}
+.reservation-filter {grid-template-columns:repeat(6,minmax(112px,.72fr)) minmax(180px,1.2fr) 64px}
 .kiosk-toolbar select {margin-left:0;min-width:145px}
 .kiosk-product-table th,.kiosk-product-table td {text-align:left}
 .kiosk-product-table td {min-height:58px}

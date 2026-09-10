@@ -259,13 +259,15 @@
     var canManage = canManageRegion(item.location);
     var row = document.createElement("tr");
     row.dataset.reservationId = item.id;
-    row.innerHTML = '<td><strong>' + escapeHtml(item.id) + '</strong><br><small>' + escapeHtml(item.createdAt) + '</small></td>' +
+    row.innerHTML = '<td><strong>' + escapeHtml(item.id) + '</strong></td>' +
       '<td><strong>' + escapeHtml(item.location) + '</strong><br><small>' + escapeHtml(item.department) + '</small></td>' +
       '<td><span class="table-program"><img src="' + (programs[item.programKey] ? programs[item.programKey].image : "assets/pony/cover.jpg") + '" alt=""><span class="table-program-info"><strong>' + escapeHtml(item.program) + '</strong></span></span></td>' +
       '<td><strong>' + escapeHtml(item.date) + '</strong><br><small>' + escapeHtml(item.time) + '</small></td>' +
-      '<td>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + ' / ' + item.qty + '명</td>' +
+      '<td><strong>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + '명</strong><br><small>전체 ' + item.qty + '명</small></td>' +
       '<td><strong>' + money(item.price) + '</strong></td>' +
-      '<td><span class="table-status ' + statusClass(item.status) + '">' + item.status + '</span></td><td>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '<span class="row-readonly">조회만 가능</span>') + '<span>›</span></td>';
+      '<td><span class="table-status ' + statusClass(item.status) + '">' + paymentStatusLabel(item) + '</span></td>' +
+      '<td><strong>' + escapeHtml(item.createdAt) + '</strong></td>' +
+      '<td><div class="reservation-row-actions"><button class="reservation-detail-button" type="button">상세보기</button>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '') + '</div></td>';
     row.addEventListener("click", function (event) { if (!event.target.closest(".row-delete")) openDrawer(item.id); });
     var deleteButton = row.querySelector(".row-delete");
     if (deleteButton) deleteButton.addEventListener("click", function (event) { event.stopPropagation(); deleteReservation(item.id); });
@@ -277,15 +279,16 @@
     var location = byId("reservation-location").value;
     var department = byId("reservation-department").value;
     var date = byId("reservation-date").value;
+    var endDate = byId("reservation-end-date").value;
     var program = byId("reservation-program").value;
     var status = byId("reservation-status").value;
     return allReservations().filter(function (item) {
-      return (!search || item.id.toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey === date) && (!program || item.program === program) && (!status || item.status === status);
+      return (!search || item.id.toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey >= date) && (!endDate || item.dateKey <= endDate) && (!program || item.program === program) && (!status || item.status === status);
     }).sort(function (a, b) { return (b.createdTimestamp || Date.parse(b.createdAt) || 0) - (a.createdTimestamp || Date.parse(a.createdAt) || 0); });
   }
 
   function hasReservationFilters() {
-    return ["reservation-search", "reservation-location", "reservation-department", "reservation-date", "reservation-program", "reservation-status"].some(function (id) {
+    return ["reservation-search", "reservation-location", "reservation-department", "reservation-date", "reservation-end-date", "reservation-program", "reservation-status"].some(function (id) {
       return Boolean(byId(id).value);
     });
   }
@@ -301,7 +304,7 @@
       var row = document.createElement("tr");
       var emptyTitle = hasReservationFilters() ? "검색 결과가 없습니다." : "예약내역이 없습니다.";
       var emptyHelp = hasReservationFilters() ? "검색어나 필터 조건을 변경해 다시 확인해주세요." : "예약이 접수되면 이곳에 표시됩니다.";
-      row.innerHTML = '<td colspan="8" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
+      row.innerHTML = '<td colspan="9" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
       body.append(row);
     }
     byId("reservation-count").textContent = items.length;
@@ -1409,6 +1412,15 @@
     byId("drawer-backdrop").hidden = false; byId("reservation-drawer").hidden = false; document.body.style.overflow = "hidden";
   }
 
+  function openPaymentReceipt() {
+    if (!activeReservation) return;
+    var refund = ticketRefundTotal(activeReservation);
+    byId("receipt-booking-info").innerHTML = '<div><dt>결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>예약번호</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상품</dt><dd>' + escapeHtml(activeReservation.program) + ' · ' + activeReservation.qty + '명</dd></div><div><dt>이용 일정</dt><dd>' + escapeHtml(activeReservation.date) + ' ' + escapeHtml(activeReservation.time) + '</dd></div><div><dt>운영 지점</dt><dd>' + escapeHtml(activeReservation.location) + ' · ' + escapeHtml(activeReservation.department) + '</dd></div>';
+    byId("receipt-amount-info").innerHTML = '<div><dt>최초 결제금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불금액</dt><dd>' + (refund ? '−' : '') + money(refund) + '</dd></div><div class="receipt-total"><dt>최종 결제금액</dt><dd>' + money(activeReservation.price - refund) + '</dd></div>';
+    byId("receipt-payment-info").innerHTML = '<div><dt>결제일시</dt><dd>' + escapeHtml(activeReservation.createdAt) + '</dd></div><div><dt>결제수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div>';
+    byId("payment-receipt-dialog").showModal();
+  }
+
   function ticketUnitPrice(reservation) { return reservation.qty ? Math.floor(reservation.price / reservation.qty) : 0; }
   function ticketRefundTotal(reservation) {
     var cancelledCount = reservation.tickets.filter(function (ticket) { return ticket === "cancelled"; }).length;
@@ -1428,11 +1440,9 @@
     var canManage = canManageRegion(activeReservation.location);
     activeReservation.tickets.forEach(function (status, index) {
       var label = document.createElement("label"); label.className = "individual-ticket" + (status !== "confirmed" ? " is-cancelled" : "");
-      var statusText = status === "confirmed" ? "예약 유효" : "취소 완료";
-      label.innerHTML = '<input type="checkbox" value="' + index + '" ' + (status !== "confirmed" || !canManage ? "disabled" : "") + '><span><strong>' + escapeHtml(activeReservation.id) + '-T' + String(index + 1).padStart(2, "0") + '</strong><small>배분 결제액 ' + money(ticketUnitPrice(activeReservation)) + '</small></span><span>' + statusText + '</span>';
+      label.innerHTML = '<input type="checkbox" value="' + index + '" ' + (status !== "confirmed" || !canManage ? "disabled" : "") + '><span><strong>' + escapeHtml(activeReservation.id) + '-T' + String(index + 1).padStart(2, "0") + '</strong><small>배분 결제액 ' + money(ticketUnitPrice(activeReservation)) + '</small></span>' + (status === "cancelled" ? '<span class="ticket-cancelled-status">취소 완료</span>' : '');
       label.querySelector("input").addEventListener("change", updateSelectedTickets); list.append(label);
     });
-    byId("drawer-ticket-count").textContent = activeReservation.tickets.length + "장 · 유효 " + activeReservation.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + "장";
     byId("cancel-selected").title = canManage ? "" : "다른 지역 예약은 조회만 가능합니다.";
     updateSelectedTickets();
   }
@@ -1496,13 +1506,14 @@
     notify("로그인했습니다.");
   });
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
-  ["reservation-search", "reservation-department", "reservation-date", "reservation-program", "reservation-status"].forEach(function (id) { byId(id).addEventListener(id === "reservation-search" ? "input" : "change", function () { reservationPage = 1; renderReservations(); }); });
+  ["reservation-search", "reservation-department", "reservation-date", "reservation-end-date", "reservation-program", "reservation-status"].forEach(function (id) { byId(id).addEventListener(id === "reservation-search" ? "input" : "change", function () { reservationPage = 1; renderReservations(); }); });
   byId("reservation-location").addEventListener("change", function () { refreshDepartmentSelect("reservation-department", byId("reservation-location").value, ""); reservationPage = 1; renderReservations(); });
-  byId("reset-filters").addEventListener("click", function () { byId("reservation-search").value = ""; byId("reservation-date").value = ""; byId("reservation-program").value = ""; byId("reservation-status").value = ""; lockLocationFilterSelect("reservation-location", "reservation-department"); reservationPage = 1; renderReservations(); });
+  byId("reset-filters").addEventListener("click", function () { byId("reservation-search").value = ""; byId("reservation-date").value = ""; byId("reservation-end-date").value = ""; byId("reservation-program").value = ""; byId("reservation-status").value = ""; lockLocationFilterSelect("reservation-location", "reservation-department"); reservationPage = 1; renderReservations(); });
   byId("reservation-prev-page").addEventListener("click", function () { if (reservationPage > 1) changeReservationPage(reservationPage - 1); });
   byId("reservation-next-page").addEventListener("click", function () { changeReservationPage(reservationPage + 1); });
   byId("reservation-page-buttons").addEventListener("click", function (event) { var button = event.target.closest("[data-reservation-page]"); if (button) changeReservationPage(Number(button.dataset.reservationPage)); });
   byId("drawer-close").addEventListener("click", closeDrawer); byId("drawer-backdrop").addEventListener("click", closeDrawer);
+  byId("open-payment-receipt").addEventListener("click", openPaymentReceipt);
   byId("cancel-selected").addEventListener("click", openCancelDialog); byId("confirm-cancel").addEventListener("click", confirmCancellation);
   byId("mobile-menu").addEventListener("click", function () { document.querySelector(".admin-sidebar").classList.toggle("is-open"); });
   byId("kiosk-product-search-form").addEventListener("submit", function (event) { event.preventDefault(); renderKioskProducts(); });
@@ -1566,7 +1577,13 @@
   byId("operation-region").addEventListener("change", function () { renderOperationCalendar(); renderOperationExceptions(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); });
   byId("operation-month-prev").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() - 1, 1); renderOperationCalendar(); });
   byId("operation-month-next").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() + 1, 1); renderOperationCalendar(); });
-  byId("download-reservations").addEventListener("click", function () { var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]]; filteredReservations().forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); }); downloadCsv("렛츠런플레이_통합예약목록.csv", rows); });
+  byId("download-reservations").addEventListener("click", function () {
+    var items = filteredReservations();
+    if (!items.length) { notify("내려받을 예약 내역이 없습니다."); return; }
+    var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]];
+    items.forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); });
+    downloadCsv("렛츠런플레이_통합예약목록.csv", rows);
+  });
   byId("download-settlement").addEventListener("click", function () {
     var startDate = byId("settlement-start-date").value, endDate = byId("settlement-end-date").value, scopeFilter = byId("settlement-scope-filter").value;
     var rows = [["지역", "담당부서", "정산태그", "프로그램", "완료건수", "결제액", "환불액", "PG수수료", "지급예정액"]];
