@@ -236,7 +236,7 @@
   }
 
   function deleteReservation(id) {
-    confirmDelete(escapeHtml(id) + " 예약을 목록에서 삭제할까요? 삭제해도 고객 환불 등은 자동으로 처리되지 않으니, 필요한 경우 별도로 처리해주세요.", function () {
+    confirmDelete(escapeHtml(id) + " 예약을 목록에서 삭제할까요?<br>삭제해도 고객 환불 등은 자동으로 처리되지 않으니,<br>필요한 경우 별도로 처리해주세요.", function () {
       deletedReservationIds.push(id);
       saveDemoState();
       renderReservations();
@@ -250,19 +250,18 @@
     return "";
   }
 
-  function reservationRow(item, selectable) {
+  function reservationRow(item) {
     var canManage = canManageRegion(item.location);
     var row = document.createElement("tr");
     row.dataset.reservationId = item.id;
-    row.innerHTML = (selectable ? '<td>' + (canManage ? '<input type="checkbox" aria-label="' + escapeHtml(item.id) + ' 선택">' : "") + '</td>' : "") +
-      '<td><strong>' + escapeHtml(item.id) + '</strong><br><small>' + escapeHtml(item.createdAt) + '</small></td>' +
+    row.innerHTML = '<td><strong>' + escapeHtml(item.id) + '</strong><br><small>' + escapeHtml(item.createdAt) + '</small></td>' +
       '<td><strong>' + escapeHtml(item.location) + '</strong><br><small>' + escapeHtml(item.department) + '</small></td>' +
       '<td><span class="table-program"><img src="' + (programs[item.programKey] ? programs[item.programKey].image : "assets/pony/cover.jpg") + '" alt=""><span class="table-program-info"><strong>' + escapeHtml(item.program) + '</strong></span></span></td>' +
       '<td><strong>' + escapeHtml(item.date) + '</strong><br><small>' + escapeHtml(item.time) + '</small></td>' +
       '<td>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + ' / ' + item.qty + '명</td>' +
       '<td><strong>' + money(item.price) + '</strong></td>' +
-      '<td><span class="table-status ' + statusClass(item.status) + '">' + item.status + '</span></td>' + (selectable ? '<td>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '<span class="row-readonly">조회만 가능</span>') + '<span>›</span></td>' : "");
-    row.addEventListener("click", function (event) { if (event.target.type !== "checkbox" && !event.target.closest(".row-delete")) openDrawer(item.id); });
+      '<td><span class="table-status ' + statusClass(item.status) + '">' + item.status + '</span></td><td>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '<span class="row-readonly">조회만 가능</span>') + '<span>›</span></td>';
+    row.addEventListener("click", function (event) { if (!event.target.closest(".row-delete")) openDrawer(item.id); });
     var deleteButton = row.querySelector(".row-delete");
     if (deleteButton) deleteButton.addEventListener("click", function (event) { event.stopPropagation(); deleteReservation(item.id); });
     return row;
@@ -292,12 +291,12 @@
     reservationPage = Math.min(Math.max(1, reservationPage), totalPages);
     var startIndex = (reservationPage - 1) * reservationPageSize;
     var pageItems = items.slice(startIndex, startIndex + reservationPageSize);
-    pageItems.forEach(function (item) { body.append(reservationRow(item, true)); });
+    pageItems.forEach(function (item) { body.append(reservationRow(item)); });
     if (!items.length) {
       var row = document.createElement("tr");
       var emptyTitle = hasReservationFilters() ? "검색 결과가 없습니다." : "예약내역이 없습니다.";
       var emptyHelp = hasReservationFilters() ? "검색어나 필터 조건을 변경해 다시 확인해주세요." : "예약이 접수되면 이곳에 표시됩니다.";
-      row.innerHTML = '<td colspan="9" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
+      row.innerHTML = '<td colspan="8" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
       body.append(row);
     }
     byId("reservation-count").textContent = items.length;

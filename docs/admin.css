@@ -53,3 +53,4 @@
 .detail-discount-options>article strong{font-size:12px}.detail-discount-options>article small{margin-top:4px;color:var(--admin-muted);font-size:11px}
 .detail-discount-options>article button{width:28px;height:28px;flex:0 0 auto;border-radius:50%;color:var(--admin-muted);font-size:20px;line-height:1}
 .detail-discount-options>article button:hover{background:#f3f5f4;color:#b94c3d}
+.reservation-table th:first-child,.reservation-table td:first-child{width:auto;padding-right:16px}
