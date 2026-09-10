@@ -408,7 +408,6 @@
   function renderOperationDayQuick(dateKey) {
     var quick = byId("operation-day-quick");
     var list = byId("operation-day-programs");
-    var closeAllButton = byId("operation-day-close-all");
     if (!quick || !dateKey) return;
     var region = byId("operation-region").value;
     var date = new Date(dateKey + "T00:00:00");
@@ -417,74 +416,44 @@
     var regionalPrograms = programCatalog().filter(function (item) { return item.location === region; });
     var operatingPrograms = regionalPrograms.filter(function (item) { return programOperatesOn(item, dateKey, weekday); });
     var closures = closuresForDate(dateKey, region);
-    var allClosure = closures.find(function (item) { return item.programKey === "all"; });
     byId("operation-day-quick-title").textContent = dateLabel + " · " + region;
     list.replaceChildren();
-    if (allClosure) {
-      byId("operation-day-quick-desc").textContent = "이 날은 전체 휴장으로 등록되어 있습니다" + (allClosure.reason ? " · " + allClosure.reason : "") + ".";
-      list.hidden = true;
-      closeAllButton.hidden = false;
-      closeAllButton.textContent = "운영 재개";
-      closeAllButton.onclick = function () {
-        confirmDelete("휴장을 해제하면 등록된 프로그램과 판매 중인 회차가<br>고객 예약 화면에 즉시 노출됩니다.<br>그래도 운영을 재개할까요?", function () {
-          operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
-          saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
-          notify("운영을 재개했습니다. 등록된 프로그램과 회차가 고객에게 노출됩니다.");
-        }, "운영 재개", "운영을 재개할까요?", true);
-      };
-      return;
-    }
     if (!operatingPrograms.length) {
       byId("operation-day-quick-desc").textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
       list.hidden = true;
-      closeAllButton.hidden = true;
       return;
     }
-    byId("operation-day-quick-desc").textContent = "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
+    byId("operation-day-quick-desc").textContent = "운영 예정 회차를 확인하고, 휴장이 필요한 회차만 개별적으로 선택하세요.";
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
-      var programClosed = closures.some(function (closure) { return closure.programKey === item.key && !closure.sessionKey; });
       var activeSessions = sessionsForProgram(item.key).filter(function (session) { return session.active !== false; });
-      var closedSessionKeys = closures.filter(function (closure) { return closure.programKey === item.key && closure.sessionKey; }).map(function (closure) { return closure.sessionKey; });
       var li = document.createElement("li");
-      li.className = "operation-program-block " + (programClosed ? "is-closed" : "is-operating");
+      li.className = "operation-program-block";
       var head = document.createElement("div");
       head.className = "operation-program-head";
-      head.innerHTML = "<span>" + escapeHtml(item.programName) + "</span>";
-      var headButton = document.createElement("button");
-      headButton.type = "button";
-      headButton.textContent = programClosed ? "휴장 중 · 해제" : "전체 휴장 처리";
-      headButton.addEventListener("click", function () { toggleProgramClosureForDate(item, dateKey, region); });
-      head.append(headButton);
+      head.innerHTML = "<strong>" + escapeHtml(item.programName) + "</strong><span>" + activeSessions.length + "개 회차</span>";
       li.append(head);
       if (activeSessions.length) {
-        var details = document.createElement("details");
-        details.className = "operation-session-toggle";
-        if (closedSessionKeys.length) details.open = true;
-        var summary = document.createElement("summary");
-        summary.textContent = "회차별로 보기" + (closedSessionKeys.length ? " · " + closedSessionKeys.length + "/" + activeSessions.length + " 휴장" : " (" + activeSessions.length + "개)");
-        details.append(summary);
         var grid = document.createElement("div");
         grid.className = "operation-session-grid";
         activeSessions.forEach(function (session) {
-          var sessionClosed = programClosed || closedSessionKeys.includes(session.key);
+          var sessionClosed = closures.some(function (closure) { return closure.programKey === "all" || (closure.programKey === item.key && (!closure.sessionKey || closure.sessionKey === session.key)); });
           var chip = document.createElement("button");
           chip.type = "button";
           chip.className = "operation-session-chip" + (sessionClosed ? " is-closed" : "");
-          chip.textContent = session.start + "~" + session.end;
-          chip.disabled = programClosed;
+          chip.innerHTML = "<strong>" + escapeHtml(session.start + "~" + session.end) + "</strong><span>" + (sessionClosed ? "휴장 · 운영 재개" : "운영 중 · 휴장 처리") + "</span>";
           chip.addEventListener("click", function () { toggleSessionClosureForDate(item, session, dateKey, region); });
           grid.append(chip);
         });
-        details.append(grid);
-        li.append(details);
+        li.append(grid);
+      } else {
+        var empty = document.createElement("p");
+        empty.className = "operation-session-empty";
+        empty.textContent = "등록된 운영 회차가 없습니다.";
+        li.append(empty);
       }
       list.append(li);
     });
-    var allClosed = operatingPrograms.every(function (item) { return closures.some(function (closure) { return closure.programKey === item.key && !closure.sessionKey; }); });
-    closeAllButton.hidden = false;
-    closeAllButton.textContent = allClosed ? "전체 휴장으로 전환" : "이 날 전체 휴장으로 전환";
-    closeAllButton.onclick = function () { closeAllProgramsForDate(operatingPrograms, dateKey, region); };
   }
 
   function removeMatchingExceptions(region, dateKey, programKey, sessionKey) {
@@ -513,19 +482,32 @@
   function toggleSessionClosureForDate(programItem, session, dateKey, region) {
     if (!canManageRegion(region)) return;
     var existing = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && item.sessionKey === session.key && item.startDate === dateKey && item.endDate === dateKey; });
-    if (existing) {
-      operationExceptions = operationExceptions.filter(function (item) { return item.id !== existing.id; });
+    var programClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && !item.sessionKey && item.startDate <= dateKey && item.endDate >= dateKey; });
+    var allClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey; });
+    if (existing || programClosure || allClosure) {
+      if (allClosure) {
+        var date = new Date(dateKey + "T00:00:00");
+        var operatingPrograms = programCatalog().filter(function (item) { return item.location === region && programOperatesOn(item, dateKey, date.getDay()); });
+        operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
+        operatingPrograms.forEach(function (item) {
+          sessionsForProgram(item.key).filter(function (sessionItem) { return sessionItem.active !== false; }).forEach(function (sessionItem) {
+            if (item.key === programItem.key && sessionItem.key === session.key) return;
+            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + sessionItem.key, region: region, programKey: item.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+          });
+        });
+      } else if (programClosure) {
+        operationExceptions = operationExceptions.filter(function (item) { return item.id !== programClosure.id; });
+        sessionsForProgram(programItem.key).filter(function (item) { return item.active !== false && item.key !== session.key; }).forEach(function (sessionItem) {
+          operationExceptions.push({ id: "operation-" + Date.now() + "-" + sessionItem.key, region: region, programKey: programItem.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+        });
+      } else {
+        operationExceptions = operationExceptions.filter(function (item) { return item.id !== existing.id; });
+      }
       notify(programItem.programName + " " + session.start + "~" + session.end + " 회차 운영을 다시 시작합니다.");
       saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
     } else {
       requestOperationClosure("회차 휴장 확인", programItem.programName + " · " + session.start + "~" + session.end, region, dateKey, programItem, session, function () {
         operationExceptions.push({ id: "operation-" + Date.now() + "-" + session.key, region: region, programKey: programItem.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
-        var activeSessions = sessionsForProgram(programItem.key).filter(function (item) { return item.active !== false; });
-        var allSessionsClosed = activeSessions.every(function (item) { return item.key === session.key || operationExceptions.some(function (closure) { return closure.region === region && closure.programKey === programItem.key && closure.sessionKey === item.key && closure.startDate === dateKey && closure.endDate === dateKey; }); });
-        if (allSessionsClosed) {
-          removeMatchingExceptions(region, dateKey, programItem.key);
-          operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
-        }
         saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
         notify(programItem.programName + " " + session.start + "~" + session.end + " 회차를 휴장 처리했습니다.");
       });
@@ -749,7 +731,7 @@
     });
     pendingProgramDeletion = program;
     byId("program-delete-confirm-scope").textContent = (program.location || "서울") + " · " + program.programName;
-    byId("program-delete-impact").textContent = sessions.length + "개 회차 · 진행 중인 예약 " + affectedReservations.length + "건에 영향을 줄 수 있습니다.";
+    byId("program-delete-impact").textContent = "프로그램 삭제 시 관련 일정 및 예약에 영향을 줄 수 있습니다.";
     byId("program-delete-confirm-dialog").showModal();
   }
 

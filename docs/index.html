@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>렛츠런파크 체험 예약</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260908-policywrap1"><link rel="stylesheet" href="styles.css?v=20260908-policyfix1">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260910-tickettypography3"><link rel="stylesheet" href="styles.css?v=20260908-policyfix1">
 </head>
 <body data-page="booking" class="shop-page">
   <header class="reservation-header shop-header">
@@ -63,12 +63,12 @@
       <div class="my-tickets-wrap">
         <div id="my-tickets-list-view">
           <button class="back-link" id="back-from-tickets" type="button">← 예약 화면으로</button><span class="eyebrow">MY TICKETS</span>
-          <div class="my-tickets-head"><div><h1>내 티켓</h1><p>예약한 티켓을 선택하면 실시간 입장 상태를 확인할 수 있어요.</p></div></div>
+          <div class="my-tickets-head"><div><h1>예약 티켓</h1><p>예약·결제 내역과 실시간 입장 상태를 함께 확인할 수 있어요.</p></div></div>
           <div class="ticket-list" id="ticket-list"></div>
           <div class="ticket-account-links"><button class="ticket-account-links__item" id="member-withdraw" type="button">회원탈퇴</button></div>
         </div>
         <div class="ticket-detail-view" id="ticket-detail-view" hidden>
-            <button class="back-link" id="back-to-ticket-list" type="button">← 내 티켓 목록</button>
+            <button class="back-link" id="back-to-ticket-list" type="button">← 예약 티켓 목록</button>
             <article class="entry-ticket" id="entry-ticket" data-access-state="upcoming">
             <section class="entry-ticket__status">
               <div class="entry-ticket__status-top"><div class="entry-ticket__indicators"><span class="entry-ticket__badge"><i></i><b id="ticket-status-label">입장 대기</b></span><aside class="entry-ticket__discount" id="ticket-discount-proof" role="note" aria-label="할인 적용 티켓입니다. 현장에서 증빙을 확인해주세요." hidden><strong>할인 적용</strong><span>증빙 확인 필요</span></aside></div><span class="entry-ticket__clock"><small>현재 시간</small><strong id="ticket-current-time">--:--:--</strong></span></div>
@@ -82,8 +82,19 @@
             </section>
             <section class="entry-ticket__window"><div><small>입장 시작</small><strong id="ticket-window-open">09:50</strong></div><i></i><div><small>예약 회차</small><strong id="ticket-window-session">10:00</strong></div><i></i><div><small>입장 마감</small><strong id="ticket-window-close">10:20</strong></div></section>
             <p class="entry-ticket__note">입장 가능 시간은 회차 시작 10분 전부터 회차 종료 전까지입니다. 시간과 티켓 상태는 자동으로 갱신됩니다.</p>
+            <section class="ticket-order-summary" aria-labelledby="ticket-order-title">
+              <header><div><small>ORDER DETAILS</small><h1 id="ticket-order-title">주문 정보</h1></div><span id="ticket-payment-status">결제완료</span></header>
+              <dl>
+                <div><dt>주문번호</dt><dd id="ticket-order-number">-</dd></div>
+                <div><dt>결제일시</dt><dd id="ticket-payment-date">-</dd></div>
+                <div><dt>판매처</dt><dd>렛츠런파크 서울 · 포니랜드</dd></div>
+              </dl>
+            </section>
             <section class="ticket-cancellation" id="ticket-cancellation"><div class="ticket-cancellation__intro"><div><strong>예약을 변경해야 하나요?</strong><small id="ticket-cancel-deadline"></small></div><button id="open-ticket-cancel" type="button">취소 요청</button></div><div class="ticket-cancellation__panel" id="ticket-cancel-panel" hidden><header><div><h3>취소할 인원을 선택해주세요</h3><p>정상가와 할인 적용 인원을 구분해 원하는 티켓만 취소할 수 있어요.</p></div><button id="close-ticket-cancel" type="button" aria-label="취소 선택 닫기">×</button></header><div class="ticket-cancel-options" id="ticket-cancel-options"></div><div class="ticket-cancel-summary"><span>선택 인원 <b id="ticket-cancel-count">0명</b></span><span>환불 예정 금액 <strong id="ticket-refund-preview">0원</strong></span></div><p class="ticket-refund-notice">환불 완료까지 카드사 영업일 기준 5~7일이 걸릴 수 있습니다.</p><button class="btn btn--dark" id="confirm-ticket-cancel" type="button" disabled>선택 취소 요청</button></div></section>
-            <footer class="entry-ticket__footer"><span id="ticket-confirmation-message">예약이 확정되었습니다.</span><div><small id="ticket-price-label">결제 금액</small><strong id="ticket-price">10,000원</strong></div></footer>
+            <section class="ticket-payment-summary" aria-labelledby="ticket-payment-title">
+              <header><h2 id="ticket-payment-title">결제 정보</h2><span id="ticket-confirmation-message">예약이 확정되었습니다.</span></header>
+              <dl><div><dt>결제금액</dt><dd id="ticket-price">10,000원</dd></div><div><dt>결제방식</dt><dd id="ticket-payment-method">신용카드</dd></div></dl>
+            </section>
             <section class="ticket-refund-history" id="ticket-refund-history" hidden>
               <header class="ticket-refund-history__head"><div><h3>취소·환불 내역</h3><p id="ticket-refund-summary-text"></p></div><span class="ticket-refund-status">취소 완료</span></header>
               <dl class="ticket-refund-summary">
@@ -99,6 +110,6 @@
       </div>
     </section>
   </main>
-  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260908-cartcap1"></script><script src="developer-policy.js?v=20260908-policyorderid1"></script><script src="app.js?v=20260908-cartcap1"></script><script src="demo-controls.js"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260908-cartcap1"></script><script src="developer-policy.js?v=20260908-policyorderid1"></script><script src="app.js?v=20260910-ticketpaymentclean1"></script><script src="demo-controls.js"></script>
 </body>
 </html>

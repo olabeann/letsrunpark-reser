@@ -212,6 +212,22 @@
     return includeSeconds ? time + ":" + String(date.getSeconds()).padStart(2, "0") : time;
   }
 
+  function formatPaymentDate(value) {
+    if (!value) return "결제 정보 준비 중";
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "결제 정보 준비 중";
+    return date.getFullYear() + "." + String(date.getMonth() + 1).padStart(2, "0") + "." + String(date.getDate()).padStart(2, "0") + " " + formatTime(date, false);
+  }
+
+  function paymentMethodLabel(method) {
+    return method === "demo-card" || method === "card" || !method ? "신용카드" : method;
+  }
+
+  function ticketPaymentStatus(reservation) {
+    if (reservation.status === "cancelled" || reservation.qty === 0) return "취소완료";
+    return Array.isArray(reservation.cancellationHistory) && reservation.cancellationHistory.length ? "부분환불 완료" : "결제완료";
+  }
+
   function ticketSessionStart(reservation) {
     var dateParts = reservation.dateKey.split("-");
     var timeParts = reservation.time.split("~")[0].split(":");
@@ -261,6 +277,10 @@
     byId("ticket-people").textContent = ticketReservation.qty + "명";
     byId("ticket-admission-count").textContent = "총 " + ticketReservation.qty + "명";
     byId("ticket-reservation-number").textContent = ticketReservation.id;
+    byId("ticket-order-number").textContent = ticketReservation.orderId || ticketReservation.id;
+    byId("ticket-payment-date").textContent = formatPaymentDate(ticketReservation.createdAt);
+    byId("ticket-payment-method").textContent = paymentMethodLabel(ticketReservation.paymentMethod);
+    byId("ticket-payment-status").textContent = ticketPaymentStatus(ticketReservation);
     byId("ticket-price").textContent = money(ticketReservation.price);
     byId("ticket-discount-proof").hidden = !ticketDiscountQty(ticketReservation);
     renderTicketCancellation(timing, now);
@@ -327,7 +347,6 @@
     var originalQty = Number(ticketReservation.qty || 0) + cancelledQty;
     var originalPrice = Number(ticketReservation.price || 0) + refundedAmount;
     byId("ticket-refund-history").hidden = !history.length;
-    byId("ticket-price-label").textContent = history.length ? "결제 잔액" : "결제 금액";
     byId("ticket-confirmation-message").textContent = history.length ? originalQty + "명 중 " + cancelledQty + "명 취소 · " + ticketReservation.qty + "명 이용 가능" : "예약이 확정되었습니다.";
     byId("ticket-refund-summary-text").textContent = history.length ? "총 " + originalQty + "명 중 " + cancelledQty + "명의 취소를 접수했어요." : "";
     byId("ticket-original-price").textContent = money(originalPrice);
@@ -702,6 +721,7 @@
 
   function defaultTicketReservations(now) {
     now = now || new Date();
+    var samplePaidAt = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     var active = activeSlotForNow(now);
     var upcomingDate = new Date(now);
     upcomingDate.setHours(0, 0, 0, 0);
@@ -715,9 +735,9 @@
     endedDate.setDate(endedDate.getDate() - 1);
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     var defaults = [
-      { id: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive },
-      { id: ticketReservationId(upcomingDate, secondSlot) + "-4", programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2 },
-      { id: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false }
+      { id: ticketReservationId(now, active.slot.time), orderId: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(upcomingDate, secondSlot) + "-4", orderId: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(endedDate, endedSlot), orderId: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
@@ -793,11 +813,9 @@
       body.append(status);
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-      var discountedQty = ticketDiscountQty(reservation);
       var metaText = reservation.qty + "명 · " + money(reservation.price);
       var meta = createTextElement("span", "ticket-list-card__meta", metaText);
       body.append(meta);
-      if (discountedQty) body.append(createTextElement("span", "ticket-list-card__discount", "할인 적용 · 증빙 확인 필요"));
       card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
       card.addEventListener("click", function () { showTicketDetail(reservation.id); });
       list.append(card);
