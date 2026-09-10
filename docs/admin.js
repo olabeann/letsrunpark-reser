@@ -224,13 +224,16 @@
     });
   }
 
-  function confirmDelete(message, onConfirm, confirmLabel) {
+  function confirmDelete(message, onConfirm, confirmLabel, title, positiveAction) {
     var dialog = byId("generic-confirm-dialog");
+    byId("generic-confirm-title").textContent = title || "삭제할까요?";
     byId("generic-confirm-message").innerHTML = message;
     var actionButton = byId("generic-confirm-action");
     actionButton.textContent = confirmLabel || "삭제";
     var freshButton = actionButton.cloneNode(true);
     actionButton.parentNode.replaceChild(freshButton, actionButton);
+    freshButton.classList.toggle("admin-button--danger", !positiveAction);
+    freshButton.classList.toggle("admin-button--primary", !!positiveAction);
     freshButton.addEventListener("click", function () { dialog.close(); onConfirm(); });
     dialog.showModal();
   }
@@ -421,11 +424,13 @@
       byId("operation-day-quick-desc").textContent = "이 날은 전체 휴장으로 등록되어 있습니다" + (allClosure.reason ? " · " + allClosure.reason : "") + ".";
       list.hidden = true;
       closeAllButton.hidden = false;
-      closeAllButton.textContent = "전체 휴장 해제";
+      closeAllButton.textContent = "운영 재개";
       closeAllButton.onclick = function () {
-        operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
-        saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
-        notify("전체 휴장을 해제했습니다.");
+        confirmDelete("휴장을 해제하면 등록된 프로그램과 판매 중인 회차가<br>고객 예약 화면에 즉시 노출됩니다.<br>그래도 운영을 재개할까요?", function () {
+          operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
+          saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+          notify("운영을 재개했습니다. 등록된 프로그램과 회차가 고객에게 노출됩니다.");
+        }, "운영 재개", "운영을 재개할까요?", true);
       };
       return;
     }
@@ -893,7 +898,7 @@
     keepCheck.checked = true;
     refundCheck.checked = false;
     if (impact.orders) {
-      impactLine.textContent = "현재 유효 예약 " + impact.orders + "건 · " + impact.people + "명이 있습니다.";
+      impactLine.textContent = "유효 예약이 존재합니다.";
       refundCheck.disabled = false;
     } else {
       impactLine.textContent = "현재 유효 예약은 없습니다.";
@@ -908,7 +913,7 @@
     var message = byId("operation-closure-message-text");
     var alert = byId("operation-closure-alert");
     if (refundCheck.checked && !refundCheck.disabled) {
-      message.textContent = "휴장 처리 시 신규 예약이 즉시 중단되고, 현재 유효 예약 " + (pendingOperationClosureImpact ? pendingOperationClosureImpact.orders : 0) + "건을 모두 취소·환불 처리합니다.";
+      message.innerHTML = "휴장 처리 시 신규 예약이 즉시 중단되고,<br>현재 유효 예약 " + (pendingOperationClosureImpact ? pendingOperationClosureImpact.orders : 0) + "건을 모두 취소·환불 처리합니다.";
       alert.hidden = false;
     } else {
       message.innerHTML = "휴장 처리 시 신규 예약이 즉시 중단됩니다.<br>기존 예약은 유지되며 자동 취소·환불되지 않습니다.";

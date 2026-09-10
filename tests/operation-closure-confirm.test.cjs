@@ -43,7 +43,7 @@ test('shows closure scope and active reservation impact before applying', () => 
   const { context, elements } = runtime();
   context.requestOperationClosure('회차 휴장 확인', '포니 타기 · 10:00~10:20', '서울', '2026-09-05', { key: 'ride', programName: '포니 타기' }, { start: '10:00', end: '10:20' }, () => {});
   assert.equal(elements['operation-closure-confirm-scope'].textContent, '2026-09-05 · 서울 · 포니 타기 · 10:00~10:20');
-  assert.equal(elements['operation-closure-impact'].textContent, '현재 유효 예약 2건 · 3명이 있습니다.');
+  assert.equal(elements['operation-closure-impact'].textContent, '유효 예약이 존재합니다.');
   assert.equal(elements['operation-closure-confirm-dialog'].opened, true);
 });
 
@@ -66,5 +66,5 @@ test('offers mutually exclusive keep or refund closure modes and warns when refu
   elements['operation-closure-refund'].checked = true;
   context.updateOperationClosureMessage();
   assert.equal(elements['operation-closure-alert'].hidden, false);
-  assert.match(elements['operation-closure-message-text'].textContent, /모두 취소·환불/);
+  assert.match(elements['operation-closure-message-text'].innerHTML, /중단되고,<br>현재 유효 예약 2건을 모두 취소·환불/);
 });
