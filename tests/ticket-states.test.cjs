@@ -126,13 +126,13 @@ test('staff discount notice is a compact design-system badge beside the ticket s
   const statusEnd = ticketHtml.indexOf('</section>', statusStart);
   const indicators = ticketHtml.indexOf('class="entry-ticket__indicators"');
   const statusBadge = ticketHtml.indexOf('class="entry-ticket__badge"');
-  const notice = ticketHtml.indexOf('id="ticket-citizen-discount"');
+  const notice = ticketHtml.indexOf('id="ticket-discount-proof"');
   const clock = ticketHtml.indexOf('class="entry-ticket__clock"');
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
   assert.ok(statusStart < indicators && indicators < statusBadge && statusBadge < notice && notice < clock && clock < sessionSummary && sessionSummary < statusEnd);
-  assert.equal([...ticketHtml.matchAll(/id="ticket-citizen-discount"/g)].length, 1);
-  assert.match(ticketHtml, /<strong>과천시민 50%<\/strong><span>증빙 확인 필요<\/span>/);
-  assert.match(ticketHtml, /aria-label="직원 확인: 과천시민 50% 할인 고객의 신분증 등 증빙 서류를 확인해주세요\."/);
+  assert.equal([...ticketHtml.matchAll(/id="ticket-discount-proof"/g)].length, 1);
+  assert.match(ticketHtml, /<strong>할인 적용<\/strong><span>증빙 확인 필요<\/span>/);
+  assert.match(ticketHtml, /aria-label="할인 적용 티켓입니다\. 현장에서 증빙을 확인해주세요\."/);
 });
 
 test('ticket colors use only design-system tokens instead of one-off color values', () => {
@@ -146,6 +146,6 @@ test('ticket colors use only design-system tokens instead of one-off color value
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
-  assert.match(source, /ticket-citizen-discount"\)\.hidden = !ticketDiscountQty\(ticketReservation\)/);
+  assert.match(source, /ticket-discount-proof"\)\.hidden = !ticketDiscountQty\(ticketReservation\)/);
   assert.match(source, /ticket\.setAttribute\("data-access-state", timing\.accessState\)/);
 });

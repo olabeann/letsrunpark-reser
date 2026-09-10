@@ -129,6 +129,9 @@
   byId("account-location").addEventListener("change", function () { byId("account-department").innerHTML = '<option>지역 통합 운영</option>'; });
   byId("generate-account-password").addEventListener("click", generatePassword);
   byId("save-admin-account").addEventListener("click", saveAccount);
+  document.querySelectorAll("dialog").forEach(function (dialog) {
+    dialog.addEventListener("click", function (event) { if (event.target === dialog) dialog.close(); });
+  });
   document.addEventListener("keydown", function (event) {
     if (event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p")) {
       event.preventDefault();

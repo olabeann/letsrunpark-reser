@@ -262,7 +262,7 @@
     byId("ticket-admission-count").textContent = "총 " + ticketReservation.qty + "명";
     byId("ticket-reservation-number").textContent = ticketReservation.id;
     byId("ticket-price").textContent = money(ticketReservation.price);
-    byId("ticket-citizen-discount").hidden = !ticketDiscountQty(ticketReservation);
+    byId("ticket-discount-proof").hidden = !ticketDiscountQty(ticketReservation);
     renderTicketCancellation(timing, now);
   }
 
@@ -794,9 +794,10 @@
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
       var discountedQty = ticketDiscountQty(reservation);
-      var metaText = reservation.qty + "명 · " + money(reservation.price) + (discountedQty ? " · 과천시민 할인 " + discountedQty + "명" : "");
+      var metaText = reservation.qty + "명 · " + money(reservation.price);
       var meta = createTextElement("span", "ticket-list-card__meta", metaText);
       body.append(meta);
+      if (discountedQty) body.append(createTextElement("span", "ticket-list-card__discount", "할인 적용 · 증빙 확인 필요"));
       card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
       card.addEventListener("click", function () { showTicketDetail(reservation.id); });
       list.append(card);
@@ -1160,6 +1161,9 @@
     }
     renderSlots(); update(); renderCart();
     if (!byId("my-tickets-screen").hidden && !byId("my-tickets-list-view").hidden) renderTicketList();
+  });
+  document.querySelectorAll("dialog").forEach(function (dialog) {
+    dialog.addEventListener("click", function (event) { if (event.target === dialog) dialog.close(); });
   });
   selectProgram(initialProgramKey);
   syncProgramExtras();

@@ -5,7 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../admin.js'), 'utf8');
-const start = source.indexOf('  function operationClosureImpact(');
+const start = source.indexOf('  function matchingReservationsForClosure(');
 const end = source.indexOf('  function deleteSession(', start);
 const functions = source.slice(start, end);
 
@@ -14,6 +14,10 @@ function runtime() {
     'operation-closure-confirm-title': { textContent: '' },
     'operation-closure-confirm-scope': { textContent: '' },
     'operation-closure-impact': { textContent: '' },
+    'operation-closure-keep': { checked: false, disabled: false },
+    'operation-closure-refund': { checked: false, disabled: false },
+    'operation-closure-message-text': { textContent: '', innerHTML: '' },
+    'operation-closure-alert': { hidden: true },
     'operation-closure-confirm-dialog': {
       opened: false,
       showModal() { this.opened = true; },
@@ -51,4 +55,16 @@ test('applies closure only after the confirmation action', () => {
   context.confirmOperationClosure();
   assert.equal(applied, 1);
   assert.equal(elements['operation-closure-confirm-dialog'].opened, false);
+});
+
+test('offers mutually exclusive keep or refund closure modes and warns when refund is selected', () => {
+  const { context, elements } = runtime();
+  context.requestOperationClosure('전체 휴장 확인', '2개 프로그램 전체 회차', '서울', '2026-09-05', null, null, () => {});
+  assert.equal(elements['operation-closure-keep'].checked, true);
+  assert.equal(elements['operation-closure-refund'].disabled, false);
+  elements['operation-closure-keep'].checked = false;
+  elements['operation-closure-refund'].checked = true;
+  context.updateOperationClosureMessage();
+  assert.equal(elements['operation-closure-alert'].hidden, false);
+  assert.match(elements['operation-closure-message-text'].textContent, /모두 취소·환불/);
 });
