@@ -11,6 +11,8 @@
   var activeSessionKey = null;
   var activeSettlementKey = null;
   var pendingImageDataUrl = null;
+  var pendingDiscountAdditions = [];
+  var pendingDiscountRemovals = [];
   var sessionProgramKey = null;
   var operationExceptions = [];
   var operationCalendarMonth = new Date(2026, 8, 1);
@@ -408,6 +410,7 @@
   function renderOperationDayQuick(dateKey) {
     var quick = byId("operation-day-quick");
     var list = byId("operation-day-programs");
+    var closeAllButton = byId("operation-day-close-all");
     if (!quick || !dateKey) return;
     var region = byId("operation-region").value;
     var date = new Date(dateKey + "T00:00:00");
@@ -416,36 +419,55 @@
     var regionalPrograms = programCatalog().filter(function (item) { return item.location === region; });
     var operatingPrograms = regionalPrograms.filter(function (item) { return programOperatesOn(item, dateKey, weekday); });
     var closures = closuresForDate(dateKey, region);
+    var allClosure = closures.find(function (item) { return item.programKey === "all"; });
     byId("operation-day-quick-title").textContent = dateLabel + " · " + region;
     list.replaceChildren();
     if (!operatingPrograms.length) {
       byId("operation-day-quick-desc").textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
       list.hidden = true;
+      closeAllButton.hidden = true;
       return;
     }
-    byId("operation-day-quick-desc").textContent = "운영 예정 회차를 확인하고, 휴장이 필요한 회차만 개별적으로 선택하세요.";
+    byId("operation-day-quick-desc").textContent = allClosure
+      ? "이 날은 전체 휴장으로 등록되어 있습니다" + (allClosure.reason ? " · " + allClosure.reason : "") + "."
+      : "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
+      var programClosed = !!allClosure || closures.some(function (closure) { return closure.programKey === item.key && !closure.sessionKey; });
       var activeSessions = sessionsForProgram(item.key).filter(function (session) { return session.active !== false; });
+      var closedSessionKeys = closures.filter(function (closure) { return closure.programKey === item.key && closure.sessionKey; }).map(function (closure) { return closure.sessionKey; });
       var li = document.createElement("li");
-      li.className = "operation-program-block";
+      li.className = "operation-program-block " + (programClosed ? "is-closed" : "is-operating");
       var head = document.createElement("div");
       head.className = "operation-program-head";
-      head.innerHTML = "<strong>" + escapeHtml(item.programName) + "</strong><span>" + activeSessions.length + "개 회차</span>";
+      head.innerHTML = "<strong>" + escapeHtml(item.programName) + "</strong>";
+      var headButton = document.createElement("button");
+      headButton.type = "button";
+      headButton.textContent = programClosed ? "휴장 처리됨" : "전체 휴장 처리";
+      headButton.addEventListener("click", function () { toggleProgramClosureForDate(item, dateKey, region); });
+      head.append(headButton);
       li.append(head);
       if (activeSessions.length) {
+        var details = document.createElement("details");
+        details.className = "operation-session-toggle";
+        if (closedSessionKeys.length) details.open = true;
+        var summary = document.createElement("summary");
+        summary.textContent = "회차별로 보기" + (closedSessionKeys.length ? " · " + closedSessionKeys.length + "/" + activeSessions.length + " 휴장" : " (" + activeSessions.length + "개)");
+        details.append(summary);
         var grid = document.createElement("div");
         grid.className = "operation-session-grid";
         activeSessions.forEach(function (session) {
-          var sessionClosed = closures.some(function (closure) { return closure.programKey === "all" || (closure.programKey === item.key && (!closure.sessionKey || closure.sessionKey === session.key)); });
+          var sessionClosed = programClosed || closedSessionKeys.includes(session.key);
           var chip = document.createElement("button");
           chip.type = "button";
           chip.className = "operation-session-chip" + (sessionClosed ? " is-closed" : "");
-          chip.innerHTML = "<strong>" + escapeHtml(session.start + "~" + session.end) + "</strong><span>" + (sessionClosed ? "휴장 · 운영 재개" : "운영 중 · 휴장 처리") + "</span>";
+          chip.textContent = session.start + "~" + session.end;
+          chip.disabled = programClosed;
           chip.addEventListener("click", function () { toggleSessionClosureForDate(item, session, dateKey, region); });
           grid.append(chip);
         });
-        li.append(grid);
+        details.append(grid);
+        li.append(details);
       } else {
         var empty = document.createElement("p");
         empty.className = "operation-session-empty";
@@ -454,6 +476,12 @@
       }
       list.append(li);
     });
+    var allClosed = operatingPrograms.every(function (item) { return programFullyClosedForDate(item, dateKey, region, closures); });
+    closeAllButton.hidden = false;
+    closeAllButton.textContent = allClosed ? "운영 재개" : "이 날 전체 휴장으로 전환";
+    closeAllButton.onclick = allClosed
+      ? function () { reopenAllProgramsForDate(operatingPrograms, dateKey, region); }
+      : function () { closeAllProgramsForDate(operatingPrograms, dateKey, region); };
   }
 
   function removeMatchingExceptions(region, dateKey, programKey, sessionKey) {
@@ -465,10 +493,22 @@
   function toggleProgramClosureForDate(programItem, dateKey, region) {
     if (!canManageRegion(region)) return;
     var existing = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && !item.sessionKey && item.startDate === dateKey && item.endDate === dateKey; });
-    if (existing) {
-      removeMatchingExceptions(region, dateKey, programItem.key);
+    var allClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey; });
+    if (existing || allClosure) {
+      if (allClosure) {
+        var date = new Date(dateKey + "T00:00:00");
+        var otherPrograms = programCatalog().filter(function (item) { return item.location === region && item.key !== programItem.key && programOperatesOn(item, dateKey, date.getDay()); });
+        operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
+        otherPrograms.forEach(function (item) {
+          sessionsForProgram(item.key).filter(function (session) { return session.active !== false; }).forEach(function (session) {
+            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + session.key, region: region, programKey: item.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+          });
+        });
+      } else {
+        removeMatchingExceptions(region, dateKey, programItem.key);
+      }
       notify(programItem.programName + " 운영을 다시 시작합니다.");
-      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey);
     } else {
       requestOperationClosure("프로그램 휴장 확인", programItem.programName + " 전체 회차", region, dateKey, programItem, null, function () {
         removeMatchingExceptions(region, dateKey, programItem.key);
@@ -519,9 +559,27 @@
     requestOperationClosure("전체 휴장 확인", operatingPrograms.length + "개 프로그램 전체 회차", region, dateKey, null, null, function () {
       operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey); });
       operationExceptions.push({ id: "operation-" + Date.now() + "-all", region: region, programKey: "all", startDate: dateKey, endDate: dateKey, status: "closed", reason: "일괄 휴장 처리" });
-      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey);
       notify("이 날을 전체 휴장으로 전환했습니다.");
     });
+  }
+
+  function programFullyClosedForDate(programItem, dateKey, region, closures) {
+    if (closures.some(function (closure) { return closure.programKey === "all" || (closure.programKey === programItem.key && !closure.sessionKey); })) return true;
+    var activeSessions = sessionsForProgram(programItem.key).filter(function (session) { return session.active !== false; });
+    if (!activeSessions.length) return false;
+    return activeSessions.every(function (session) {
+      return closures.some(function (closure) { return closure.programKey === programItem.key && closure.sessionKey === session.key; });
+    });
+  }
+
+  function reopenAllProgramsForDate(operatingPrograms, dateKey, region) {
+    if (!canManageRegion(region)) return;
+    confirmDelete("휴장을 해제하면 등록된 프로그램과 판매 중인 회차가<br>고객 예약 화면에 즉시 노출됩니다.<br>그래도 운영을 재개할까요?", function () {
+      operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey && (item.programKey === "all" || operatingPrograms.some(function (program) { return program.key === item.programKey; }))); });
+      saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey);
+      notify("운영을 재개했습니다. 등록된 프로그램과 회차가 고객에게 노출됩니다.");
+    }, "운영 재개", "운영을 재개할까요?", true);
   }
 
   function showView(viewName) {
@@ -622,6 +680,7 @@
     var cancelDivisor = cancelUnit === "days" ? 1440 : cancelUnit === "hours" ? 60 : 1;
     byId("detail-cancel-unit").value = cancelUnit;
     byId("detail-cancel-value").value = item.cancelOffsetValue == null ? cancelMinutes / cancelDivisor : item.cancelOffsetValue;
+    pendingDiscountAdditions = []; pendingDiscountRemovals = [];
     renderProductDiscountOptions(item);
     showView("program-edit");
   }
@@ -678,14 +737,22 @@
     byId("program-name-options").innerHTML = uniqueProgramNames().map(function (name) { return '<option value="' + escapeHtml(name) + '">'; }).join("");
   }
 
+  function effectiveConnectedDiscounts(program) {
+    if (!program) return [];
+    return discountPolicies.filter(function (discount) {
+      if (pendingDiscountRemovals.includes(discount.id)) return false;
+      if (pendingDiscountAdditions.includes(discount.id)) return true;
+      return discountAppliesToProgram(discount, program);
+    });
+  }
+
   function renderProductDiscountOptions(program) {
     var wrap = byId("detail-discount-options"); wrap.replaceChildren();
-    var activeDiscounts = program ? discountPolicies.filter(function (discount) { return discountAppliesToProgram(discount, program); }) : [];
-    if (!activeDiscounts.length) { wrap.innerHTML = '<p>연결된 할인이 없습니다. 할인 관리에서 적용 프로그램을 선택해주세요.</p>'; return; }
+    var activeDiscounts = effectiveConnectedDiscounts(program);
+    if (!activeDiscounts.length) { wrap.innerHTML = '<p>연결된 할인이 없습니다. ‘할인 추가’ 버튼으로 적용할 할인을 선택해주세요.</p>'; return; }
     activeDiscounts.forEach(function (discount) {
       var card = document.createElement("article");
-      var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
-      card.innerHTML = '<span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + '</small></span><button type="button" aria-label="' + escapeHtml(discount.name) + ' 연결 해제">×</button>';
+      card.innerHTML = '<span><strong>' + escapeHtml(discount.name) + '</strong></span><button type="button" aria-label="' + escapeHtml(discount.name) + ' 연결 해제">×</button>';
       card.querySelector("button").addEventListener("click", function () { disconnectDiscountFromProgram(discount, program); });
       wrap.append(card);
     });
@@ -693,18 +760,13 @@
 
   function disconnectDiscountFromProgram(discount, program) {
     if (!program || !discount) return;
-    var updatedProgram = program;
-    if (discount.allPrograms) {
-      discount.excludedPrograms = Array.from(new Set((discount.excludedPrograms || []).concat(program.programName)));
-    } else {
-      discount.programs = (discount.programs || []).filter(function (name) { return name !== program.programName; });
+    if (pendingDiscountAdditions.includes(discount.id)) {
+      pendingDiscountAdditions = pendingDiscountAdditions.filter(function (id) { return id !== discount.id; });
+    } else if (!pendingDiscountRemovals.includes(discount.id)) {
+      pendingDiscountRemovals.push(discount.id);
     }
-    if (Array.isArray(program.discountIds) && program.discountIds.includes(discount.id)) {
-      updatedProgram = Object.assign({}, program, { discountIds: program.discountIds.filter(function (id) { return id !== discount.id; }) });
-      persistProgram(updatedProgram);
-    }
-    saveDemoState(); renderProductDiscountOptions(updatedProgram); renderKioskProducts();
-    notify(discount.name + " 할인과 현재 프로그램의 연결을 해제했습니다. 할인 정책과 기존 주문은 유지됩니다.");
+    renderProductDiscountOptions(program);
+    notify(discount.name + " 할인 연결 해제를 예약했습니다. 프로그램 저장을 눌러야 실제로 반영됩니다.");
   }
 
   function discountAppliesToProgram(discount, program) {
@@ -712,6 +774,58 @@
     if (discount.allPrograms) return !(discount.excludedPrograms || []).includes(program.programName);
     if ((discount.programs || []).includes(program.programName)) return true;
     return (program.discountIds || []).includes(discount.id);
+  }
+
+  function openDiscountPicker(program) {
+    if (!program) { notify("프로그램명을 먼저 입력해주세요."); return; }
+    var connectedIds = effectiveConnectedDiscounts(program).map(function (discount) { return discount.id; });
+    var candidates = visibleDiscountPolicies().filter(function (discount) { return discount.active && !connectedIds.includes(discount.id); });
+    var list = byId("discount-picker-list"); list.replaceChildren();
+    if (!candidates.length) {
+      list.innerHTML = '<p class="empty-table"><strong>추가할 수 있는 할인이 없습니다.</strong><small>할인 관리에서 새 할인을 먼저 등록해주세요.</small></p>';
+    } else {
+      candidates.forEach(function (discount) {
+        var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
+        var label = document.createElement("label");
+        label.innerHTML = '<input type="checkbox" value="' + escapeHtml(discount.id) + '"><span><strong>' + escapeHtml(discount.name) + '</strong><small>' + valueText + '</small></span>';
+        list.append(label);
+      });
+    }
+    byId("discount-picker-dialog").showModal();
+  }
+
+  function applyDiscountPickerSelection(program) {
+    var checked = Array.from(document.querySelectorAll("#discount-picker-list input:checked")).map(function (input) { return input.value; });
+    if (!checked.length) { byId("discount-picker-dialog").close(); return; }
+    checked.forEach(function (id) {
+      pendingDiscountRemovals = pendingDiscountRemovals.filter(function (removedId) { return removedId !== id; });
+      if (!pendingDiscountAdditions.includes(id)) pendingDiscountAdditions.push(id);
+    });
+    byId("discount-picker-dialog").close();
+    renderProductDiscountOptions(program);
+    notify(checked.length + "개 할인을 선택했습니다. 프로그램 저장을 눌러야 실제로 연결됩니다.");
+  }
+
+  function commitDiscountDraft(program) {
+    pendingDiscountAdditions.forEach(function (id) {
+      var discount = discountPolicies.find(function (item) { return item.id === id; });
+      if (!discount) return;
+      if (discount.allPrograms) {
+        discount.excludedPrograms = (discount.excludedPrograms || []).filter(function (name) { return name !== program.programName; });
+      } else if (!(discount.programs || []).includes(program.programName)) {
+        discount.programs = (discount.programs || []).concat([program.programName]);
+      }
+    });
+    pendingDiscountRemovals.forEach(function (id) {
+      var discount = discountPolicies.find(function (item) { return item.id === id; });
+      if (!discount) return;
+      if (discount.allPrograms) {
+        discount.excludedPrograms = Array.from(new Set((discount.excludedPrograms || []).concat(program.programName)));
+      } else {
+        discount.programs = (discount.programs || []).filter(function (name) { return name !== program.programName; });
+      }
+    });
+    pendingDiscountAdditions = []; pendingDiscountRemovals = [];
   }
 
   function persistProgram(program) {
@@ -795,9 +909,16 @@
       discountIds: existing && Array.isArray(existing.discountIds) ? existing.discountIds : [], active: existing ? existing.active : true
     });
     program.programKey = program.key;
+    commitDiscountDraft(program);
+    var isNewProgram = !existing;
     persistProgram(program); activeProgramKey = program.key;
-    notify(programName + " 프로그램을 저장했습니다. 회차를 등록해주세요.");
-    openSessionManager(program.key);
+    if (isNewProgram) {
+      notify(programName + " 프로그램을 저장했습니다. 회차를 등록해주세요.");
+      openSessionManager(program.key);
+    } else {
+      notify(programName + " 프로그램을 저장했습니다.");
+      showView("programs");
+    }
   }
 
   function persistSession(session) {
@@ -1400,7 +1521,13 @@
   byId("discount-all-programs").addEventListener("change", function () { renderDiscountProgramOptions(Array.from(document.querySelectorAll("#discount-program-options input:checked")).map(function (input) { return input.value; })); });
   byId("save-discount-policy").addEventListener("click", saveDiscountPolicy);
   byId("delete-discount-policy").addEventListener("click", deleteDiscountPolicy);
-  byId("open-discounts-from-product").addEventListener("click", function () { openDiscountManager(); notify("할인 관리에서 현재 프로그램을 적용 대상으로 선택해주세요."); });
+  byId("open-discounts-from-product").addEventListener("click", function () {
+    var draftProgram = { programName: byId("detail-program").value.trim(), key: activeProgramKey };
+    openDiscountPicker(draftProgram);
+  });
+  byId("apply-discount-picker").addEventListener("click", function () {
+    applyDiscountPickerSelection({ programName: byId("detail-program").value.trim(), key: activeProgramKey });
+  });
   byId("detail-image").addEventListener("change", function (event) {
     var file = event.target.files && event.target.files[0];
     var imagePreview = byId("detail-image-preview");
@@ -1414,7 +1541,7 @@
     reader.readAsDataURL(file);
   });
   byId("save-product-detail").addEventListener("click", saveProductDetail);
-  byId("program-edit-back").addEventListener("click", function () { showView("programs"); });
+  byId("program-edit-back").addEventListener("click", function () { pendingDiscountAdditions = []; pendingDiscountRemovals = []; showView("programs"); });
   byId("program-sessions-back").addEventListener("click", function () { showView("programs"); });
   byId("add-session").addEventListener("click", function () { editSession(null); });
   byId("cancel-session-edit").addEventListener("click", function () { byId("session-editor").hidden = true; activeSessionKey = null; });
