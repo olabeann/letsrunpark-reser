@@ -166,6 +166,10 @@
     user.querySelector("strong").textContent = currentAccount.name;
     user.querySelector("small").textContent = currentAccount.role;
   }
+  function renderAdminNavigation() {
+    var isIntegratedAdmin = !!currentAccount && currentAccount.scope === "all";
+    document.querySelectorAll("[data-integrated-admin-only]").forEach(function (item) { item.hidden = !isIntegratedAdmin; });
+  }
   function prepareDiscountFormFields() {
     var form = document.querySelector(".discount-form-grid");
     if (!form) return;
@@ -1505,11 +1509,13 @@
   currentAccount = restoreAdminSession();
   setAdminLoginState(!!currentAccount);
   if (currentAccount) renderAdminIdentity();
+  renderAdminNavigation();
   lockAccountFilterSelects();
   renderReservations(); renderKioskProducts();
 
   document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.adminView); }); });
-  byId("admin-logout").addEventListener("click", function () { saveAdminSession("signed-out"); currentAccount = null; setAdminLoginState(false); lockAccountFilterSelects(); });
+  document.querySelectorAll("[data-admin-href]").forEach(function (button) { button.addEventListener("click", function () { window.location.href = button.dataset.adminHref; }); });
+  byId("admin-logout").addEventListener("click", function () { saveAdminSession("signed-out"); currentAccount = null; setAdminLoginState(false); renderAdminNavigation(); lockAccountFilterSelects(); });
   byId("admin-login-form").addEventListener("submit", function (event) {
     event.preventDefault();
     var enteredId = byId("admin-login-id").value.trim();
@@ -1518,6 +1524,7 @@
     if (!account) { byId("admin-login-password").focus(); return; }
     currentAccount = account;
     saveAdminSession(account.id); setAdminLoginState(true); renderAdminIdentity();
+    renderAdminNavigation();
     lockAccountFilterSelects();
     renderKioskProducts(); renderReservations(); lockOperationRegionSelect();
     refreshSettlementScopeFilter(); renderSettlementSummary();

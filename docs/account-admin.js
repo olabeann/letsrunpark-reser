@@ -33,11 +33,6 @@
     try { localStorage.setItem(storeKey, JSON.stringify(accounts)); }
     catch (error) { notify("이 브라우저에 계정 설정을 저장하지 못했습니다."); }
   }
-  function permissionSummary(account) {
-    if (account.type === "super") return ["전체 관리", "계정 발급"];
-    if (account.type === "region") return [account.location + " 전체 관리", "타 지역 조회"];
-    return ["전체 프로그램 조회"];
-  }
   function render() {
     var location = byId("account-location-filter").value;
     var search = byId("account-search").value.trim().toLowerCase();
@@ -48,24 +43,29 @@
     var body = byId("admin-account-body"); body.replaceChildren();
     visible.forEach(function (account) {
       var row = document.createElement("tr");
-      var chips = permissionSummary(account).map(function (label, index) { return '<span class="' + (index === 0 ? 'is-enabled' : '') + '">' + escapeHtml(label) + '</span>'; }).join("");
       row.innerHTML = '<td><strong>' + escapeHtml(account.location) + '</strong><small>' + escapeHtml(account.department) + '</small></td>' +
         '<td><strong>' + escapeHtml(account.loginId) + '</strong><small>초기 비밀번호 발급 완료</small></td>' +
         '<td><span class="account-type ' + (account.type === "super" ? 'is-super' : '') + '">' + (account.type === "super" ? '통합 관리자' : account.type === "region" ? '지역 관리자' : '부서 공용') + '</span></td>' +
-        '<td><div class="account-permission-summary">' + chips + '</div></td><td>' + escapeHtml(account.lastLogin || "미접속") + '</td>' +
-        '<td><span class="account-status ' + (account.active ? '' : 'is-off') + '">' + (account.active ? '사용 중' : '사용 중지') + '</span></td>' +
-        '<td><button class="account-edit" type="button">계정 설정</button></td>';
+        '<td>' + escapeHtml(account.lastLogin || "미접속") + '</td>' +
+        '<td><button class="account-edit" type="button">계정 정보</button></td>';
       row.querySelector(".account-edit").addEventListener("click", function () { openDialog(account); });
       body.append(row);
     });
-    if (!visible.length) body.innerHTML = '<tr><td colspan="7" class="empty-table">조건에 맞는 관리자 계정이 없습니다.</td></tr>';
-    byId("issued-account-count").textContent = accounts.length;
-    byId("active-account-count").textContent = accounts.filter(function (account) { return account.active; }).length;
+    if (!visible.length) body.innerHTML = '<tr><td colspan="5" class="empty-table">조건에 맞는 관리자 계정이 없습니다.</td></tr>';
   }
   function refreshDepartments(location, selected) {
     var departments = location === "전체" ? ["통합 운영"] : organization[location] || [];
     byId("account-department").innerHTML = departments.map(function (department) { return '<option>' + escapeHtml(department) + '</option>'; }).join("");
     if (selected && departments.includes(selected)) byId("account-department").value = selected;
+  }
+  function renderFixedAccessPolicy(isSuper, location) {
+    var cards = byId("fixed-access-policy-cards");
+    if (isSuper) {
+      cards.innerHTML = '<article><span>모든 지역</span><strong>모든 기능을 사용할 수 있어요</strong><small>서울·부산경남·제주의 예약과 프로그램 등 모든 내용을 보고 관리할 수 있습니다.</small></article>';
+      return;
+    }
+    cards.innerHTML = '<article><span>담당 지역 · ' + escapeHtml(location) + '</span><strong>모든 내용을 관리할 수 있어요</strong><small>프로그램, 예약, 환불, 운영일과 정산 내용을 보고 추가하거나 변경할 수 있습니다.</small></article>' +
+      '<article class="is-readonly"><span>다른 지역</span><strong>보기만 할 수 있어요</strong><small>다른 지역의 내용은 확인할 수 있지만 추가하거나 변경할 수 없습니다.</small></article>';
   }
   function openDialog(account) {
     activeAccountKey = account ? account.key : null;
@@ -75,7 +75,7 @@
     var allOption = Array.from(locationSelect.options).find(function (option) { return option.value === "전체"; });
     if (isSuper && !allOption) locationSelect.insertAdjacentHTML("afterbegin", '<option>전체</option>');
     if (!isSuper && allOption) allOption.remove();
-    byId("account-dialog-title").textContent = account ? (account.type === "region" ? account.location + " 지역 계정 설정" : account.department + " 계정 설정") : "지역 계정 발급";
+    byId("account-dialog-title").textContent = account ? (account.type === "region" ? account.location + " 지역 계정 정보" : account.department + " 계정 정보") : "지역 계정 발급";
     locationSelect.value = account ? account.location : "서울"; locationSelect.disabled = isSuper;
     refreshDepartments(locationSelect.value, account && account.type !== "region" ? account.department : "");
     if (isRegion) byId("account-department").innerHTML = '<option>지역 통합 운영</option>';
@@ -84,11 +84,7 @@
     byId("account-login-id").value = account ? account.loginId : "";
     byId("account-password").value = ""; byId("account-password").type = "password";
     byId("account-password").placeholder = account ? "재발급할 때만 입력" : "8자 이상 임시 비밀번호";
-    ["programs", "reservations", "refunds", "settlement"].forEach(function (permission) {
-      var input = byId("permission-" + permission);
-      input.checked = true; input.disabled = true;
-    });
-    byId("account-active").checked = account ? account.active : true;
+    renderFixedAccessPolicy(isSuper, locationSelect.value);
     byId("account-dialog").showModal();
   }
   function generatePassword() {
@@ -109,13 +105,10 @@
     if (accounts.some(function (account) { return account.key !== activeAccountKey && account.loginId.toLowerCase() === loginId.toLowerCase(); })) { notify("이미 사용 중인 로그인 ID입니다."); return; }
     if (!isSuper && accounts.some(function (account) { return account.key !== activeAccountKey && account.type === "region" && account.location === location; })) { notify("해당 지역에는 이미 발급된 관리자 계정이 있습니다."); return; }
     if ((!existing || password) && password.length < 8) { notify("임시 비밀번호는 8자 이상이어야 합니다."); return; }
-    if (byId("permission-refunds").checked && !byId("permission-reservations").checked) { notify("취소·환불 권한에는 예약·결제 조회 권한이 필요합니다."); return; }
     var saved = Object.assign({}, existing || {}, {
       key: activeAccountKey || "region-account-" + Date.now(), loginId: loginId, type: isSuper ? "super" : "region", access: isSuper ? { ownRegion: "crud", otherRegions: "crud" } : { ownRegion: "crud", otherRegions: "read" },
-      location: location, department: department, permissions: {
-        programs: isSuper || byId("permission-programs").checked, reservations: isSuper || byId("permission-reservations").checked,
-        refunds: isSuper || byId("permission-refunds").checked, settlement: isSuper || byId("permission-settlement").checked
-      }, active: byId("account-active").checked, lastLogin: existing ? existing.lastLogin : "미접속"
+      location: location, department: department, permissions: { programs: true, reservations: true, refunds: true, settlement: true },
+      active: true, lastLogin: existing ? existing.lastLogin : "미접속"
     });
     var index = accounts.findIndex(function (account) { return account.key === saved.key; });
     if (index === -1) accounts.push(saved); else accounts[index] = saved;
@@ -123,10 +116,16 @@
   }
 
   load(); render();
+  document.querySelectorAll("[data-admin-href]").forEach(function (button) { button.addEventListener("click", function () { window.location.href = button.dataset.adminHref; }); });
+  byId("mobile-menu").addEventListener("click", function () { document.querySelector(".admin-sidebar").classList.toggle("is-open"); });
+  byId("account-admin-logout").addEventListener("click", function () {
+    try { sessionStorage.setItem("letsrunPlayAdminSessionV1", "signed-out"); } catch (error) {}
+    window.location.href = "admin.html";
+  });
   byId("issue-account").addEventListener("click", function () { openDialog(null); });
   byId("account-location-filter").addEventListener("change", render);
   byId("account-search").addEventListener("input", render);
-  byId("account-location").addEventListener("change", function () { byId("account-department").innerHTML = '<option>지역 통합 운영</option>'; });
+  byId("account-location").addEventListener("change", function () { byId("account-department").innerHTML = '<option>지역 통합 운영</option>'; renderFixedAccessPolicy(false, byId("account-location").value); });
   byId("generate-account-password").addEventListener("click", generatePassword);
   byId("save-admin-account").addEventListener("click", saveAccount);
   document.querySelectorAll("dialog").forEach(function (dialog) {
