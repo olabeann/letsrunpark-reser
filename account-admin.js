@@ -77,7 +77,7 @@
     var blockers = [];
     var programCount = seededProgramCounts[account.location + "|" + account.department] || 0;
     if (programCount) blockers.push("연결된 프로그램 " + programCount + "개");
-    if (account.lastLogin && account.lastLogin !== "미접속") blockers.push("로그인 및 관리자 작업 이력");
+    if (account.operationHistoryCount > 0) blockers.push("운영 이력 " + account.operationHistoryCount + "건");
     return blockers;
   }
   function openDialog(account) {
@@ -109,8 +109,8 @@
     byId("account-delete-scope").textContent = account.location + " · " + account.department;
     byId("account-delete-impact").textContent = blocked ? "삭제 제한: " + blockers.join(", ") : "로그인 ID " + account.loginId;
     byId("account-delete-message").textContent = blocked
-      ? "프로그램 또는 예약·결제·환불·정산·감사 이력이 있는 계정은 완전 삭제하지 않고 사용 중지로 보존해야 합니다. 연결 데이터를 먼저 확인해주세요."
-      : "아직 사용하지 않았고 연결된 운영 데이터가 없는 계정만 삭제할 수 있습니다. 삭제한 계정은 복구할 수 없습니다.";
+      ? "연결된 프로그램 또는 예약·결제·환불·정산 등\n운영 이력이 있어 계정을 삭제할 수 없습니다."
+      : "연결된 프로그램과 운영 이력이 없는 계정만 삭제할 수 있습니다.\n삭제한 계정은 복구할 수 없습니다.";
     byId("confirm-account-delete").hidden = blocked;
     byId("account-delete-close").textContent = blocked ? "확인" : "취소";
     byId("account-delete-dialog").showModal();
@@ -123,7 +123,7 @@
     if (blockers.length) {
       pendingDeletionKey = null;
       byId("account-delete-dialog").close();
-      notify("연결 데이터나 사용 이력이 생겨 계정을 삭제할 수 없습니다.");
+      notify("연결된 프로그램이나 운영 이력이 생겨 계정을 삭제할 수 없습니다.");
       return;
     }
     accounts.splice(index, 1);

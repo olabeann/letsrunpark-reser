@@ -14,14 +14,14 @@ test('account details expose a guarded deletion flow', () => {
   assert.match(script, /account\.type === "super"/);
   assert.match(script, /accountDeletionBlockers\(account\)/);
   assert.match(script, /연결된 프로그램/);
-  assert.match(script, /로그인 및 관리자 작업 이력/);
+  assert.doesNotMatch(script, /account\.lastLogin &&/);
   assert.match(script, /accounts\.splice\(index, 1\)/);
 });
 
 test('deletion policy protects operational data and audit history', () => {
   assert.match(requirements, /통합 관리자 계정은 삭제할 수 없다/);
   assert.match(requirements, /프로그램·회차·예약·결제·환불·정산 이력이 없을 때만 완전 삭제/);
-  assert.match(requirements, /사용 중지/);
+  assert.doesNotMatch(requirements, /사용 중지/);
   assert.match(requirements, /연쇄 삭제하지 않는다/);
   assert.match(requirements, /트랜잭션 안에서 다시 확인/);
 });
