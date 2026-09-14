@@ -6,7 +6,7 @@ const L=globalThis.SettlementLedger;
 const may={start:'2026-05-01',end:'2026-05-31'};
 test('May ledger counts approvals and each cancellation, including prior-month payment',()=>{
  const rows=L.filter(may,()=>true),t=L.totals(rows);
- assert.equal(rows.length,10);assert.equal(t.approved,73000);assert.equal(t.cancelled,30000);assert.equal(t.net,43000);assert.equal(t.pending,0);assert.equal(t.fee,828);assert.equal(t.payout,42172);
+ assert.equal(rows.length,10);assert.equal(t.approved,73000);assert.equal(t.cancelled,30000);assert.equal(t.net,43000);assert.equal(t.pending,0);assert.equal(t.fee,860);assert.equal(t.payout,42140);
  assert.ok(rows.some(e=>e.paymentId==='demo-pay-006'&&e.type==='취소'));
  assert.equal(rows.filter(e=>e.paymentId==='demo-pay-003'&&e.type==='취소').length,2);
 });
@@ -26,9 +26,22 @@ test('exact dates, cards, search and scope constrain screen/export source identi
 });
 test('demo fees are populated and June cancellation does not rewrite May',()=>{
  const row=L.filter({...may,start:'2026-05-31'},()=>true)[0];
- assert.equal(L.fee(row),220);assert.equal(L.detail(row)[L.headers.indexOf('수수료')],220);
+ assert.equal(L.pgFeeRate,0.02);
+ assert.equal(L.fee(row),200);assert.equal(L.detail(row)[L.headers.indexOf('수수료')],200);
+ assert.ok(L.events.every(e=>Math.abs(L.fee(e))===Math.round(Math.abs(e.amount)*0.02)));
  assert.ok(L.events.every(e=>Number.isFinite(L.fee(e))));
  assert.equal(L.totals(L.filter({start:'2026-06-01',end:'2026-06-30'},()=>true)).net,-10000);
+});
+
+test('completed services are scheduled for the eighth of the following month',()=>{
+ assert.equal(L.monthlyPayoutDate('2026-06-06'),'2026-07-08');
+ assert.equal(L.monthlyPayoutDate('2026-06-01'),'2026-07-08');
+ assert.equal(L.monthlyPayoutDate('2026-06-30'),'2026-07-08');
+ assert.equal(L.monthlyPayoutDate('2026-12-31'),'2027-01-08');
+ assert.ok(L.events.filter(e=>e.type==='승인').every(e=>e.paidOutDate==='2026-07-08'));
+ assert.ok(L.events.filter(e=>e.type==='취소').every(e=>e.paidOutDate===''));
+ const cancelled=L.events.find(e=>e.type==='취소');
+ assert.equal(L.detail(cancelled)[12],'');
 });
 test('xlsx is a ZIP workbook with numeric amounts and literal formula-like strings',async()=>{
  const blob=SettlementXlsx.workbook([{name:'안전',rows:[['ID','금액'],['=1+1',27000],['00123',null]]}]);
@@ -61,6 +74,8 @@ test('admin rendering and download use identical filtered ledger and reject reve
  assert.match(elements['settlement-card-count'].textContent,/4개 거래/);
  assert.ok(!elements['settlement-detail-body'].innerHTML.includes('확인 대기'));
  assert.match(elements['settlement-detail-body'].innerHTML, /<td>2026-06-06<\/td><td>카드<\/td><td>국민카드<\/td>/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /지급예정액<\/dt><dd>0원<\/dd>/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /지급예정일<\/dt><dd>—<\/dd>/);
  assert.match(elements['settlement-metrics'].innerHTML,/<small>승인금액<\/small><strong>42000원<\/strong>/);
  assert.match(elements['settlement-metrics'].innerHTML,/취소 수수료 조정 반영 완료/);
  assert.match(elements['settlement-metrics'].innerHTML,/순매출 - 수수료/);
@@ -97,7 +112,7 @@ test('default Excel cells have no borders; only declared table ranges have borde
 test('service month includes earlier payments and partial refunds but excludes undelivered cancellations',()=>{
  const f={basis:'service',start:'2026-06-01',end:'2026-06-30',asOf:'2026-07-01T00:00:00+09:00'};
  const rows=L.filter(f,()=>true),t=L.totals(rows);
- assert.equal(rows.length,6);assert.equal(t.approved,55000);assert.equal(t.cancelled,10000);assert.equal(t.net,45000);assert.equal(t.fee,872);assert.equal(t.payout,44128);assert.equal(t.net-t.fee,t.payout);
+ assert.equal(rows.length,6);assert.equal(t.approved,55000);assert.equal(t.cancelled,10000);assert.equal(t.net,45000);assert.equal(t.fee,900);assert.equal(t.payout,44100);assert.equal(t.net-t.fee,t.payout);
  assert.ok(rows.every(e=>L.payment(e).completedAt));
  assert.ok(!rows.some(e=>['demo-pay-004','demo-pay-005','demo-pay-006'].includes(e.paymentId)));
  assert.equal(L.filter({...f,start:'2026-05-01',end:'2026-05-31'},()=>true).length,0);

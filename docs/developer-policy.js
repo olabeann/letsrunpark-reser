@@ -66,7 +66,7 @@
           ["프로그램 · 회차 저장", "프로그램 검색/생성/수정/상태 변경과 회차 저장", "프로그램은 안내 문구를 제외한 모든 항목을 필수로 검증하고 회차는 시작·종료 시간, 판매 수량과 판매 상태를 모두 필수로 검증합니다. 기간·시간 순서, 수량, 지역·부서 관계와 수정 버전도 확인합니다.", "프로그램 → 회차 템플릿 → 날짜별 실제 회차 구조로 연결하고 저장 응답에 최신 행과 할인 요약용 count/name을 반환합니다.", "필수값이 하나라도 없으면 저장하지 않습니다. 동시 수정은 버전 충돌로 막고 이미 판매된 회차 변경은 예약 영향·재고 부족을 확인합니다."],
           ["할인 정책 저장 · 요약", "할인 추가/수정/비활성화 또는 프로그램 목록 조회", "결제 완료 예약의 존재 여부와 관계없이 할인명·방식·값·상한·적용 수량·기간·프로그램·활성 상태를 검증해 저장하며 할인 간 우선순위는 두지 않습니다.", "동일 회원·동일 이용일의 모든 프로그램·주문에서 선택한 할인 정책 하나와 사용 수량을 집계하고, 취소·환불 완료 시 해당 티켓 수량만큼 복원합니다. 목록에는 ‘할인명 외 N개’로 요약합니다.", "변경된 정책은 신규 견적부터 적용하고 결제 완료 주문은 저장된 할인 스냅샷을 사용합니다."],
           ["회차 일괄 취소", "운영 취소 확정 요청", "회차를 잠그고 유효 예약·결제, 환불 예정액, 중복 실행 여부를 조회한 뒤 ‘기존 예약 유지 후 휴장’과 ‘기존 예약 전체 취소·환불 후 휴장’ 중 하나를 선택받습니다.", "선택에 따라 신규 예약만 중단하거나 예약별 환불, 회차 중지, 티켓 취소와 감사 이력을 함께 기록합니다.", "취소·환불을 선택해도 고객 알림은 발송되지 않음을 경고하고, 일부 환불 실패는 건별 재처리 대상으로 남깁니다."],
-          ["정산 집계 · 내보내기", "기간별 정산 조회 또는 XLSX 파일 생성", "예약·상품 데이터의 서비스 이용일·지역·부서·상품 정보, 포트원의 성공한 승인·취소 거래 정보, 토스페이먼츠 정산 결과의 확정 수수료·지급예정액을 서버에서 거래 단위로 연결합니다. 한국시간 서비스 제공 완료일과 계정 권한을 서버에서 검증하고 화면과 파일에 같은 필터와 산식을 적용합니다.", "승인과 취소를 별도 거래 이벤트로 보존해 승인금액, 취소금액, 순매출, 총수수료와 지급예정액을 반환합니다. 화면 상세에는 포트원 거래번호를 제공하고 내부 주문·예약번호와 PG 기술키는 정산 목록 및 엑셀에서 제외합니다. 조회 결과가 0건이어도 두 시트의 조회 정보와 열 머리글을 반환합니다.", "수수료 공급가액·부가세를 운영 화면에서 나누어 보여주거나 임의 비율로 수수료를 추정하지 않습니다. 월 지급일과 서비스 완료 후 예외 환불의 귀속 월은 확정 전까지 계산 규칙으로 추가하지 않습니다."],
+          ["정산 집계 · 내보내기", "기간별 정산 조회 또는 XLSX 파일 생성", "예약·상품 데이터의 서비스 이용일·지역·부서·상품 정보와 포트원의 성공한 승인·취소 거래 정보를 서버에서 거래 단위로 연결합니다. 한국시간 서비스 제공 완료일과 계정 권한을 서버에서 검증하고 화면과 파일에 같은 필터와 산식을 적용합니다.", "승인과 취소를 별도 거래 이벤트로 보존해 승인금액, 취소금액, 순매출, 총수수료와 지급예정액을 반환합니다. PG 수수료는 거래금액의 2%로 계산하고 취소 거래에는 취소금액의 2%를 음수 조정합니다. 승인 거래의 지급예정일은 서비스 제공 완료월의 다음 달 8일로 계산합니다. 화면 상세에는 포트원 거래번호를 제공하고 내부 주문·예약번호와 PG 기술키는 정산 목록 및 엑셀에서 제외합니다. 조회 결과가 0건이어도 두 시트의 조회 정보와 열 머리글을 반환합니다.", "수수료 공급가액·부가세는 운영 화면에서 나누어 보여주지 않습니다. 서비스 완료 후 예외 환불의 귀속 월은 확정 전까지 계산 규칙으로 추가하지 않습니다."],
           ["민감정보 · 비밀번호", "관리자 계정 발급/재발급 및 개인정보 조회", "비밀번호는 단방향 해시, 개인정보는 최소 권한·마스킹·접근 로그를 적용합니다.", "임시 비밀번호는 최초 로그인 변경 대상으로 발급하고 저장 후 원문을 노출하지 않습니다.", "분실 시 기존 비밀번호 조회가 아니라 새 임시 비밀번호 재발급만 허용합니다."],
           ["계정 수명주기 · 감사", "계정 발급, 비밀번호 재발급 또는 삭제", "통합 관리자 권한과 부서당 공용 계정 1개 제한을 검증합니다. 통합 관리자는 삭제 불가이며 부서 계정은 프로그램·회차·예약·결제·환불·정산 등 운영 이력이 없을 때만 삭제합니다.", "삭제 조건을 트랜잭션 안에서 재검사합니다. 이력이 있으면 삭제를 거절하고 기존 계정과 업무 데이터를 유지하며 요청자·대상·사유·결과를 계정과 분리된 감사 로그에 기록합니다.", "계정과 업무 데이터는 연쇄 삭제하지 않습니다. 부서 공용 계정은 개인 처리자를 구분하지 못하므로 중요한 작업에는 처리자 메모를 함께 남깁니다."],
           ["운영 보안 · 복구", "배포, 장애, 백업 복구 또는 대량 작업", "운영/테스트 환경 분리, HTTPS, 접근 통제, 비밀정보 노출, 백업과 복구 가능성을 점검합니다.", "장애와 대량 작업 결과를 추적하고 신규 판매 중단 중에도 기존 티켓·취소·환불 처리 방침을 적용합니다.", "성능·보관 기간·복구 목표와 공공기관 보안 요건은 승인된 운영 기준 없이는 확정값으로 표시하지 않습니다."]
@@ -127,18 +127,33 @@
     "ACC-04": [["계정 삭제 · 감사", "삭제, 권한 변경, 비밀번호 재발급", "통합 관리자는 삭제할 수 없습니다. 부서 계정은 연결된 프로그램 또는 운영 이력이 있으면 삭제를 차단하고 사유를 안내합니다. 로그인 이력만으로는 삭제를 제한하지 않습니다.", "삭제 직전 서버가 연결 이력을 다시 검사하며 계정 삭제가 프로그램·예약·결제 등의 연쇄 삭제로 이어지지 않게 합니다.", "삭제 요청자와 시각, 대상, 사유, 결과를 별도 감사 로그에 기록합니다."]]
   };
 
+  servicePolicy["ADM-07"][5][2] = "매월 1일부터 말일까지 실제 서비스 이용이 완료된 승인 거래를 해당 월의 정산 대상으로 묶습니다. 예약일과 결제일은 정산월을 결정하지 않으며, 서비스 완료 전 부분취소를 함께 반영합니다. 미이용·서비스 전 전액취소 건은 제외합니다.";
+  servicePolicy["ADM-07"][5][3] = "해당 월 정산 대상의 지급예정일은 다음 달 8일입니다. 예: 2026년 6월 1일부터 6월 30일까지 서비스 이용이 완료된 건은 2026년 7월 8일 지급 예정입니다.";
+  servicePolicy["ADM-07"][5][4] = "투어 프로그램의 정산 완료 후 환불 가능성·귀속 월은 브랜드총괄부 확인 사항이며 임의로 확정하지 않습니다.";
+  servicePolicy["ADM-07"].push(["취소 거래의 지급 표시", "거래내역에서 펼친 취소 행 상세", "취소 거래 자체에는 새로 지급되는 금액과 지급일이 없습니다.", "지급예정액은 0원, 지급예정일은 ‘—’로 표시합니다. 취소금액과 취소 수수료 조정으로 발생한 정산 차감은 상단 및 지역·부서·상품별 요약 계산에 반영합니다.", "승인 거래의 지급예정액·지급예정일과 취소 거래의 정산 차감 의미를 혼용하지 않습니다."]);
+  servicePolicy["ADM-07"].push(["PG 수수료율", "승인·취소 거래와 화면·엑셀 합계", "PG 수수료율은 거래금액의 2%입니다.", "승인 거래는 거래금액의 2%를 수수료로 반영하고, 취소 거래는 취소금액의 2%를 음수 수수료 조정으로 반영합니다. 화면 요약·거래내역·매출 요약·엑셀에 같은 산식을 적용합니다.", "수수료 공급가액과 부가세는 별도 항목으로 나누어 표시하지 않습니다."]);
+
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function (character) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
     });
   }
 
-  function renderItem(item, type) {
+  function renderPolicyText(value) {
+    var sentences = String(value).split(/(?<=[.!?])\s+/).filter(Boolean);
+    if (sentences.length < 2) return escapeHtml(value);
+    return '<span class="policy-rule-lines">' + sentences.map(function (sentence) {
+      return '<span>' + escapeHtml(sentence) + '</span>';
+    }).join("") + '</span>';
+  }
+
+  function renderItem(item, type, itemIndex) {
     var labels = type === "service" ? ["적용 범위", "정책 기준", "확정 내용", "예외 · 주의"] : ["트리거", "조건 · 검증", "정상 결과", "예외 · 주의"];
     var rows = item.slice(1).map(function (value, rowIndex) {
-      return '<div class="policy-rule"><dt>' + labels[rowIndex] + '</dt><dd>' + escapeHtml(value) + '</dd></div>';
+      var warningClass = rowIndex === 3 ? " policy-rule--caution" : "";
+      return '<div class="policy-rule' + warningClass + '"><dt>' + labels[rowIndex] + '</dt><dd>' + renderPolicyText(value) + '</dd></div>';
     }).join("");
-    return '<details class="policy-flow" open><summary><span>' + escapeHtml(item[0]) + '</span><i aria-hidden="true"></i></summary><dl>' + rows + '</dl></details>';
+    return '<details class="policy-flow"' + (itemIndex === 0 ? " open" : "") + '><summary><span>' + escapeHtml(item[0]) + '</span><i aria-hidden="true"></i></summary><dl>' + rows + '</dl></details>';
   }
 
   function topicsFor(context) {
@@ -187,7 +202,7 @@
     var empty = type === "service" ? "이 영역에 별도로 적용되는 서비스 정책이 없습니다." : type === "frontend" ? "별도 화면 동작 없이 서버 정책으로만 적용됩니다." : "별도 서버 처리 없이 화면 상태만 변경합니다.";
     var badge = type === "service" ? "정책" : type === "frontend" ? "FE" : "BE";
     var eyebrow = type === "service" ? "SERVICE" : type === "frontend" ? "INTERACTION" : "SERVER";
-    return '<section class="policy-lane policy-lane--' + type + '"><header><b>' + badge + '</b><div><small>' + eyebrow + '</small><h4>' + title + '</h4></div><span>' + items.length + '개</span></header><div class="policy-lane-body">' + (items.length ? items.map(function (item) { return renderItem(item, type); }).join("") : '<p class="policy-lane-empty">' + empty + '</p>') + '</div></section>';
+    return '<section class="policy-lane policy-lane--' + type + '"><header><b>' + badge + '</b><div><small>' + eyebrow + '</small><h4>' + title + '</h4></div><span>' + items.length + '개</span></header><div class="policy-lane-body">' + (items.length ? items.map(function (item, itemIndex) { return renderItem(item, type, itemIndex); }).join("") : '<p class="policy-lane-empty">' + empty + '</p>') + '</div></section>';
   }
 
   function renderTopic(topic, context, embedded) {
@@ -339,7 +354,7 @@
       document.body.classList.add("policy-inspector-on");
       panel.hidden = false; markerLayer.hidden = false;
       buildMarkers();
-      if (typeof index === "number") showTopic(index); else renderIndex();
+      if (typeof index === "number") showTopic(index); else if (topics.length === 1) showTopic(0); else renderIndex();
     }
 
     function close() {
