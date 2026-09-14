@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../admin.js'), 'utf8');
 function runtime(reservations = [], allowed = true) {
-  const ctx = { programCatalog: () => [{key:'ride',location:'서울',programName:'포니 타기'}], canManageRegion: () => allowed, localStorage: {getItem: () => JSON.stringify({reservations})}, reservationStoreKey:'store', demoReservations:[], sessionData:{ride:[['1회차','10:00','10:20',0,8,'판매중']]}, catalogState:{sessionOverrides:{},addedSessions:[]}, confirm:()=>true, notify:()=>{}, activeSessionKey:null, persistSession:(s)=>{ctx.saved=s;} };
+  const ctx = { programCatalog: () => [{key:'ride',location:'서울',department:'공원화사업추진TF',programName:'포니 타기'}], canManageDepartment: () => allowed, localStorage: {getItem: () => JSON.stringify({reservations})}, reservationStoreKey:'store', demoReservations:[], sessionData:{ride:[['1회차','10:00','10:20',0,8,'판매중']]}, catalogState:{sessionOverrides:{},addedSessions:[]}, confirm:()=>true, confirmDelete:(message,action)=>ctx.confirm()&&action(), escapeHtml:(value)=>String(value), notify:()=>{}, activeSessionKey:null, persistSession:(s)=>{ctx.saved=s;} };
   vm.createContext(ctx);
   for (const name of ['sessionDeletionReason','deleteSession','sessionsForProgram']) {
     const start = source.indexOf('  function '+name+'(');
@@ -24,7 +24,7 @@ test('original time and stable session keys protect edited sessions',()=>{
  const ctx=runtime([{programKey:'ride',time:'10:00~10:20'}]); assert.ok(ctx.sessionDeletionReason({...session,start:'11:00',end:'11:20'}));
  const keyed=runtime([{sessionKey:session.key,time:'09:00~09:20'}]); assert.ok(keyed.sessionDeletionReason(session));
 });
-test('foreign region and unreadable history block deletion',()=>{
+test('foreign department and unreadable history block deletion',()=>{
  const denied=runtime([],false); denied.deleteSession(session); assert.equal(denied.saved,undefined);
  const invalid=runtime(); invalid.localStorage.getItem=()=>'{'; invalid.deleteSession(session); assert.equal(invalid.saved,undefined);
 });

@@ -48,3 +48,12 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /data-policy-all>전체 정책 보기/);
   assert.match(source, /dialog\.showModal\(\)/);
 });
+
+test('administrator access is scoped by department instead of region', () => {
+  assert.match(accountAdmin, /DEPARTMENT ACCOUNTS/);
+  assert.match(accountAdmin, /부서 계정 발급/);
+  assert.match(source, /부서당 공용 계정 1개/);
+  assert.match(source, /자기 부서 프로그램은 관리/);
+  assert.doesNotMatch(accountAdmin, /REGIONAL ACCOUNTS|지역 계정 발급|지역 통합 운영/);
+  assert.doesNotMatch(source, /지역당 계정 1개|자기 지역 CRUD|타 지역 Read/);
+});
