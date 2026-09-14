@@ -158,9 +158,9 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .table-status.is-review {background:#fff0f2;color:#d64e62}
 .table-status.is-cancelled {background:#f1f2f4;color:#747980}
 .reservation-table input {accent-color:var(--admin-blue)}
-.reservation-table{min-width:1280px}
+.reservation-table{min-width:1380px}
 .reservation-table th:last-child,.reservation-table td:last-child{width:92px;text-align:right}
-.reservation-table td:nth-child(3) strong,.reservation-table td:nth-child(6) strong,.reservation-table td:nth-child(8) strong{font-weight:400;color:#4d5359}
+.reservation-table td:nth-child(3) strong,.reservation-table td:nth-child(6) strong,.reservation-table td:nth-child(7) strong,.reservation-table td:nth-child(9) strong{font-weight:400;color:#4d5359}
 .reservation-detail-button{height:32px;padding:0 12px;border:1px solid #cfd8e5;border-radius:7px;background:#fff;color:#1769ff;font-size:10px;font-weight:800;white-space:nowrap}
 .reservation-detail-button:hover{border-color:#1769ff;background:#f4f8ff}
 .reservation-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}.reservation-row-actions .row-delete{white-space:nowrap}

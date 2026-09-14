@@ -296,8 +296,9 @@
       '<td><strong>' + escapeHtml(item.location) + '</strong><br><small>' + escapeHtml(item.department) + '</small></td>' +
       '<td><span class="table-program"><img src="' + (programs[item.programKey] ? programs[item.programKey].image : "assets/pony/cover.jpg") + '" alt=""><span class="table-program-info"><strong>' + escapeHtml(item.program) + '</strong></span></span></td>' +
       '<td><strong>' + escapeHtml(item.date) + '</strong><br><small>' + escapeHtml(item.time) + '</small></td>' +
-      '<td><strong>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + '명</strong><br><small>전체 ' + item.qty + '명</small></td>' +
+      '<td><strong>' + item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length + '명</strong></td>' +
       '<td><strong>' + money(item.price) + '</strong></td>' +
+      '<td><strong>' + money(item.price - ticketRefundTotal(item)) + '</strong></td>' +
       '<td><span class="table-status ' + statusClass(item.status) + '">' + paymentStatusLabel(item) + '</span></td>' +
       '<td><strong>' + escapeHtml(item.createdAt) + '</strong></td>' +
       '<td><div class="reservation-row-actions"><button class="reservation-detail-button" type="button">상세보기</button>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '') + '</div></td>';
@@ -338,7 +339,7 @@
       var row = document.createElement("tr");
       var emptyTitle = hasReservationFilters() ? "검색 결과가 없습니다." : "예약내역이 없습니다.";
       var emptyHelp = hasReservationFilters() ? "검색어나 필터 조건을 변경해 다시 확인해주세요." : "예약이 접수되면 이곳에 표시됩니다.";
-      row.innerHTML = '<td colspan="9" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
+      row.innerHTML = '<td colspan="10" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
       body.append(row);
     }
     byId("reservation-count").textContent = items.length;
@@ -1443,7 +1444,7 @@
     byId("drawer-title").textContent = activeReservation.id;
     byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약 식별</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일</dt><dd>' + escapeHtml(activeReservation.date) + '</dd></div><div><dt>회차</dt><dd>' + escapeHtml(activeReservation.time) + '</dd></div></dl>';
     renderDrawerTickets();
-    byId("payment-detail").innerHTML = '<div><dt>통합 결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>결제 수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제·환불 상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div><div><dt>원 결제금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불 누계</dt><dd>' + money(ticketRefundTotal(activeReservation)) + '</dd></div><div><dt>남은 결제금액</dt><dd>' + money(activeReservation.price - ticketRefundTotal(activeReservation)) + '</dd></div>';
+    byId("payment-detail").innerHTML = '<div><dt>통합 결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>결제 수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제·환불 상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div><div><dt>구매금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불 누계</dt><dd>' + money(ticketRefundTotal(activeReservation)) + '</dd></div><div><dt>결제금액</dt><dd>' + money(activeReservation.price - ticketRefundTotal(activeReservation)) + '</dd></div>';
     var cancellationEvents = Array.isArray(activeReservation.cancellationEvents) ? activeReservation.cancellationEvents : [];
     var cancellationHistory = cancellationEvents.map(function (event) {
       var sourceLabel = event.source === "customer" ? "고객 직접 취소" : "관리자 처리";
@@ -1460,7 +1461,7 @@
     if (!activeReservation) return;
     var refund = ticketRefundTotal(activeReservation);
     byId("receipt-booking-info").innerHTML = '<div><dt>결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>예약번호</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상품</dt><dd>' + escapeHtml(activeReservation.program) + ' · ' + activeReservation.qty + '명</dd></div><div><dt>이용 일정</dt><dd>' + escapeHtml(activeReservation.date) + ' ' + escapeHtml(activeReservation.time) + '</dd></div><div><dt>운영 지점</dt><dd>' + escapeHtml(activeReservation.location) + ' · ' + escapeHtml(activeReservation.department) + '</dd></div>';
-    byId("receipt-amount-info").innerHTML = '<div><dt>최초 결제금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불금액</dt><dd>' + (refund ? '−' : '') + money(refund) + '</dd></div><div class="receipt-total"><dt>최종 결제금액</dt><dd>' + money(activeReservation.price - refund) + '</dd></div>';
+    byId("receipt-amount-info").innerHTML = '<div><dt>구매금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불금액</dt><dd>' + (refund ? '−' : '') + money(refund) + '</dd></div><div class="receipt-total"><dt>결제금액</dt><dd>' + money(activeReservation.price - refund) + '</dd></div>';
     byId("receipt-payment-info").innerHTML = '<div><dt>결제일시</dt><dd>' + escapeHtml(activeReservation.createdAt) + '</dd></div><div><dt>결제수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div>';
     byId("payment-receipt-dialog").showModal();
   }
@@ -1631,8 +1632,8 @@
   byId("download-reservations").addEventListener("click", function () {
     var items = filteredReservations();
     if (!items.length) { notify("내려받을 예약 내역이 없습니다."); return; }
-    var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "결제금액", "상태"]];
-    items.forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.status]); });
+    var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "구매금액", "결제금액", "상태"]];
+    items.forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.price - ticketRefundTotal(item), item.status]); });
     downloadCsv("렛츠런플레이_통합예약목록.csv", rows);
   });
   byId("download-settlement").addEventListener("click", function () {
