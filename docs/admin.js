@@ -101,26 +101,6 @@
     play: { program: "포니랑 놀기", scope: "서울 · 공원화사업추진TF", completed: 604, paid: 3210000, refunded: 116000, fee: 92820, payout: 3001180, daily: [["2026.09.05", 204, 1080000, 36000, 1012000], ["2026.09.12", 216, 1120000, 40000, 1047000], ["2026.09.19", 184, 1010000, 40000, 942180]], transactions: [["2026.09.05", "LRP-260902-00004-1", "PAY-260902-3012", 2, 8000, 4000, 120, 3880, "부분 환불"], ["2026.09.06", "LRP-260902-00002-1", "PAY-260902-2971", 4, 16000, 0, 480, 15520, "결제 완료"], ["2026.09.12", "LRP-260912-00001-1", "PAY-260912-3758", 2, 8000, 0, 240, 7760, "결제 완료"], ["2026.09.12", "LRP-260912-00002-1", "PAY-260912-3884", 3, 12000, 4000, 240, 7760, "부분 환불"], ["2026.09.19", "LRP-260919-00002-1", "PAY-260919-4263", 1, 4000, 4000, 0, 0, "전체 환불"]], refunds: [["2026.09.05 · 부분 환불 6건", "인원별 부분취소", 36000], ["2026.09.12 · 전체 환불 5건", "고객 요청", 40000], ["2026.09.19 · 전체·부분 환불 7건", "운영 취소 포함", 40000]] }
   };
 
-  var cardSettlementRows = [
-    [1, "비씨카드", 199, 172, 1590500, 144520, 184, 1710500, 12, 120000, 0, 0, 172, 1590500, 10, 89000, 0, 0, 3, 0],
-    [2, "국민카드", 372, 300, 2492500, 226463, 335, 2825000, 35, 332500, 300, 2492500, 300, 2492500, 0, 0, 70, 665000, 2, 0],
-    [3, "하나(구외환)카드", 157, 133, 1014500, 92168, 145, 1115500, 12, 101000, 133, 1014500, 133, 1014500, 0, 0, 24, 202000, 0, 0],
-    [4, "삼성카드", 283, 219, 1817000, 165089, 251, 2165000, 32, 348000, 219, 1817000, 219, 1817000, 0, 0, 64, 696000, 0, 0],
-    [5, "신한(구LG)", 277, 223, 1810000, 164452, 250, 2066000, 27, 256000, 223, 1810000, 223, 1810000, 0, 0, 54, 512000, 0, 0],
-    [6, "현대카드", 338, 265, 2062000, 187337, 299, 2368000, 34, 306000, 265, 2062000, 265, 2062000, 0, 0, 68, 612000, 0, 5],
-    [7, "NH카드", 77, 67, 571000, 51880, 72, 613000, 5, 42000, 67, 571000, 67, 571000, 0, 0, 10, 84000, 0, 0],
-    [8, "우리카드", 78, 58, 417000, 37883, 68, 525000, 10, 108000, 58, 417000, 58, 417000, 0, 0, 20, 216000, 0, 0],
-    [9, "롯데카드(구)", 116, 91, 712500, 64735, 103, 819500, 12, 107000, 91, 712500, 91, 712500, 0, 0, 24, 214000, 0, 1]
-  ];
-  var cardSettlementTransactions = [
-    ["2026-05-09 09:52", "LRP-260509-00001-1", "ORDER-260509-00001", "pay-260509-00001", "tviva2026••••367", "카드", "국민카드", 27000, 0, 27000, "결제 완료", "정산 완료"],
-    ["2026-05-09 09:54", "LRP-260509-00002-1", "ORDER-260509-00002", "pay-260509-00002", "tviva2026••••104", "카드", "삼성카드", 9000, 0, 9000, "결제 완료", "정산 완료"],
-    ["2026-05-09 09:55", "LRP-260509-00003-1", "ORDER-260509-00003", "pay-260509-00003", "tviva2026••••228", "카드", "국민카드", 9000, 0, 9000, "결제 완료", "정산 완료"],
-    ["2026-05-09 09:56", "LRP-260509-00004-1", "ORDER-260509-00004", "pay-260509-00004", "tviva2026••••442", "카드", "비씨카드", 18000, 0, 18000, "결제 완료", "정산 완료"],
-    ["2026-05-09 09:59", "LRP-260509-00005-1", "ORDER-260509-00005", "pay-260509-00005", "tviva2026••••515", "카드", "국민카드", 9000, 0, 9000, "결제 완료", "정산 완료"],
-    ["2026-05-09 10:02", "LRP-260509-00006-1", "ORDER-260509-00006", "pay-260509-00006", "tviva2026••••679", "카드", "현대카드", 9000, 0, 9000, "결제 완료", "정산 완료"]
-  ];
-
   var sessionData = {
     ride: [
       ["1회차", "10:00", "10:20", 7, 8, "판매중"], ["2회차", "10:20", "10:45", 6, 6, "마감"],
@@ -1320,7 +1300,7 @@
   function refreshSettlementScopeFilter() {
     var select = byId("settlement-scope-filter"); if (!select) return;
     var cardSelect = byId("settlement-card-filter");
-    if (cardSelect && cardSelect.options.length === 1) cardSelect.innerHTML += cardSettlementRows.map(function (row) { return '<option>' + escapeHtml(row[1]) + '</option>'; }).join("");
+    if (cardSelect && cardSelect.options.length === 1) cardSelect.innerHTML += Array.from(new Set(SettlementLedger.payments.map(function (p) { return p.card; }))).map(function (card) { return '<option>' + escapeHtml(card) + '</option>'; }).join("");
     var selected = select.value;
     var options = settlementScopeOptions();
     select.innerHTML = '<option value="">전체 지역 · 부서</option>' + options.map(function (item) { return '<option value="' + escapeHtml(item.scope) + '">' + escapeHtml(item.scope) + '</option>'; }).join("");
@@ -1352,30 +1332,31 @@
     }, { completed: 0, paid: 0, fee: 0, payout: 0, refunded: 0 });
   }
 
+  function settlementFilters() {
+    return { basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, scope: byId("settlement-scope-filter").value, type: byId("settlement-type-filter").value, search: byId("settlement-detail-search").value.trim() };
+  }
   function renderSettlementSummary() {
-    var body = byId("settlement-summary-body"), foot = byId("settlement-summary-foot"), metrics = byId("settlement-metrics");
-    if (!body) return;
-    var startDate = byId("settlement-start-date").value, endDate = byId("settlement-end-date").value;
-    var cardFilter = byId("settlement-card-filter").value;
-    var hasAccountAccess = canManageDepartment("서울", "공원화사업추진TF");
-    var inMayRange = (!startDate || startDate <= "2026-05-31") && (!endDate || endDate >= "2026-05-01");
-    var rows = hasAccountAccess && inMayRange ? cardSettlementRows.filter(function (row) { return !cardFilter || row[1] === cardFilter; }) : [];
-    var detailSearch = (byId("settlement-detail-search").value || "").trim().toLowerCase();
-    var detailRows = hasAccountAccess && inMayRange ? cardSettlementTransactions.filter(function (row) {
-      var paidDate = row[0].slice(0, 10);
-      return (!cardFilter || row[6] === cardFilter) && (!startDate || paidDate >= startDate) && (!endDate || paidDate <= endDate) && (!detailSearch || row.join(" ").toLowerCase().includes(detailSearch));
-    }) : [];
-    byId("settlement-period").textContent = "거래기간 · 거래일시 " + (startDate || "전체") + " 00:00:00 ~ " + (endDate || "전체") + " 23:59:59";
-    metrics.innerHTML = hasAccountAccess ? '<article><small>승인금액</small><strong>' + money(14207500) + '</strong><p>토스페이먼츠 승인 1,707건</p></article><article><small>취소금액</small><strong>−' + money(1720500) + '</strong><p>전체·부분 취소 179건</p></article><article><small>결제 수수료</small><strong>−' + money(258360) + '</strong><p>정산 내역 기준</p></article><article class="is-emphasis"><small>정산 완료액</small><strong>' + money(12228640) + '</strong><p>포트원·토스 대사 완료</p></article>' : '<article><small>승인금액</small><strong>0원</strong><p>담당 부서 거래 없음</p></article><article><small>취소금액</small><strong>0원</strong><p>담당 부서 거래 없음</p></article><article><small>결제 수수료</small><strong>0원</strong><p>담당 부서 거래 없음</p></article><article class="is-emphasis"><small>정산 완료액</small><strong>0원</strong><p>담당 부서 거래 없음</p></article>';
-    byId("settlement-card-count").textContent = rows.length + "개 카드사";
-    body.innerHTML = rows.length ? rows.map(function (row) {
-      var status = row[14] || row[16] ? "확인 필요" : "정상";
-      return '<tr><td><strong>' + escapeHtml(row[1]) + '</strong></td><td>' + row[3].toLocaleString("ko-KR") + '건</td><td>' + money(row[4]) + '</td><td>' + row[8].toLocaleString("ko-KR") + '건 · ' + money(row[9]) + '</td><td>' + money(row[13]) + '</td><td>' + row[16].toLocaleString("ko-KR") + '건</td><td><span class="settlement-reconcile ' + (status === "정상" ? 'is-ok' : 'is-review') + '">' + status + '</span></td></tr>';
-    }).join("") : '<tr><td colspan="7" class="empty-table">조건에 맞는 카드사 집계가 없습니다.</td></tr>';
-    foot.innerHTML = rows.length && !cardFilter ? '<tr><td>합계</td><td>1,528건</td><td>' + money(12487000) + '</td><td>179건 · ' + money(1720500) + '</td><td>' + money(12487000) + '</td><td>334건</td><td>—</td></tr>' : "";
-    byId("settlement-detail-body").innerHTML = detailRows.length ? detailRows.map(function (row) {
-      return '<tr>' + row.map(function (cell, index) { return '<td' + (index >= 7 && index <= 9 ? ' class="settlement-amount"' : '') + '>' + (index >= 7 && index <= 9 ? money(cell) : escapeHtml(String(cell || "—"))) + '</td>'; }).join("") + '</tr>';
-    }).join("") : '<tr><td colspan="12" class="empty-table">조건에 맞는 결제 내역이 없습니다.</td></tr>';
+    var f = settlementFilters();
+    var invalid = f.start && f.end && f.start > f.end;
+    byId("download-settlement").disabled = !!invalid;
+    byId("settlement-date-error").hidden = !invalid;
+    var rows = invalid ? [] : SettlementLedger.filter(f, canManageDepartment), t = SettlementLedger.totals(rows);
+    var metrics = [["승인금액", t.approved, "승인 " + t.approvals + "건"], ["취소금액", t.cancelled, "전체·부분 취소 " + t.cancels + "건"], ["수수료", t.fee, "취소 수수료 조정 반영 완료"], ["지급예정액", t.payout, "순매출 - 수수료"]];
+    byId("settlement-metrics").innerHTML = metrics.map(function(m){return '<article><small>'+m[0]+'</small><strong>'+(typeof m[1] === 'number' ? money(m[1]) : m[1])+'</strong><p>'+m[2]+'</p></article>';}).join("");
+    var groups = Array.from(new Set(rows.map(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program;})));
+    function cells(group, v) { return '<tr><td>'+escapeHtml(group)+'</td><td>'+money(v.approved)+'<small class="settlement-summary-count">승인 '+v.approvals+'건</small></td><td>'+money(v.cancelled)+'<small class="settlement-summary-count">취소 '+v.cancels+'건</small></td><td>'+money(v.net)+'</td><td>'+money(v.fee)+'</td><td>'+money(v.payout)+'</td></tr>'; }
+    byId("settlement-card-count").textContent = rows.length + "개 거래";
+    byId("settlement-summary-body").innerHTML = groups.length ? groups.map(function(group){return cells(group,SettlementLedger.totals(rows.filter(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program===group;})));}).join("") : '<tr><td colspan="6" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
+    byId("settlement-summary-foot").innerHTML = groups.length ? cells("합계",t) : "";
+    byId("settlement-detail-body").innerHTML = rows.length ? rows.map(function(e, index) {
+      var p = SettlementLedger.payment(e), fee = SettlementLedger.fee(e), cancelled = e.type === '취소';
+      var status = cancelled ? SettlementLedger.state(e) : '승인';
+      var detailId = 'settlement-event-' + index;
+      var fields = [['포트원 거래번호', p.impUid || '—'], ['지역·담당부서', p.region + ' · ' + p.department], ['원결제일시', p.paidAt], ['취소사유', e.reason || '—'], ['지급예정액', e.payOutAmount === null ? '—' : money(e.payOutAmount)], ['지급예정일', e.paidOutDate || '—']];
+      return '<tr><td><strong>' + escapeHtml(p.program) + '</strong></td><td>' + escapeHtml(p.serviceDate) + '</td><td>' + escapeHtml(p.easyPay || p.method) + '</td><td>' + escapeHtml(p.card === '해당 없음' ? '—' : p.card) + '</td><td><span class="settlement-status' + (cancelled ? ' is-cancelled' : '') + '">' + status + '</span></td><td class="money-cell' + (cancelled ? ' is-negative' : '') + '">' + (cancelled ? '−' : '') + money(Math.abs(e.amount)) + '</td><td class="money-cell">' + (fee === null ? '—' : money(fee)) + '</td><td><strong>' + escapeHtml(e.at.slice(0,10)) + '</strong><small>' + escapeHtml(e.at.slice(11)) + '</small></td><td><button type="button" class="settlement-expand" aria-expanded="false" aria-controls="' + detailId + '">상세</button></td></tr>' +
+        '<tr id="' + detailId + '" class="settlement-event-detail" hidden><td colspan="9"><dl>' + fields.map(function(field){return '<div><dt>' + field[0] + '</dt><dd>' + escapeHtml(String(field[1])) + '</dd></div>';}).join('') + '</dl></td></tr>';
+    }).join('') : '<tr><td colspan="9" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
+    return !invalid;
   }
 
   function closeSettlementDrawer() {
@@ -1597,9 +1578,18 @@
   byId("operation-closure-confirm-dialog").addEventListener("close", function () { pendingOperationClosureAction = null; });
   byId("confirm-program-delete").addEventListener("click", confirmProgramDeletion);
   byId("program-delete-confirm-dialog").addEventListener("close", function () { pendingProgramDeletion = null; });
-  byId("apply-settlement").addEventListener("click", function () { renderSettlementSummary(); notify("선택한 기간의 정산 내역을 조회했습니다."); });
+  byId("apply-settlement").addEventListener("click", function () { if (renderSettlementSummary()) notify("선택한 조건의 거래 내역을 조회했습니다."); });
+  ["settlement-start-date", "settlement-end-date", "settlement-type-filter", "settlement-scope-filter"].forEach(function(id){ byId(id).addEventListener("change", renderSettlementSummary); });
   byId("settlement-card-filter").addEventListener("change", renderSettlementSummary);
-  byId("settlement-detail-search").addEventListener("input", renderSettlementSummary);
+  byId("settlement-detail-search-form").addEventListener("submit", function (event) { event.preventDefault(); if (renderSettlementSummary()) notify("상품명 검색 결과를 조회했습니다."); });
+  byId("settlement-detail-body").addEventListener("click", function(event) {
+    var button = event.target.closest('.settlement-expand');
+    if (!button) return;
+    var detail = byId(button.getAttribute('aria-controls'));
+    detail.hidden = !detail.hidden;
+    button.setAttribute('aria-expanded', String(!detail.hidden));
+    button.textContent = detail.hidden ? '상세' : '닫기';
+  });
   byId("settlement-drawer-close").addEventListener("click", closeSettlementDrawer);
   byId("settlement-drawer-confirm").addEventListener("click", closeSettlementDrawer);
   byId("settlement-drawer-backdrop").addEventListener("click", closeSettlementDrawer);
@@ -1623,13 +1613,14 @@
     downloadCsv("렛츠런플레이_통합예약목록.csv", rows);
   });
   byId("download-settlement").addEventListener("click", function () {
-    if (!canManageDepartment("서울", "공원화사업추진TF")) { notify("담당 부서의 정산 자료만 내려받을 수 있습니다."); return; }
-    var startDate = byId("settlement-start-date").value, endDate = byId("settlement-end-date").value, cardFilter = byId("settlement-card-filter").value;
-    var rows = [["번호", "카드사명", "총건수", "매출건수", "매출금액", "부가세", "승인건수", "승인금액", "취소건수", "취소금액", "청구건수", "청구금액", "입금건수", "입금금액", "반송건수", "반송금액", "보류건수", "보류금액", "승인거절건수", "취소거절건수"]];
-    cardSettlementRows.filter(function (row) { return !cardFilter || row[1] === cardFilter; }).forEach(function (row) { rows.push(row); });
-    rows.push([]); rows.push(["포트원·토스페이먼츠 거래 상세"]); rows.push(["결제일시", "예약번호", "주문번호", "포트원 paymentId", "토스 paymentKey", "결제수단", "카드사", "승인금액", "취소금액", "최종결제액", "결제상태", "정산상태"]);
-    cardSettlementTransactions.filter(function (row) { var paidDate = row[0].slice(0, 10); return (!cardFilter || row[6] === cardFilter) && (!startDate || paidDate >= startDate) && (!endDate || paidDate <= endDate); }).forEach(function (row) { rows.push(row); });
-    downloadCsv("렛츠런플레이_카드매출정산_" + (startDate || "전체") + "_" + (endDate || "전체") + ".csv", rows);
+    if (!renderSettlementSummary()) return;
+    var f = settlementFilters(), rows = SettlementLedger.filter(f, canManageDepartment);
+    var blob = SettlementXlsx.workbook(SettlementLedger.sheets(rows, f));
+    var url = URL.createObjectURL(blob), link = document.createElement("a");
+    link.href = url; link.download = "렛츠런플레이_매출정산_예시_" + (f.start || "전체") + "_" + (f.end || "전체") + ".xlsx";
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);}, 1000);
+    notify("현재 조회 조건의 엑셀 파일을 내려받았습니다.");
   });
   function openDeveloperPolicy() {
     if (window.DeveloperPolicy) { window.DeveloperPolicy.toggle(); return; }
