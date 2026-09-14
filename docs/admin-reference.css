@@ -163,7 +163,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .reservation-table td:nth-child(3) strong,.reservation-table td:nth-child(6) strong,.reservation-table td:nth-child(7) strong,.reservation-table td:nth-child(9) strong{font-weight:400;color:#4d5359}
 .reservation-detail-button{height:32px;padding:0 12px;border:1px solid #cfd8e5;border-radius:7px;background:#fff;color:#1769ff;font-size:10px;font-weight:800;white-space:nowrap}
 .reservation-detail-button:hover{border-color:#1769ff;background:#f4f8ff}
-.reservation-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}.reservation-row-actions .row-delete{white-space:nowrap}
+.reservation-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}
 .receipt-link{color:#1769ff;font-size:11px;font-weight:800}
 .reservation-panel{scroll-margin-top:82px}.table-pagination #reservation-page-buttons{display:flex;gap:4px}.table-pagination button:disabled{cursor:not-allowed;opacity:.4}
 .table-pagination {justify-content:center}

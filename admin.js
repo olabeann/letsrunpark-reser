@@ -6,7 +6,6 @@
   var adminSessionKey = "letsrunPlayAdminSessionV1";
   var toastTimer;
   var activeReservation = null;
-  var deletedReservationIds = [];
   var activeProgramKey = null;
   var activeSessionKey = null;
   var activeSettlementKey = null;
@@ -221,13 +220,12 @@
         catalogState.sessionOverrides = state.catalog.sessionOverrides || {};
         catalogState.addedSessions = Array.isArray(state.catalog.addedSessions) ? state.catalog.addedSessions : [];
       }
-      if (Array.isArray(state.deletedReservationIds)) deletedReservationIds = state.deletedReservationIds;
       if (Array.isArray(state.operationExceptions)) operationExceptions = state.operationExceptions.filter(function (item) { return item.status !== "open"; }).map(function (item) { return Object.assign({ programKey: "all", status: "closed" }, item); });
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, paymentStatus: item.paymentStatus || "결제 완료", tickets: item.tickets, cancellationEvents: item.cancellationEvents || [] }; }), discounts: discountPolicies, catalog: catalogState, operationExceptions: operationExceptions, deletedReservationIds: deletedReservationIds })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, paymentStatus: item.paymentStatus || "결제 완료", tickets: item.tickets, cancellationEvents: item.cancellationEvents || [] }; }), discounts: discountPolicies, catalog: catalogState, operationExceptions: operationExceptions })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -252,7 +250,7 @@
 
   function allReservations() {
     var ids = {};
-    return demoReservations.concat(readBookingReservations()).filter(function (item) { if (ids[item.id]) return false; ids[item.id] = true; return true; }).filter(function (item) { return deletedReservationIds.indexOf(item.id) === -1; }).map(function (item) {
+    return demoReservations.concat(readBookingReservations()).filter(function (item) { if (ids[item.id]) return false; ids[item.id] = true; return true; }).map(function (item) {
       if (!item.location) item.location = "서울";
       if (!item.department) item.department = "공원화사업추진TF";
       return item;
@@ -273,15 +271,6 @@
     dialog.showModal();
   }
 
-  function deleteReservation(id) {
-    confirmDelete(escapeHtml(id) + " 예약을 목록에서 삭제할까요?<br>삭제해도 고객 환불 등은 자동으로 처리되지 않으니,<br>필요한 경우 별도로 처리해주세요.", function () {
-      deletedReservationIds.push(id);
-      saveDemoState();
-      renderReservations();
-      notify(id + " 예약을 삭제했습니다.");
-    });
-  }
-
   function statusClass(status) {
     if (status === "부분 취소") return "is-partial";
     if (status === "취소 완료") return "is-cancelled";
@@ -289,7 +278,6 @@
   }
 
   function reservationRow(item) {
-    var canManage = canManageDepartment(item.location, item.department);
     var row = document.createElement("tr");
     row.dataset.reservationId = item.id;
     row.innerHTML = '<td><strong>' + escapeHtml(item.id) + '</strong></td>' +
@@ -301,10 +289,8 @@
       '<td><strong>' + money(item.price - ticketRefundTotal(item)) + '</strong></td>' +
       '<td><span class="table-status ' + statusClass(item.status) + '">' + paymentStatusLabel(item) + '</span></td>' +
       '<td><strong>' + escapeHtml(item.createdAt) + '</strong></td>' +
-      '<td><div class="reservation-row-actions"><button class="reservation-detail-button" type="button">상세보기</button>' + (canManage ? '<button class="row-delete" type="button">삭제</button>' : '') + '</div></td>';
-    row.addEventListener("click", function (event) { if (!event.target.closest(".row-delete")) openDrawer(item.id); });
-    var deleteButton = row.querySelector(".row-delete");
-    if (deleteButton) deleteButton.addEventListener("click", function (event) { event.stopPropagation(); deleteReservation(item.id); });
+      '<td><div class="reservation-row-actions"><button class="reservation-detail-button" type="button">상세보기</button></div></td>';
+    row.addEventListener("click", function () { openDrawer(item.id); });
     return row;
   }
 
