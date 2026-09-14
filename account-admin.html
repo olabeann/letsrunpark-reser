@@ -60,7 +60,17 @@
         </section>
         <p class="account-security"><i>i</i> 부서별 이용 범위는 계정을 저장하면 자동으로 적용됩니다.</p>
       </div>
-      <footer><button class="admin-button admin-button--ghost" value="close">닫기</button><button class="admin-button admin-button--primary" id="save-admin-account" type="button">계정 저장</button></footer>
+      <footer><button class="account-delete-text" id="delete-admin-account" type="button" hidden>계정 삭제</button><button class="admin-button admin-button--ghost" value="close">닫기</button><button class="admin-button admin-button--primary" id="save-admin-account" type="button">계정 저장</button></footer>
+    </form>
+  </dialog>
+  <dialog class="cancel-dialog" id="account-delete-dialog" aria-labelledby="account-delete-title">
+    <form method="dialog">
+      <header><div><small>ACCOUNT DELETE</small><h2 id="account-delete-title">관리자 계정을 삭제할까요?</h2></div><button value="close" aria-label="닫기">×</button></header>
+      <div class="cancel-dialog__body">
+        <div class="operation-closure-summary"><strong id="account-delete-scope"></strong><span id="account-delete-impact"></span></div>
+        <p class="operation-closure-message"><i>!</i><span id="account-delete-message">삭제한 계정은 복구할 수 없습니다.</span></p>
+      </div>
+      <footer><button class="admin-button admin-button--ghost" id="account-delete-close" value="close">취소</button><button class="admin-button admin-button--danger" id="confirm-account-delete" type="button">계정 삭제</button></footer>
     </form>
   </dialog>
   <dialog class="developer-policy-dialog" id="developer-policy-dialog" aria-labelledby="developer-policy-title">
@@ -71,6 +81,6 @@
     </form>
   </dialog>
   <div class="toast" id="account-toast" role="status"></div>
-  <script src="developer-policy.js?v=20260914-department1"></script><script src="account-admin.js?v=20260914-department1"></script>
+  <script src="developer-policy.js?v=20260914-account-delete1"></script><script src="account-admin.js?v=20260914-account-delete1"></script>
 </body>
 </html>

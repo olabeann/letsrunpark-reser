@@ -4,6 +4,10 @@
   var storeKey = "letsrunParkDepartmentAccountsV3";
   var toastTimer;
   var activeAccountKey = null;
+  var pendingDeletionKey = null;
+  var seededProgramCounts = {
+    "서울|공원화사업추진TF": 2
+  };
   var organization = {
     "서울": ["홍보부", "브랜드총괄부", "발매운영부", "서울고객안전부", "공원화사업추진TF"],
     "부산경남": ["부산경주자원관리부", "부산고객안전부", "부산운영지원부"],
@@ -67,6 +71,15 @@
     cards.innerHTML = '<article><span>담당 부서 · ' + escapeHtml(location) + ' · ' + escapeHtml(department) + '</span><strong>담당 부서 내용을 관리할 수 있어요</strong><small>자기 부서의 프로그램·회차, 예약·환불, 운영일과 정산을 관리할 수 있습니다.</small></article>' +
       '<article class="is-readonly"><span>다른 부서</span><strong>프로그램은 보기만 할 수 있어요</strong><small>다른 부서가 운영하는 프로그램은 확인할 수 있지만 추가하거나 변경할 수 없습니다.</small></article>';
   }
+  function accountDeletionBlockers(account) {
+    if (!account) return ["계정 정보를 찾을 수 없음"];
+    if (account.type === "super") return ["통합 관리자 계정"];
+    var blockers = [];
+    var programCount = seededProgramCounts[account.location + "|" + account.department] || 0;
+    if (programCount) blockers.push("연결된 프로그램 " + programCount + "개");
+    if (account.lastLogin && account.lastLogin !== "미접속") blockers.push("로그인 및 관리자 작업 이력");
+    return blockers;
+  }
   function openDialog(account) {
     activeAccountKey = account ? account.key : null;
     var isSuper = !!account && account.type === "super";
@@ -82,8 +95,42 @@
     byId("account-login-id").value = account ? account.loginId : "";
     byId("account-password").value = ""; byId("account-password").type = "text";
     byId("account-password").placeholder = account ? "재발급할 때만 입력" : "8자 이상 임시 비밀번호";
+    byId("delete-admin-account").hidden = !account || isSuper;
     renderFixedAccessPolicy(isSuper, locationSelect.value, byId("account-department").value);
     byId("account-dialog").showModal();
+  }
+  function requestAccountDeletion() {
+    var account = accounts.find(function (item) { return item.key === activeAccountKey; });
+    if (!account || account.type === "super") { notify("통합 관리자 계정은 삭제할 수 없습니다."); return; }
+    var blockers = accountDeletionBlockers(account);
+    var blocked = blockers.length > 0;
+    pendingDeletionKey = blocked ? null : account.key;
+    byId("account-delete-title").textContent = blocked ? "관리자 계정을 삭제할 수 없습니다" : "관리자 계정을 삭제할까요?";
+    byId("account-delete-scope").textContent = account.location + " · " + account.department;
+    byId("account-delete-impact").textContent = blocked ? "삭제 제한: " + blockers.join(", ") : "로그인 ID " + account.loginId;
+    byId("account-delete-message").textContent = blocked
+      ? "프로그램 또는 예약·결제·환불·정산·감사 이력이 있는 계정은 완전 삭제하지 않고 사용 중지로 보존해야 합니다. 연결 데이터를 먼저 확인해주세요."
+      : "아직 사용하지 않았고 연결된 운영 데이터가 없는 계정만 삭제할 수 있습니다. 삭제한 계정은 복구할 수 없습니다.";
+    byId("confirm-account-delete").hidden = blocked;
+    byId("account-delete-close").textContent = blocked ? "확인" : "취소";
+    byId("account-delete-dialog").showModal();
+  }
+  function confirmAccountDeletion() {
+    var index = accounts.findIndex(function (account) { return account.key === pendingDeletionKey; });
+    if (index === -1) { notify("삭제할 계정 정보를 찾을 수 없습니다."); return; }
+    var account = accounts[index];
+    var blockers = accountDeletionBlockers(account);
+    if (blockers.length) {
+      pendingDeletionKey = null;
+      byId("account-delete-dialog").close();
+      notify("연결 데이터나 사용 이력이 생겨 계정을 삭제할 수 없습니다.");
+      return;
+    }
+    accounts.splice(index, 1);
+    save(); render();
+    activeAccountKey = null; pendingDeletionKey = null;
+    byId("account-delete-dialog").close(); byId("account-dialog").close();
+    notify(account.department + " 관리자 계정을 삭제했습니다.");
   }
   function saveAccount() {
     var existing = activeAccountKey ? accounts.find(function (account) { return account.key === activeAccountKey; }) : null;
@@ -119,6 +166,9 @@
   byId("account-location").addEventListener("change", function () { refreshDepartments(byId("account-location").value, ""); renderFixedAccessPolicy(false, byId("account-location").value, byId("account-department").value); });
   byId("account-department").addEventListener("change", function () { renderFixedAccessPolicy(false, byId("account-location").value, byId("account-department").value); });
   byId("save-admin-account").addEventListener("click", saveAccount);
+  byId("delete-admin-account").addEventListener("click", requestAccountDeletion);
+  byId("confirm-account-delete").addEventListener("click", confirmAccountDeletion);
+  byId("account-delete-dialog").addEventListener("close", function () { pendingDeletionKey = null; });
   document.querySelectorAll("dialog").forEach(function (dialog) {
     dialog.addEventListener("click", function (event) { if (event.target === dialog) dialog.close(); });
   });
