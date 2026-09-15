@@ -1423,21 +1423,41 @@
     });
   }
 
+  function refreshSettlementDepartmentFilter(selectedDepartment) {
+    var regionSelect = byId("settlement-region-filter");
+    var departmentSelect = byId("settlement-department-filter");
+    if (!regionSelect || !departmentSelect) return;
+    var region = regionSelect.value;
+    var departments = settlementScopeOptions().filter(function (item) { return !region || item.region === region; }).map(function (item) { return item.department; });
+    departments = Array.from(new Set(departments));
+    departmentSelect.innerHTML = '<option value="">전체 부서</option>' + departments.map(function (department) { return '<option>' + escapeHtml(department) + '</option>'; }).join("");
+    departmentSelect.value = departments.includes(selectedDepartment) ? selectedDepartment : "";
+  }
+
   function refreshSettlementScopeFilter() {
-    var select = byId("settlement-scope-filter"); if (!select) return;
+    var regionSelect = byId("settlement-region-filter");
+    var departmentSelect = byId("settlement-department-filter");
+    if (!regionSelect || !departmentSelect) return;
     var cardSelect = byId("settlement-card-filter");
     if (cardSelect && cardSelect.options.length === 1) cardSelect.innerHTML += Array.from(new Set(SettlementLedger.payments.map(function (p) { return p.card; }))).map(function (card) { return '<option>' + escapeHtml(card) + '</option>'; }).join("");
-    var selected = select.value;
+    var selectedRegion = regionSelect.value;
+    var selectedDepartment = departmentSelect.value;
     var options = settlementScopeOptions();
-    select.innerHTML = '<option value="">전체 지역 · 부서</option>' + options.map(function (item) { return '<option value="' + escapeHtml(item.scope) + '">' + escapeHtml(item.scope) + '</option>'; }).join("");
+    var regions = Array.from(new Set(options.map(function (item) { return item.region; })));
+    regionSelect.innerHTML = '<option value="">전체 지역</option>' + regions.map(function (region) { return '<option>' + escapeHtml(region) + '</option>'; }).join("");
     var isDepartmentLocked = currentAccount && currentAccount.scope === "department";
-    if (isDepartmentLocked && options.length === 1) { select.value = options[0].scope; select.disabled = true; }
-    else if (isDepartmentLocked) {
-      select.disabled = false;
-      var ownScope = settlementScopeKey(currentAccount.region, currentAccount.department);
-      var keepSelected = options.some(function (item) { return item.scope === selected; }) ? selected : null;
-      select.value = keepSelected || (options.some(function (item) { return item.scope === ownScope; }) ? ownScope : "");
-    } else { select.disabled = false; select.value = options.some(function (item) { return item.scope === selected; }) ? selected : ""; }
+    if (isDepartmentLocked) {
+      regionSelect.value = currentAccount.region;
+      regionSelect.disabled = true;
+      refreshSettlementDepartmentFilter(currentAccount.department);
+      departmentSelect.value = currentAccount.department;
+      departmentSelect.disabled = true;
+    } else {
+      regionSelect.disabled = false;
+      departmentSelect.disabled = false;
+      regionSelect.value = regions.includes(selectedRegion) ? selectedRegion : "";
+      refreshSettlementDepartmentFilter(selectedDepartment);
+    }
   }
 
   function settlementDailyInRange(daily, startDate, endDate) {
@@ -1459,7 +1479,7 @@
   }
 
   function settlementFilters() {
-    return { basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, scope: byId("settlement-scope-filter").value, type: byId("settlement-type-filter").value, search: byId("settlement-detail-search").value.trim() };
+    return { basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, region: byId("settlement-region-filter").value, department: byId("settlement-department-filter").value, type: byId("settlement-type-filter").value, search: byId("settlement-detail-search").value.trim() };
   }
   function renderSettlementSummary() {
     var f = settlementFilters();
@@ -1793,7 +1813,8 @@
   byId("confirm-program-delete").addEventListener("click", confirmProgramDeletion);
   byId("program-delete-confirm-dialog").addEventListener("close", function () { pendingProgramDeletion = null; });
   byId("apply-settlement").addEventListener("click", function () { if (renderSettlementSummary()) notify("선택한 조건의 거래 내역을 조회했습니다."); });
-  ["settlement-start-date", "settlement-end-date", "settlement-type-filter", "settlement-scope-filter"].forEach(function(id){ byId(id).addEventListener("change", renderSettlementSummary); });
+  ["settlement-start-date", "settlement-end-date", "settlement-type-filter", "settlement-department-filter"].forEach(function(id){ byId(id).addEventListener("change", renderSettlementSummary); });
+  byId("settlement-region-filter").addEventListener("change", function () { refreshSettlementDepartmentFilter(""); renderSettlementSummary(); });
   byId("settlement-card-filter").addEventListener("change", renderSettlementSummary);
   byId("settlement-detail-search-form").addEventListener("submit", function (event) { event.preventDefault(); if (renderSettlementSummary()) notify("상품명 검색 결과를 조회했습니다."); });
   byId("settlement-detail-body").addEventListener("click", function(event) {

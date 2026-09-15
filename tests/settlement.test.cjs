@@ -15,6 +15,9 @@ test('exact dates, cards, search and scope constrain screen/export source identi
  assert.equal(L.filter(may,()=>false).length,0);
  assert.equal(L.filter({...may,scope:'제주 · 제주고객안전부'},()=>true).length,0);
  assert.equal(L.filter({...may,scope:'서울 · 공원화사업추진TF'},()=>true).length,10);
+ assert.equal(L.filter({...may,region:'제주'},()=>true).length,0);
+ assert.equal(L.filter({...may,region:'서울',department:'공원화사업추진TF'},()=>true).length,10);
+ assert.equal(L.filter({...may,region:'서울',department:'서울고객안전부'},()=>true).length,0);
  assert.equal(L.headers.length,14);
  assert.ok(L.payments.every(p=>/^LRP-\d{6}-\d{5}$/.test(p.reservation)));
  assert.equal(L.filter({...may,search:'LRP-260510-00003'},()=>true).length,3);
@@ -68,7 +71,7 @@ test('cancellation rows distinguish partial from full and preserve event-time ba
 test('admin rendering and download use identical filtered ledger and reject reversed dates',async()=>{
  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),source=fs.readFileSync(path.join(__dirname,'../admin.js'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../admin-reference.css'),'utf8');
  const elements={};
- for(const id of ['settlement-start-date','settlement-end-date','settlement-card-filter','settlement-scope-filter','settlement-type-filter','settlement-detail-search','download-settlement','settlement-date-error','settlement-metrics','settlement-card-count','settlement-summary-body','settlement-summary-foot','settlement-detail-body'])elements[id]={value:'',innerHTML:'',textContent:'',addEventListener(_,fn){this.click=fn;}};
+ for(const id of ['settlement-start-date','settlement-end-date','settlement-card-filter','settlement-region-filter','settlement-department-filter','settlement-type-filter','settlement-detail-search','download-settlement','settlement-date-error','settlement-metrics','settlement-card-count','settlement-summary-body','settlement-summary-foot','settlement-detail-body'])elements[id]={value:'',innerHTML:'',textContent:'',addEventListener(_,fn){this.click=fn;}};
  elements['settlement-start-date'].value='2026-06-01';elements['settlement-end-date'].value='2026-06-30';elements['settlement-detail-search'].value='포니 타기';
  let downloaded;
  const ctx={SettlementLedger:L,SettlementXlsx,byId:id=>elements[id],canManageDepartment:()=>true,money:n=>n+'원',escapeHtml:String,notify:()=>{},setTimeout:()=>{},URL:{createObjectURL:blob=>{downloaded=blob;return 'blob:test';}},document:{createElement:()=>({click(){},remove(){}}),body:{appendChild(){}}}};

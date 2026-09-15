@@ -684,7 +684,7 @@ td small {font-size:11px}
 @media(max-width:560px){.session-row{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}.session-row .session-delete{grid-column:4;grid-row:3}}
 
 /* Sales summary and progressive transaction detail */
-[data-view="settlement"] .filter-panel.settlement-filter { display:grid; grid-template-columns:repeat(2,minmax(125px,1fr)) minmax(200px,1.5fr) repeat(2,minmax(105px,1fr)) 80px; max-width:none; gap:16px; padding:20px 0; }
+[data-view="settlement"] .filter-panel.settlement-filter { display:grid; grid-template-columns:repeat(2,minmax(125px,1fr)) repeat(2,minmax(140px,1.2fr)) repeat(2,minmax(105px,1fr)) 80px; max-width:none; gap:16px; padding:20px 0; }
 [data-view="settlement"] .settlement-metrics--sales { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin:24px 0; }
 [data-view="settlement"] .settlement-metrics article { padding:22px; box-shadow:none; }
 [data-view="settlement"] .settlement-metrics small { font-size:13px; }
