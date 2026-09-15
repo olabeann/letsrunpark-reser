@@ -42,6 +42,11 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /renderLane\("backend"/);
   assert.match(source, /renderLane\("service"/);
   assert.match(source, /과천시민 할인/);
+  assert.match(source, /결제번호 · 포트원 거래번호 구분/);
+  assert.match(source, /PAY-YYMMDD-NNNN 형식의 결제번호는 서비스가 발급하는 내부 식별자/);
+  assert.match(source, /imp_로 시작하는 포트원 거래번호는 포트원이 발급하는 외부 결제 식별자/);
+  assert.match(source, /‘통합 결제번호’가 아닌 ‘결제번호’로 표시/);
+  assert.match(source, /포트원 거래번호는 관리자 결제 상세에서만 표시/);
   assert.doesNotMatch(source, /예약 항목마다 주문번호 뒤에 담긴 순서대로|상품이 1개뿐인 주문에도 -1/);
   assert.match(source, /className = "policy-marker"/);
   assert.match(source, /className = "policy-inspector"/);
