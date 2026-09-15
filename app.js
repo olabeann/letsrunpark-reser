@@ -522,7 +522,7 @@
 
   function syncQuantityWithDiscount() {
     var maxQty = selectedMaxQty();
-    state.qty = selectedDiscountPolicy() ? maxQty : Math.min(state.qty, maxQty);
+    state.qty = Math.max(1, Math.min(state.qty, maxQty));
     state.discountQty = selectedDiscountQty();
   }
 
@@ -1236,11 +1236,10 @@
     var actionError = selectionError || (!programIsVisible(program) ? "현재 예약할 수 없는 프로그램입니다." : "");
     setExplainedButtonState(byId("add-to-cart"), !!actionError, actionError);
     setExplainedButtonState(byId("book-now"), !!actionError, actionError);
-    var quantityLocked = !!selectedPolicy;
     var limitText = quantityLimitText();
-    setExplainedButtonState(byId("qty-minus"), !!selectionError || quantityLocked || state.qty <= 1, selectionError || limitText);
-    setExplainedButtonState(byId("qty-plus"), !!selectionError || quantityLocked || state.qty >= selectedMaxQty(), selectionError || limitText);
-    byId("booking-quantity-limit").textContent = selectedPolicy ? "할인 적용 수량은 자동으로 설정돼요." : "할인 미적용은 최대 4매까지 선택할 수 있어요.";
+    setExplainedButtonState(byId("qty-minus"), !!selectionError || state.qty <= 1, selectionError || limitText);
+    setExplainedButtonState(byId("qty-plus"), !!selectionError || state.qty >= selectedMaxQty(), selectionError || limitText);
+    byId("booking-quantity-limit").textContent = selectedPolicy ? "할인은 최대 " + selectedMaxQty() + "매까지 선택할 수 있어요." : "할인 미적용은 최대 4매까지 선택할 수 있어요.";
   }
 
   function purchaseLimitUsage() {
@@ -1270,15 +1269,18 @@
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
     var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
     if (remainingCapacity < 4) return "선택한 회차에는 " + remainingCapacity + "자리만 남아 최대 " + remainingCapacity + "매까지 담을 수 있어요.";
-    if (selectedPolicy) return "할인 선택 시 남은 할인 가능 " + remainingDiscountQty(selectedPolicy) + "매로 인원이 자동 고정돼요.";
+    if (selectedPolicy) return "할인 적용 · 최대 " + remainingDiscountQty(selectedPolicy) + "매";
     return "할인 미적용은 최대 4매까지 인원을 선택할 수 있어요.";
   }
 
   function selectedMaxQty() {
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
     var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
+    var policy = selectedDiscountPolicy();
+    var discountLimit = policy ? remainingDiscountQty(policy) : Infinity;
+    var selectableMax = Math.min(4, remainingCapacity, discountLimit);
     var purchasePolicy = program.purchasePolicy;
-    if (!purchasePolicy || !purchasePolicy.group || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return Math.min(4, remainingCapacity);
+    if (!purchasePolicy || !purchasePolicy.group || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return Math.max(1, selectableMax);
     var store = readStore();
     if (!store) return 1;
     var used = BookingRules.ticketRecords(store.reservations).concat(ownCart(store)).filter(function (item) {
@@ -1288,9 +1290,7 @@
     // Keep one selectable so a full existing cart can still route the user to checkout;
     // addToCart performs the final validation and does not add a fifth ticket.
     var remainingPurchaseLimit = Math.max(1, purchasePolicy.maxQty - used);
-    var policy = selectedDiscountPolicy();
-    var discountLimit = policy ? remainingDiscountQty(policy) : Infinity;
-    return Math.max(1, Math.min(4, remainingCapacity, remainingPurchaseLimit, discountLimit));
+    return Math.max(1, Math.min(selectableMax, remainingPurchaseLimit));
   }
 
   function renderDiscountOptions() {
@@ -1448,13 +1448,13 @@
   byId("qty-minus").addEventListener("click", function () {
     var error = bookingSelectionError();
     if (error) { notify(error); return; }
-    if (selectedDiscountPolicy() || state.qty <= 1) { notify(quantityLimitText()); return; }
+    if (state.qty <= 1) { notify(quantityLimitText()); return; }
     state.qty = Math.max(1, state.qty - 1); update();
   });
   byId("qty-plus").addEventListener("click", function () {
     var error = bookingSelectionError();
     if (error) { notify(error); return; }
-    if (selectedDiscountPolicy() || state.qty >= selectedMaxQty()) { notify(quantityLimitText()); return; }
+    if (state.qty >= selectedMaxQty()) { notify(quantityLimitText()); return; }
     state.qty = Math.min(selectedMaxQty(), state.qty + 1); update();
   });
   byId("add-to-cart").addEventListener("click", function () { addToCart(false); });

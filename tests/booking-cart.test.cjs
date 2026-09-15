@@ -458,7 +458,7 @@ test('discount selection caps a new card at the remaining discount quantity', ()
   assert.equal(runtime.selectedMaxQty(), 2);
 });
 
-test('discount selection fixes the quantity to every remaining discount ticket', () => {
+test('discount selection keeps the default at one and only clamps an excessive quantity', () => {
   const state = { qty: 1, discountPolicyId: 'gwacheon', discountQty: 0 };
   const runtime = vm.createContext({
     state,
@@ -468,21 +468,31 @@ test('discount selection fixes the quantity to every remaining discount ticket',
   });
   vm.runInContext(appFunction('syncQuantityWithDiscount'), runtime);
   runtime.syncQuantityWithDiscount();
-  assert.equal(state.qty, 2);
-  assert.equal(state.discountQty, 2);
+  assert.equal(state.qty, 1);
+  assert.equal(state.discountQty, 1);
 
-  state.discountPolicyId = '';
   state.qty = 4;
-  runtime.selectedMaxQty = () => 3;
   runtime.syncQuantityWithDiscount();
-  assert.equal(state.qty, 3, 'Regular tickets remain adjustable but respect the available maximum');
-  assert.equal(state.discountQty, 0);
+  assert.equal(state.qty, 2, 'Discount tickets are capped without automatically selecting the maximum');
+  assert.equal(state.discountQty, 2);
 });
 
-test('quantity controls are locked for a selected discount and regular tickets advertise four-ticket selection', () => {
-  assert.match(source, /quantityLocked = !!selectedPolicy/);
-  assert.match(source, /selectedDiscountPolicy\(\) \|\| state\.qty >= selectedMaxQty\(\)/);
+test('discount and regular quantity controls start at one and stop at their own maximum', () => {
+  assert.doesNotMatch(source, /quantityLocked = !!selectedPolicy/);
+  assert.match(source, /state\.qty >= selectedMaxQty\(\)/);
   assert.match(pageSource, /id="booking-quantity-limit" aria-live="polite"/);
+});
+
+test('logged-out discount selection still respects the two-ticket discount maximum', () => {
+  const state = { dateKey: '2026-08-29', time: '10:00~10:20', discountPolicyId: 'gwacheon' };
+  const runtime = vm.createContext({
+    state, program: programs.ride, currentMember: null,
+    slotRemainingCapacity: () => 8,
+    selectedDiscountPolicy: () => programs.ride.discountPolicy,
+    remainingDiscountQty: () => 2,
+  });
+  vm.runInContext(appFunction('selectedMaxQty'), runtime);
+  assert.equal(runtime.selectedMaxQty(), 2);
 });
 
 test('requires date and time in order before later booking controls can change', () => {

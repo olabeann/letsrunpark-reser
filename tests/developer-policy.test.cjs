@@ -49,7 +49,7 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /포트원 거래번호는 관리자 결제 상세에서만 표시/);
   assert.match(source, /선택 인원수만큼 1명 단위 장바구니 카드를 만듭니다/);
   assert.match(source, /기존 카드와 합치지 않습니다/);
-  assert.match(source, /할인 선택 시 인원을 해당 이용일의 남은 할인 매수로 자동 고정/);
+  assert.match(source, /인원은 1명에서 시작하고 해당 이용일의 남은 할인 매수까지만 직접 늘릴 수 있습니다/);
   assert.match(source, /모든 장바구니 카드는 1명으로 고정/);
   assert.match(source, /카드별 삭제만 제공/);
   assert.match(source, /다른 상품이나 기존 예약과 시간이 겹쳐도 회차를 선택하고 장바구니에 담을 수 있습니다/);
