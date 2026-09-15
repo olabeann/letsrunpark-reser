@@ -85,8 +85,11 @@
 
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
+  var defaultArrivalLeadMinutes = 20;
+  var additionalSampleDiscount = { id: "multi-child", name: "다자녀 가족 할인", type: "percent", value: 20, maxAmount: 0, maxQty: 1, noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true };
   var discountPolicies = [
-    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true }
+    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true },
+    Object.assign({}, additionalSampleDiscount)
   ];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
 
@@ -123,8 +126,8 @@
   };
 
   var programs = {
-    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], active: true },
-    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], discountIds: ["gwacheon"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
+    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.", requiresGuidanceConfirmation: false, discountIds: ["gwacheon", "multi-child"], active: true },
+    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 연령 제한 없이 누구나 이용할 수 있습니다.\n[체험 방법] 포니 빗질하기, 꾸며주기, 산책하기 순서로 진행됩니다.\n[준비 사항] 어린이는 보호자와 함께 방문해주세요.", requiresGuidanceConfirmation: false, discountIds: ["gwacheon", "multi-child"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
   };
 
   function byId(id) { return document.getElementById(id); }
@@ -169,12 +172,32 @@
       '<label><span>할인 방식</span><select id="discount-type"><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
       '<label><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
       '<label><span>1매당 최대 할인 금액</span><span class="discount-input-suffix"><input id="discount-max-amount" type="number" min="0" step="100" value="0"><em>원</em></span><small class="field-help">정률 할인에만 적용됩니다. 0원은 상한 없음입니다.</small></label>' +
+      '<label class="field-wide"><span>할인 안내 문구</span><input id="discount-notice" type="text" maxlength="120" placeholder="예: 체험 전 증빙서류를 반드시 지참해주세요."><small class="field-help">사용자 예약 화면의 할인 항목 아래에 표시됩니다. 비워두면 노출하지 않습니다.</small></label>' +
       '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>수량 한도는 계정당 이용일마다 합산하며, 증빙은 현장에서 확인합니다.</small></div>' +
       '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
       '<label style="grid-column:1"><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
       '<label><span>할인 적용 종료일</span><input id="discount-end-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 종료일 제한이 없습니다.</small></label>' +
       '<fieldset class="field-wide"><legend>적용 프로그램</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
       '<label class="policy-toggle field-wide"><input id="discount-active" type="checkbox" checked><span><strong>할인 활성화</strong><small>활성화한 할인만 신규 예약에 적용됩니다. 기존 예약의 할인 금액은 변경되지 않습니다.</small></span></label>';
+  }
+  function prepareProgramGuidanceFields() {
+    var noticeField = byId("detail-notice").closest("label");
+    if (!noticeField || byId("program-guidance-editor")) return;
+    var section = document.createElement("section");
+    section.id = "program-guidance-editor";
+    section.className = "program-guidance-editor field-wide";
+    section.innerHTML = '<h3 class="program-guidance-title">이용 전 확인사항</h3><p class="program-guidance-intro">예약 화면에 표시할 확인사항을 입력해주세요. 미입력 시 노출되지 않습니다.<br>입력된 경우 사용자는 확인 체크 후 결제할 수 있습니다.</p><label class="program-guidance-content"><textarea id="program-guidance-text" rows="8" maxlength="1000" aria-label="이용 전 확인사항 내용" placeholder="예: [이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요."></textarea></label>';
+    noticeField.after(section);
+  }
+  function guidanceItemsToText(items) {
+    return (Array.isArray(items) ? items : []).map(function (item) {
+      var title = String(item && item.title || "").trim();
+      var content = String(item && item.content || "").trim();
+      return [title ? "[" + title + "]" : "", content].filter(Boolean).join(" ");
+    }).filter(Boolean).join("\n");
+  }
+  function renderProgramGuidanceEditor(text, legacyItems) {
+    byId("program-guidance-text").value = typeof text === "string" ? text : guidanceItemsToText(legacyItems);
   }
   function money(value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; }
   function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, function (char) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]; }); }
@@ -195,8 +218,9 @@
         });
       }
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
+      if (!discountPolicies.some(function (discount) { return discount.id === additionalSampleDiscount.id; })) discountPolicies.push(Object.assign({}, additionalSampleDiscount));
       discountPolicies = discountPolicies.map(function (discount) {
-        return Object.assign({ maxAmount: 0, maxQty: 1, scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
+        return Object.assign({ maxAmount: 0, maxQty: 1, noticeText: "", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
       });
       if (state.catalog && typeof state.catalog === "object") {
         catalogState.programOverrides = state.catalog.programOverrides || {};
@@ -774,11 +798,13 @@
     imagePreview.src = item.image || "";
     imagePreview.hidden = !item.image;
     byId("detail-notice").value = item.noticeText || "";
+    renderProgramGuidanceEditor(item.guidanceText, item.guidanceItems);
     byId("detail-sale-start").value = item.saleStartDate || "";
     byId("detail-sale-end").value = item.saleEndDate || "";
     byId("detail-visible-start").value = item.visibleStartAt || (item.saleStartDate ? item.saleStartDate + "T00:00" : "");
     byId("detail-visible-end").value = item.visibleEndAt || (item.saleEndDate ? item.saleEndDate + "T23:59" : "");
     byId("detail-booking-window").value = item.bookingWindow != null ? item.bookingWindow : defaultBookingWindow;
+    byId("detail-arrival-lead-minutes").value = item.arrivalLeadMinutes != null ? item.arrivalLeadMinutes : defaultArrivalLeadMinutes;
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
@@ -994,6 +1020,8 @@
     var visibleStartAt = byId("detail-visible-start").value;
     var visibleEndAt = byId("detail-visible-end").value;
     var bookingWindow = Number(byId("detail-booking-window").value);
+    var arrivalLeadMinutes = Number(byId("detail-arrival-lead-minutes").value);
+    var guidanceText = byId("program-guidance-text").value.trim();
     var saleDays = Array.from(document.querySelectorAll(".detail-days input:checked")).map(function (input) { return Number(input.value); });
     var cancelOffsetValue = Number(byId("detail-cancel-value").value);
     var cancelOffsetUnit = byId("detail-cancel-unit").value;
@@ -1002,6 +1030,7 @@
     if (!visibleStartAt || !visibleEndAt) { event.preventDefault(); notify("프로그램 노출 시작과 종료 일시를 모두 설정해주세요."); return; }
     if (visibleEndAt < visibleStartAt) { event.preventDefault(); notify("프로그램 노출 종료는 시작보다 빨라질 수 없습니다."); return; }
     if (!Number.isFinite(bookingWindow) || bookingWindow < 1) { event.preventDefault(); notify("예약 가능 일수를 1일 이상으로 설정해주세요."); return; }
+    if (!Number.isInteger(arrivalLeadMinutes) || arrivalLeadMinutes < 0 || arrivalLeadMinutes > 100) { event.preventDefault(); notify("입장 대기 시간은 0~100분 사이의 정수로 입력해주세요."); return; }
     if (!saleDays.length) { event.preventDefault(); notify("판매 요일을 하나 이상 선택해주세요."); return; }
     if (!Number.isFinite(cancelOffsetValue) || cancelOffsetValue < 0) { event.preventDefault(); notify("취소 마감 값을 확인해주세요."); return; }
     var cancelMultiplier = cancelOffsetUnit === "days" ? 1440 : cancelOffsetUnit === "hours" ? 60 : 1;
@@ -1013,10 +1042,14 @@
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
       bookingWindow: bookingWindow,
+      arrivalLeadMinutes: arrivalLeadMinutes,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: price, image: pendingImageDataUrl || (existing && existing.image),
       noticeText: byId("detail-notice").value.trim(),
+      guidanceText: guidanceText,
+      guidanceItems: [],
+      requiresGuidanceConfirmation: !!guidanceText,
       discountIds: existing && Array.isArray(existing.discountIds) ? existing.discountIds : [], active: existing ? existing.active : true
     });
     program.programKey = program.key;
@@ -1310,6 +1343,7 @@
     byId("discount-type").value = discount ? discount.type : "percent";
     byId("discount-value").value = discount ? discount.value : 10;
     byId("discount-max-amount").value = discount ? discount.maxAmount || 0 : 0;
+    byId("discount-notice").value = discount ? discount.noticeText || "" : "";
     byId("discount-max-qty").value = discount ? discount.maxQty || 0 : 1;
     byId("discount-start-date").value = discount ? discount.startDate || "" : "";
     byId("discount-end-date").value = discount ? discount.endDate || "" : "";
@@ -1317,6 +1351,7 @@
     byId("discount-type").disabled = !isEditable;
     byId("discount-value").disabled = !isEditable;
     byId("discount-max-amount").disabled = !isEditable;
+    byId("discount-notice").disabled = !isEditable;
     byId("discount-max-qty").disabled = !isEditable;
     byId("discount-start-date").disabled = !isEditable;
     byId("discount-end-date").disabled = !isEditable;
@@ -1379,6 +1414,7 @@
     var type = byId("discount-type").value;
     var value = Number(byId("discount-value").value);
     var maxAmount = type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
+    var noticeText = byId("discount-notice").value.trim();
     var scope = "day";
     var maxQty = Number(byId("discount-max-qty").value);
     var startDate = byId("discount-start-date").value;
@@ -1392,7 +1428,7 @@
     if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
     var existing = discountPolicies.find(function (discount) { return discount.id === id; });
     var saved = {
-      id: id, name: name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty,
+      id: id, name: name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty, noticeText: noticeText,
       scope: scope, proof: "onsite",
       startDate: startDate, endDate: endDate, stackable: false, restoreOnCancel: existing ? existing.restoreOnCancel : true,
       allPrograms: allPrograms, programs: selectedPrograms,
@@ -1742,6 +1778,7 @@
   }
 
   prepareDiscountFormFields();
+  prepareProgramGuidanceFields();
   loadSavedDemoState();
   currentAccount = restoreAdminSession();
   setAdminLoginState(!!currentAccount);
@@ -1786,7 +1823,7 @@
   byId("add-product").addEventListener("click", function () {
     var ownLocation = currentAccount && currentAccount.scope === "department" ? currentAccount.region : "서울";
     var ownDepartment = currentAccount && currentAccount.scope === "department" ? currentAccount.department : "공원화사업추진TF";
-    openProductDialog({ location: ownLocation, department: ownDepartment, programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true });
+    openProductDialog({ location: ownLocation, department: ownDepartment, programType: "기타", settlementTag: "", purchaseGroup: "", conflictGroup: "", bookingWindow: 14, arrivalLeadMinutes: defaultArrivalLeadMinutes, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-09-01T00:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], programName: "", price: 0, image: "", discountIds: [], active: true });
   });
   byId("detail-location").addEventListener("change", function () { var location = byId("detail-location").value; refreshDepartmentSelect("detail-department", location, organization[location][0]); });
   byId("discount-settings").addEventListener("click", function () { openDiscountManager(); });

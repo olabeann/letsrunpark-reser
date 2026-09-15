@@ -192,6 +192,20 @@ test('updates ticket badges at a status boundary without replacing the list or o
   assert.equal(fixture.renders(), 0);
 });
 
+test('uses the program arrival waiting time for ticket activation and guidance', () => {
+  const { context } = runtime(now);
+  const reservation = { id: 'arrival-policy', dateKey: '2026-08-27', time: '12:00~12:20', arrivalLeadMinutes: 35 };
+  const beforeOpen = context.ticketTiming(reservation, new Date(2026, 7, 27, 11, 24));
+  const atOpen = context.ticketTiming(reservation, new Date(2026, 7, 27, 11, 25));
+  assert.equal(beforeOpen.accessState, 'upcoming');
+  assert.equal(beforeOpen.status.detail, '35분 전까지 방문하셔서 입장을 대기해주세요.');
+  assert.equal(atOpen.accessState, 'active');
+  assert.equal(atOpen.arrivalLeadMinutes, 35);
+  assert.equal(atOpen.status.detail, '35분 전까지 방문하셔서 입장을 대기해주세요.');
+  const noLead = context.ticketTiming({ ...reservation, arrivalLeadMinutes: 0 }, new Date(2026, 7, 27, 12, 0));
+  assert.equal(noLead.status.detail, '예약 시간까지 방문하셔서 입장을 대기해주세요.');
+});
+
 test('staff discount notice is a compact design-system badge beside the ticket status', () => {
   const statusStart = ticketHtml.indexOf('<section class="entry-ticket__status">');
   const statusEnd = ticketHtml.indexOf('</section>', statusStart);
@@ -202,8 +216,8 @@ test('staff discount notice is a compact design-system badge beside the ticket s
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
   assert.ok(statusStart < indicators && indicators < statusBadge && statusBadge < notice && notice < clock && clock < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-discount-proof"/g)].length, 1);
-  assert.match(ticketHtml, /<strong id="ticket-discount-label">할인 적용<\/strong><span>증빙 확인 필요<\/span>/);
-  assert.match(ticketHtml, /aria-label="할인 적용 티켓입니다\. 현장에서 증빙을 확인해주세요\."/);
+  assert.match(ticketHtml, /<strong id="ticket-discount-label">할인 증빙 검토 필요<\/strong>/);
+  assert.match(ticketHtml, /aria-label="할인 증빙 검토가 필요한 티켓입니다\."/);
 });
 
 test('ticket colors use only design-system tokens instead of one-off color values', () => {
@@ -218,6 +232,6 @@ test('ticket colors use only design-system tokens instead of one-off color value
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
   assert.match(source, /ticket-discount-proof"\)\.hidden = !hasDiscount/);
-  assert.match(source, /ticket-discount-label"\)\.textContent = discountLabel/);
+  assert.match(source, /ticket-discount-label"\)\.textContent = "할인 증빙 검토 필요"/);
   assert.match(source, /ticket\.setAttribute\("data-access-state", timing\.accessState\)/);
 });

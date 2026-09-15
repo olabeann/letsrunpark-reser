@@ -12,6 +12,12 @@
     toastTimer = setTimeout(function () { toast.classList.remove("is-on"); }, 4500);
   }
 
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, function (character) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character];
+    });
+  }
+
   document.querySelectorAll("[data-toast]").forEach(function (button) {
     button.addEventListener("click", function () { notify(button.getAttribute("data-toast")); });
   });
@@ -106,9 +112,16 @@
       department: "공원화사업추진TF",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
+      guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.",
+      requiresGuidanceConfirmation: false,
       discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicies: [
+        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
+        { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
+      ],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
+      arrivalLeadMinutes: 20,
       cancelMinutes: 10,
       slots: ponySlots
     },
@@ -128,9 +141,16 @@
       noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.",
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
+      guidanceText: "[이용 대상] 연령 제한 없이 누구나 이용할 수 있습니다.\n[체험 방법] 포니 빗질하기, 꾸며주기, 산책하기 순서로 진행됩니다.\n[준비 사항] 어린이는 보호자와 함께 방문해주세요.",
+      requiresGuidanceConfirmation: false,
       discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicies: [
+        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
+        { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
+      ],
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
+      arrivalLeadMinutes: 20,
       cancelMinutes: 10,
       slots: playSlots
     },
@@ -175,8 +195,8 @@
   var baseBookingWindowDays = { ride: programs.ride.bookingWindow, play: programs.play.bookingWindow };
   var baseCancelMinutes = { ride: programs.ride.cancelMinutes, play: programs.play.cancelMinutes };
   var baseProgramSettings = {
-    ride: { name: programs.ride.name, price: programs.ride.price, image: programs.ride.image, noticeText: programs.ride.noticeText || "", purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: ponySlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.ride.discountPolicy) },
-    play: { name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy) }
+    ride: { name: programs.ride.name, price: programs.ride.price, image: programs.ride.image, noticeText: programs.ride.noticeText || "", guidanceText: programs.ride.guidanceText, requiresGuidanceConfirmation: programs.ride.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: ponySlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.ride.discountPolicy), discountPolicies: programs.ride.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) },
+    play: { name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", guidanceText: programs.play.guidanceText, requiresGuidanceConfirmation: programs.play.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy), discountPolicies: programs.play.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) }
   };
   var operationExceptions = [];
   var bookingStart, bookingEnd, calendarFirstMonth;
@@ -194,14 +214,14 @@
         programs[key] = {
           key: key, userBookable: true, adminCreated: true, name: item.programName, price: item.price,
           image: item.image || "assets/pony/cover.jpg", subtitle: item.noticeText || "렛츠런파크 체험 프로그램",
-          noticeText: item.noticeText || "", region: item.location, department: item.department,
-          bookingWindow: item.bookingWindow || 14, cancelMinutes: Number.isFinite(item.cancelMinutes) ? item.cancelMinutes : 10,
+          noticeText: item.noticeText || "", guidanceText: typeof item.guidanceText === "string" ? item.guidanceText : guidanceItemsToText(item.guidanceItems), requiresGuidanceConfirmation: !!item.requiresGuidanceConfirmation, region: item.location, department: item.department,
+          bookingWindow: item.bookingWindow || 14, arrivalLeadMinutes: Number.isInteger(item.arrivalLeadMinutes) && item.arrivalLeadMinutes >= 0 && item.arrivalLeadMinutes <= 100 ? item.arrivalLeadMinutes : 20, cancelMinutes: Number.isFinite(item.cancelMinutes) ? item.cancelMinutes : 10,
           slots: []
         };
         baseBookingWindowDays[key] = programs[key].bookingWindow;
         baseCancelMinutes[key] = programs[key].cancelMinutes;
         baseProgramSettings[key] = {
-          name: item.programName, price: item.price, image: programs[key].image, noticeText: programs[key].noticeText,
+          name: item.programName, price: item.price, image: programs[key].image, noticeText: programs[key].noticeText, guidanceText: programs[key].guidanceText, requiresGuidanceConfirmation: programs[key].requiresGuidanceConfirmation, arrivalLeadMinutes: programs[key].arrivalLeadMinutes,
           purchaseGroup: item.purchaseGroup || "", saleStartDate: item.saleStartDate || "", saleEndDate: item.saleEndDate || "",
           visibleStartAt: item.visibleStartAt || "", visibleEndAt: item.visibleEndAt || "", saleDays: Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0],
           active: item.active !== false, slots: [], discountPolicy: null
@@ -214,10 +234,13 @@
         var base = baseProgramSettings[key];
         programs[key].name = source.programName || base.name;
         programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
+        programs[key].arrivalLeadMinutes = source && Number.isInteger(source.arrivalLeadMinutes) && source.arrivalLeadMinutes >= 0 && source.arrivalLeadMinutes <= 100 ? source.arrivalLeadMinutes : base.arrivalLeadMinutes;
         programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
         programs[key].price = Number.isFinite(source.price) ? source.price : base.price;
         programs[key].image = source.image || base.image;
         programs[key].noticeText = typeof source.noticeText === "string" ? source.noticeText : base.noticeText;
+        programs[key].guidanceText = typeof source.guidanceText === "string" ? source.guidanceText : Array.isArray(source.guidanceItems) ? guidanceItemsToText(source.guidanceItems) : base.guidanceText || "";
+        programs[key].requiresGuidanceConfirmation = source.requiresGuidanceConfirmation !== undefined ? !!source.requiresGuidanceConfirmation : !!base.requiresGuidanceConfirmation;
         programs[key].saleStartDate = source.saleStartDate || base.saleStartDate;
         programs[key].saleEndDate = source.saleEndDate || base.saleEndDate;
         programs[key].visibleStartAt = source.visibleStartAt || base.visibleStartAt;
@@ -251,11 +274,14 @@
             return discount.active !== false && included;
           }).map(function (discount) {
             var discountName = String(discount.name || "할인").replace(/\s*할인$/, "");
-            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxAmount: discount.maxAmount || 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
+            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxAmount: discount.maxAmount || 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", noticeText: discount.noticeText || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
+          });
+          (base.discountPolicies || []).forEach(function (samplePolicy) {
+            if (!programs[key].discountPolicies.some(function (policy) { return policy.id === samplePolicy.id; })) programs[key].discountPolicies.push(Object.assign({}, samplePolicy));
           });
           programs[key].discountPolicy = programs[key].discountPolicies[0] || null;
         } else {
-          programs[key].discountPolicies = base.discountPolicy ? [Object.assign({}, base.discountPolicy)] : [];
+          programs[key].discountPolicies = Array.isArray(base.discountPolicies) ? base.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) : base.discountPolicy ? [Object.assign({}, base.discountPolicy)] : [];
           programs[key].discountPolicy = programs[key].discountPolicies[0];
         }
         programs[key].operationExceptions = operationExceptions;
@@ -348,16 +374,18 @@
 
   function ticketTiming(reservation, now) {
     var sessionStart = ticketSessionStart(reservation);
-    var entryOpen = new Date(sessionStart.getTime() - 10 * 60 * 1000);
+    var arrivalLeadMinutes = Number.isInteger(reservation.arrivalLeadMinutes) && reservation.arrivalLeadMinutes >= 0 ? reservation.arrivalLeadMinutes : 20;
+    var entryOpen = new Date(sessionStart.getTime() - arrivalLeadMinutes * 60 * 1000);
     var entryClose = ticketSessionEnd(reservation, sessionStart);
     var accessState = reservation.forceActive ? "active" : now < entryOpen ? "upcoming" : now <= entryClose ? "active" : "ended";
+    var arrivalGuidance = arrivalLeadMinutes === 0 ? "예약 시간까지 방문하셔서 입장을 대기해주세요." : arrivalLeadMinutes + "분 전까지 방문하셔서 입장을 대기해주세요.";
     var status = {
-      upcoming: { label: "입장 대기", title: "입장 가능 시간이 아닙니다.", detail: formatTime(entryOpen, false) + "부터 입장할 수 있습니다.", live: "입장 시간에 자동으로 활성화됩니다." },
-      active: { label: "입장 가능", title: "지금 입장할 수 있습니다.", detail: formatTime(entryClose, false) + "까지 입장 가능합니다.", live: "활성화된 티켓입니다. 입장 시 보여주세요." },
+      upcoming: { label: "입장 대기", title: "입장 가능 시간이 아닙니다.", detail: arrivalGuidance, live: "입장 시간에 자동으로 활성화됩니다." },
+      active: { label: "입장 가능", title: "지금 입장할 수 있습니다.", detail: arrivalGuidance, live: "활성화된 티켓입니다. 입장 시 보여주세요." },
       ended: { label: "입장 종료", title: "입장 시간이 지났습니다.", detail: formatTime(sessionStart, false) + " 회차 입장이 마감되었습니다.", live: "사용할 수 없는 티켓입니다." }
     }[accessState];
 
-    return { sessionStart: sessionStart, entryOpen: entryOpen, entryClose: entryClose, accessState: accessState, status: status };
+    return { sessionStart: sessionStart, entryOpen: entryOpen, entryClose: entryClose, arrivalLeadMinutes: arrivalLeadMinutes, accessState: accessState, status: status };
   }
 
   function updateTicketAccess() {
@@ -377,6 +405,7 @@
     byId("ticket-window-open").textContent = formatTime(timing.entryOpen, false);
     byId("ticket-window-session").textContent = formatTime(timing.sessionStart, false);
     byId("ticket-window-close").textContent = formatTime(timing.entryClose, false);
+    byId("ticket-window-note").textContent = "입장 가능 시간은 회차 시작 " + timing.arrivalLeadMinutes + "분 전부터 회차 종료 전까지입니다. 시간과 티켓 상태는 자동으로 갱신됩니다.";
     byId("ticket-name").textContent = ticketReservation.name;
     byId("ticket-admission-title").textContent = ticketReservation.name + " 입장권";
     byId("ticket-date").textContent = ticketReservation.date;
@@ -390,10 +419,9 @@
     byId("ticket-payment-status").textContent = ticketPaymentStatus(ticketReservation);
     byId("ticket-price").textContent = money(ticketReservation.price);
     var hasDiscount = ticketDiscountQty(ticketReservation) > 0;
-    var discountLabel = ticketReservation.discountLabel || "할인 적용";
     byId("ticket-discount-proof").hidden = !hasDiscount;
-    byId("ticket-discount-proof").setAttribute("aria-label", discountLabel + " 티켓입니다. 현장에서 증빙을 확인해주세요.");
-    byId("ticket-discount-label").textContent = discountLabel;
+    byId("ticket-discount-proof").setAttribute("aria-label", "할인 증빙 검토가 필요한 티켓입니다.");
+    byId("ticket-discount-label").textContent = "할인 증빙 검토 필요";
     renderTicketCancellation(timing, now);
   }
 
@@ -493,11 +521,18 @@
     return date.getDay() === 0 || date.getDay() === 6;
   }
 
-  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, discountQty: 0, discountPolicyId: "", programKey: initialProgramKey, paymentMethod: "card", step: 0 };
+  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, discountQty: 0, discountPolicyId: "", guidanceConfirmed: false, programKey: initialProgramKey, paymentMethod: "card", step: 0 };
   var byId = function (id) { return document.getElementById(id); };
   var money = function (value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; };
   var currentName = function () { return program.name; };
   var currentPrice = function () { return program.price; };
+  function guidanceItemsToText(items) {
+    return (Array.isArray(items) ? items : []).map(function (item) {
+      var title = String(item && item.title || "").trim();
+      var content = String(item && item.content || "").trim();
+      return [title ? "[" + title + "]" : "", content].filter(Boolean).join(" ");
+    }).filter(Boolean).join("\n");
+  }
   var selectedDiscountPolicy = function () {
     var policies = Array.isArray(program.discountPolicies) ? program.discountPolicies : program.discountPolicy ? [program.discountPolicy] : [];
     return policies.find(function (policy) { return policy.id === state.discountPolicyId && (!state.dateKey || ((!policy.startDate || state.dateKey >= policy.startDate) && (!policy.endDate || state.dateKey <= policy.endDate))); }) || null;
@@ -518,6 +553,7 @@
   function bookingSelectionError() {
     if (!state.dateKey) return "이용 날짜를 먼저 선택해주세요.";
     if (!state.time) return "이용 시간을 먼저 선택해주세요.";
+    if (typeof program !== "undefined" && String(program.guidanceText || "").trim() && !state.guidanceConfirmed) return "이용 전 확인사항을 확인해주세요.";
     return "";
   }
 
@@ -838,7 +874,7 @@
       var body = document.createElement("div"); body.className = "cart-item__body";
       body.append(createTextElement("strong", "", item.name));
       body.append(createTextElement("p", "", item.date + " · " + item.time));
-      body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · " + (item.discountLabel || "할인 적용") + " " + (item.discountQty || item.qty) + "명" : "")));
+      body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · " + (item.discountLabel || "할인 적용") : "")));
       var meta = document.createElement("div"); meta.className = "cart-item__meta";
       meta.append(createTextElement("strong", "cart-item__price", money(item.price)));
       if (editable) {
@@ -955,11 +991,12 @@
 
   function activeSlotForNow(now) {
     var slots = programs.ride.slots.filter(function (slot) { return !slot.disabled; });
+    var arrivalLeadMinutes = Number.isInteger(programs.ride.arrivalLeadMinutes) ? programs.ride.arrivalLeadMinutes : 20;
     var activeSlot = slots.find(function (slot) {
       var range = slot.time.split("~");
       var start = slotDateTime(now, range[0]);
       var end = slotDateTime(now, range[1]);
-      return now >= new Date(start.getTime() - 10 * 60 * 1000) && now <= end;
+      return now >= new Date(start.getTime() - arrivalLeadMinutes * 60 * 1000) && now <= end;
     });
     if (activeSlot) return { slot: activeSlot, forceActive: false };
     var closestSlot = slots.reduce(function (closest, slot) {
@@ -979,8 +1016,9 @@
     upcomingDate.setHours(0, 0, 0, 0);
     var secondSlot = programs.play.slots[5].time;
     var endedSlot = programs.ride.slots[2].time;
+    var playArrivalLeadMinutes = Number.isInteger(programs.play.arrivalLeadMinutes) ? programs.play.arrivalLeadMinutes : 20;
     // Keep the next reservation in the waiting state, including on weekend afternoons.
-    while (!isWeekend(upcomingDate) || now >= new Date(slotDateTime(upcomingDate, secondSlot.split("~")[0]).getTime() - 10 * 60 * 1000)) {
+    while (!isWeekend(upcomingDate) || now >= new Date(slotDateTime(upcomingDate, secondSlot.split("~")[0]).getTime() - playArrivalLeadMinutes * 60 * 1000)) {
       upcomingDate.setDate(upcomingDate.getDate() + 1);
     }
     var endedDate = new Date(now);
@@ -988,9 +1026,9 @@
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     var groupedReservationId = ticketReservationId(samplePaidDate, 1);
     var defaults = [
-      { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
+      { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
@@ -1253,7 +1291,7 @@
     program = programs[state.programKey];
     refreshBookingWindow(state.programKey);
     if (reset !== false) {
-      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false; state.discountQty = 0; state.discountPolicyId = "";
+      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false; state.discountQty = 0; state.discountPolicyId = ""; state.guidanceConfirmed = false;
       calendarMonth = new Date(calendarFirstMonth);
     }
     if (typeof renderDiscountOptions === "function") renderDiscountOptions();
@@ -1266,7 +1304,31 @@
     byId("product-unit-price").textContent = money(program.price);
     byId("booking-review-image").src = program.image;
     byId("booking-review-image").alt = program.name + " 체험 현장";
+    if (typeof renderProgramGuidance === "function") renderProgramGuidance();
     renderCalendar(); renderSlots(); update();
+  }
+
+  function prepareProgramGuidancePanel() {
+    var picker = byId("program-picker");
+    if (!picker || byId("program-guidance")) return;
+    var panel = document.createElement("section");
+    panel.id = "program-guidance";
+    panel.className = "program-guidance";
+    panel.hidden = true;
+    panel.innerHTML = '<h3>이용 전 확인사항</h3><p id="program-guidance-text" class="program-guidance__text"></p><label id="program-guidance-check-wrap"><input id="program-guidance-check" type="checkbox"><span>확인하였습니다.</span></label>';
+    picker.after(panel);
+    byId("program-guidance-check").addEventListener("change", function (event) { state.guidanceConfirmed = event.target.checked; update(); });
+  }
+
+  function renderProgramGuidance() {
+    var panel = byId("program-guidance");
+    if (!panel) return;
+    var text = String(program.guidanceText || "").trim();
+    panel.hidden = !text;
+    byId("program-guidance-text").textContent = text;
+    var checkWrap = byId("program-guidance-check-wrap");
+    checkWrap.hidden = !text;
+    byId("program-guidance-check").checked = !!state.guidanceConfirmed;
   }
 
   function renderCalendar() {
@@ -1334,7 +1396,7 @@
     byId("summary-price").textContent = money(price);
     var selectedPolicy = selectedDiscountPolicy();
     byId("product-discount-note").hidden = !selectedPolicy;
-    if (selectedPolicy) byId("product-discount-note").textContent = selectedPolicy.label + " · " + selectedDiscountQty() + "명 적용";
+    if (selectedPolicy) byId("product-discount-value").textContent = selectedPolicy.label.replace(/\s*할인$/, "") + " · " + selectedDiscountQty() + "매";
     var selectionError = bookingSelectionError();
     var actionError = selectionError || (!programIsVisible(program) ? "현재 예약할 수 없는 프로그램입니다." : "");
     setExplainedButtonState(byId("add-to-cart"), !!actionError, actionError);
@@ -1342,7 +1404,8 @@
     var limitText = quantityLimitText();
     setExplainedButtonState(byId("qty-minus"), !!selectionError || state.qty <= 1, selectionError || limitText);
     setExplainedButtonState(byId("qty-plus"), !!selectionError || state.qty >= selectedMaxQty(), selectionError || limitText);
-    byId("booking-quantity-limit").textContent = selectedPolicy ? "할인은 최대 " + selectedMaxQty() + "매까지 선택할 수 있어요." : "할인 미적용은 최대 4매까지 선택할 수 있어요.";
+    var purchaseLimit = program.purchasePolicy && Number(program.purchasePolicy.maxQty) > 0 ? Number(program.purchasePolicy.maxQty) : 4;
+    byId("booking-quantity-limit").textContent = "이용일 기준 최대 " + purchaseLimit + "매 구매 가능합니다.";
   }
 
   function purchaseLimitUsage() {
@@ -1372,8 +1435,9 @@
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
     var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
     if (remainingCapacity < 4) return "선택한 회차에는 " + remainingCapacity + "자리만 남아 최대 " + remainingCapacity + "매까지 담을 수 있어요.";
-    if (selectedPolicy) return "할인 적용 · 최대 " + remainingDiscountQty(selectedPolicy) + "매";
-    return "할인 미적용은 최대 4매까지 인원을 선택할 수 있어요.";
+    if (selectedPolicy) return "할인은 최대 " + remainingDiscountQty(selectedPolicy) + "매 적용 가능합니다.";
+    var purchaseLimit = program.purchasePolicy && Number(program.purchasePolicy.maxQty) > 0 ? Number(program.purchasePolicy.maxQty) : 4;
+    return "이용일 기준 최대 " + purchaseLimit + "매 구매 가능합니다.";
   }
 
   function selectedMaxQty() {
@@ -1407,8 +1471,11 @@
     syncQuantityWithDiscount();
     wrap.innerHTML = '<label class="discount-check"><input type="radio" name="booking-discount" value="" ' + (!state.discountPolicyId ? "checked" : "") + '> 할인 미적용</label>' + policies.map(function (policy) {
       var remaining = remainingDiscountQty(policy);
-      var limitText = remaining < 1 ? "한도 소진" : remaining < Number(policy.maxQty || remaining) ? "잔여 " + remaining + "매" : "최대 " + policy.maxQty + "매";
-      return '<label class="discount-check"><input type="radio" name="booking-discount" value="' + policy.id + '" ' + (state.discountPolicyId === policy.id ? "checked" : "") + (remaining < 1 ? " disabled" : "") + '> ' + policy.label + ' <span>· ' + limitText + '</span></label>';
+      var availabilityText = remaining < 1 ? " <span>· 한도 소진</span>" : "";
+      var maximum = Number(policy.maxQty) > 0 ? Number(policy.maxQty) : remaining;
+      var selectedLimit = remaining < 1 ? "" : '<span class="discount-limit-badge">최대 ' + maximum + '매 적용 가능</span>';
+      var noticeText = policy.noticeText ? '<small class="discount-option-notice">' + escapeHtml(policy.noticeText) + '</small>' : "";
+      return '<label class="discount-check"><input type="radio" name="booking-discount" value="' + escapeHtml(policy.id) + '" ' + (state.discountPolicyId === policy.id ? "checked" : "") + (remaining < 1 ? " disabled" : "") + '><span class="discount-option-copy"><strong>' + escapeHtml(policy.label) + '</strong>' + noticeText + '</span>' + selectedLimit + availabilityText + '</label>';
     }).join("");
     wrap.querySelectorAll('input[name="booking-discount"]').forEach(function (input) {
       input.addEventListener("change", function () {
@@ -1630,6 +1697,7 @@
   document.querySelectorAll("dialog").forEach(function (dialog) {
     dialog.addEventListener("click", function (event) { if (event.target === dialog) dialog.close(); });
   });
+  prepareProgramGuidancePanel();
   selectProgram(initialProgramKey);
   syncProgramExtras();
   renderCart();

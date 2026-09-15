@@ -256,6 +256,7 @@
         originalUnitAmounts: unitAmounts.slice(),
         originalDiscountFlags: discountFlags,
         adminTicketStatuses: ticketStatuses,
+        arrivalLeadMinutes: Number.isInteger(programs[item.programKey].arrivalLeadMinutes) && programs[item.programKey].arrivalLeadMinutes >= 0 && programs[item.programKey].arrivalLeadMinutes <= 100 ? programs[item.programKey].arrivalLeadMinutes : 20,
         cancelMinutes: Number.isFinite(programs[item.programKey].cancelMinutes) ? programs[item.programKey].cancelMinutes : 10,
         status: "confirmed", createdAt: now.toISOString(), paymentMethod: "demo-card"
       });

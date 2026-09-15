@@ -191,6 +191,7 @@ test('checkout recalculates prices and atomically produces one reservation with 
   assert.deepEqual(order.tickets[0].originalUnitAmounts, [2500, 2500]);
   assert.deepEqual(order.tickets[0].originalDiscountFlags, [true, true]);
   assert.deepEqual(order.tickets[0].adminTicketStatuses, ['confirmed', 'confirmed']);
+  assert.equal(order.tickets[0].arrivalLeadMinutes, 20, 'Arrival waiting time is snapshotted at checkout');
   assert.equal(order.tickets[0].cancelMinutes, 10, 'Cancellation deadline is snapshotted at checkout');
   assert.equal(order.store.carts[memberId].length, 0);
   assert.deepEqual(order.store.carts.other, before.carts.other);
@@ -234,7 +235,7 @@ test('booking summary shows the discount note only after a discount is selected'
     amount: () => 5000,
     currentPrice: () => 5000,
     money: value => value + '원',
-    selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId } : null,
+    selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId, label: '과천시민 50% 할인' } : null,
     selectedDiscountQty: () => state.discountPolicyId ? 1 : 0,
     selectedMaxQty: () => 4,
     quantityLimitText: () => '수량 제한 안내',
@@ -249,9 +250,12 @@ test('booking summary shows the discount note only after a discount is selected'
   vm.runInContext(appFunction('update'), runtime);
   runtime.update();
   assert.equal(runtime.byId('product-discount-note').hidden, true);
+  assert.equal(runtime.byId('booking-quantity-limit').textContent, '이용일 기준 최대 4매 구매 가능합니다.');
   state.discountPolicyId = 'gwacheon-resident';
   runtime.update();
   assert.equal(runtime.byId('product-discount-note').hidden, false);
+  assert.equal(runtime.byId('product-discount-value').textContent, '과천시민 50% · 1매');
+  assert.equal(runtime.byId('booking-quantity-limit').textContent, '이용일 기준 최대 4매 구매 가능합니다.');
   assert.match(pageSource, /id="product-discount-note" hidden/);
 });
 

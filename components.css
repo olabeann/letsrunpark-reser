@@ -182,15 +182,15 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 .entry-ticket__status{position:relative;z-index:2;min-height:290px;padding:34px 38px;border-radius:28px;overflow:hidden;background:var(--ink);color:var(--white);transition:background-color .3s,box-shadow .3s}
 .entry-ticket__status-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
 .entry-ticket__indicators{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.entry-ticket__badge,.entry-ticket__discount{height:30px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-full);display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-badge);font-weight:var(--fw-semibold);line-height:1;white-space:nowrap}
-.entry-ticket__badge{border-color:var(--yellow-300);background:var(--yellow-100);color:var(--ink)}
+.entry-ticket__badge,.entry-ticket__discount{display:inline-flex;align-items:center;gap:7px;line-height:1;white-space:nowrap}
+.entry-ticket__badge{display:none;height:30px;padding:0 12px;border:1px solid var(--yellow-300);border-radius:var(--r-full);background:var(--yellow-100);color:var(--ink);font-size:var(--fs-badge);font-weight:var(--fw-semibold)}
 .entry-ticket__badge i{width:6px;height:6px;border-radius:var(--r-full);background:var(--yellow-500);flex:0 0 auto}
 .entry-ticket__clock{text-align:right}
 .entry-ticket__clock small,.entry-ticket__clock strong{display:block}
 .entry-ticket__clock small{color:var(--line);font-size:var(--fs-caption)}
 .entry-ticket__clock strong{margin-top:3px;font-size:28px;font-variant-numeric:tabular-nums}
-.entry-ticket__status>p{margin:66px 0 8px;color:var(--line);font-size:var(--fs-label);font-weight:var(--fw-bold)}
-.entry-ticket__status>h1{margin:0 0 12px;font-size:38px;line-height:1.14;letter-spacing:-.04em;word-break:keep-all}
+.entry-ticket__status>p{margin:56px 0 8px;color:var(--line);font-size:var(--fs-label);font-weight:var(--fw-bold)}
+.entry-ticket__status>h1{margin:0 0 6px;font-size:38px;line-height:1.14;letter-spacing:-.04em;word-break:keep-all}
 .entry-ticket__status>strong{font-size:var(--fs-body-lg)}
 .entry-ticket__pass{margin-top:-16px;padding:48px 38px 34px;border:1px solid var(--line);border-top:0;border-radius:0 0 30px 30px;background:var(--white);box-shadow:0 18px 44px rgba(24,24,28,.08)}
 .entry-ticket__pass>header{display:flex;align-items:center;justify-content:space-between;gap:20px}
@@ -198,19 +198,19 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 .entry-ticket__brand img{width:124px;height:124px;object-fit:contain}
 .entry-ticket__brand small,.entry-ticket__brand strong{display:block}
 .entry-ticket__brand small{color:var(--grey);font-size:var(--fs-badge);font-weight:var(--fw-bold);letter-spacing:.12em}
-.entry-ticket__brand strong{margin-top:4px;font-size:var(--fs-body-lg)}
+.entry-ticket__brand strong{margin-top:4px;font-size:24px;line-height:1.3}
 .entry-ticket__pass>header>b{padding:8px 14px;border-radius:var(--r-full);background:var(--yellow-500);color:var(--ink);font-size:26px;line-height:1}
 .entry-ticket__meta{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:12px;margin-top:26px}
 .entry-ticket__meta>div{min-width:0;padding:18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--white)}
 .entry-ticket__meta small,.entry-ticket__meta strong{display:block}
-.entry-ticket__meta small{color:var(--grey);font-size:var(--fs-caption)}
-.entry-ticket__meta strong{margin-top:7px;font-size:var(--fs-body-lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-ticket__meta small{color:var(--grey);font-size:11px}
+.entry-ticket__meta strong{margin-top:6px;font-size:16px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .entry-ticket__live{min-height:180px;margin-top:22px;padding:24px 30px;border:1px solid var(--line);border-radius:24px;display:flex;align-items:center;justify-content:center;gap:32px;background:var(--white);color:var(--grey);text-align:center}
 .entry-ticket__live>span{position:relative;flex:0 0 auto;width:180px;height:180px;border:5px dashed var(--soft);border-radius:50%;display:grid;place-items:center;background:var(--bg)}
-.entry-ticket__live img{width:156px;height:156px;object-fit:contain;filter:grayscale(1);opacity:.45}
+.entry-ticket__live img{width:136px;height:136px;object-fit:contain;filter:grayscale(1);opacity:.45}
 .entry-ticket__live>strong{max-width:260px;font-size:var(--fs-body-lg);line-height:1.5}
-.entry-ticket__discount{width:fit-content;height:32px;padding:0 12px 0 8px;border:2px solid var(--coral-500);background:var(--coral-100);color:var(--ink);box-shadow:0 0 0 3px var(--coral-200)}
-.entry-ticket__discount::before{content:"!";width:18px;height:18px;border-radius:var(--r-full);display:grid;place-items:center;background:var(--coral-500);color:var(--ink);font-size:var(--fs-badge);font-weight:var(--fw-bold);flex:0 0 auto}
+.entry-ticket__discount{width:fit-content;height:46px;padding:0 22px;border:3px solid var(--coral-500);border-radius:var(--r-full);background:var(--coral-100);color:var(--coral-600);font-size:var(--fs-body-sm);font-weight:var(--fw-bold);box-shadow:0 0 0 3px var(--coral-200)}
+.entry-ticket__discount img{width:28px;height:28px;display:block;flex:0 0 auto}
 .entry-ticket__discount[hidden]{display:none}
 .entry-ticket__discount strong{font-weight:var(--fw-bold)}
 .entry-ticket__discount>span{font-weight:var(--fw-bold)}
@@ -252,45 +252,46 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 @media(max-width:997px){.reservation-header{height:60px}.reservation-brand img{height:50px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
 @media(max-width:560px){.login-dialog__body{padding:30px 22px 24px}.login-dialog h2{font-size:24px}}
 @media(max-width:700px){.back-link,.ticket-account-links__item{min-height:44px;display:inline-flex;align-items:center}.reservation-complete{padding-top:42px}.complete-booking-card{grid-template-columns:1fr}.complete-booking-card>img{height:190px;min-height:0}.reservation-complete .complete-actions{grid-template-columns:1fr}.my-tickets-screen{padding:32px 16px 64px}.my-tickets-head{align-items:flex-start;flex-direction:column}.my-tickets-head h1{font-size:32px}.ticket-list-group__header{min-height:48px;padding:12px 16px}.ticket-list-group__items{padding:0}.ticket-list-group .ticket-list-card{padding-inline:22px}.ticket-list-card{grid-template-columns:100px minmax(0,1fr);gap:14px;padding:12px;border-radius:var(--r-lg)}.ticket-list-card>img{width:100px;height:112px}.ticket-list-card__arrow{display:none}.ticket-list-card__title{font-size:var(--fs-body)}.ticket-list-card__schedule{line-height:1.45}.ticket-detail-view>.back-link{margin-left:0}.ticket-order-summary{padding:22px 20px}.ticket-order-summary>header h1{font-size:24px}.ticket-order-summary dl div{display:grid;gap:4px}.ticket-order-summary dd{text-align:left;overflow-wrap:anywhere}.ticket-payment-summary>header{align-items:flex-start;flex-direction:column}.ticket-payment-summary>header span{text-align:left}}
-@media(max-width:600px){.ticket-screen{padding-top:20px}.entry-ticket__status{min-height:260px;padding:28px 24px;border-radius:22px}.entry-ticket__status-top{gap:12px}.entry-ticket__indicators{max-width:200px}.entry-ticket__badge{height:28px;padding-inline:10px}.entry-ticket__discount{height:30px;padding:0 9px 0 7px}.entry-ticket__discount::before{width:16px;height:16px}.entry-ticket__clock strong{font-size:23px}.entry-ticket__status>p{margin-top:52px}.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:24px}.entry-ticket__status>h1{font-size:30px}.entry-ticket__pass{padding:42px 22px 28px;border-radius:0 0 24px 24px}.entry-ticket__brand img{width:104px;height:104px}.entry-ticket__pass>header>b{font-size:28px}.entry-ticket__meta{grid-template-columns:1fr 1fr}.entry-ticket__meta>div:first-child{grid-column:1/-1}.entry-ticket__live{min-height:220px;padding:22px 18px;gap:18px}.entry-ticket__live>span{width:144px;height:144px}.entry-ticket__live img{width:124px;height:124px}.entry-ticket__window{grid-template-columns:1fr 20px 1fr 20px 1fr;padding:18px 10px}.entry-ticket__window strong{font-size:var(--fs-label)}.entry-ticket__footer{align-items:center}.entry-ticket__footer>span{max-width:150px}}
+@media(max-width:600px){.ticket-screen{padding-top:20px}.entry-ticket__status{min-height:260px;padding:28px 24px;border-radius:22px}.entry-ticket__status-top{gap:12px}.entry-ticket__indicators{max-width:none}.entry-ticket__badge{height:28px;padding-inline:10px}.entry-ticket__discount{height:30px;padding:0 9px 0 6px}.entry-ticket__discount::before{width:18px;height:18px}.entry-ticket__clock strong{font-size:23px}.entry-ticket__status>p{margin-top:52px}.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:14px}.entry-ticket__status>h1{font-size:30px}.entry-ticket__pass{padding:42px 22px 28px;border-radius:0 0 24px 24px}.entry-ticket__brand img{width:104px;height:104px}.entry-ticket__pass>header>b{font-size:28px}.entry-ticket__meta{grid-template-columns:1fr 1fr}.entry-ticket__meta>div:first-child{grid-column:1/-1}.entry-ticket__live{min-height:220px;padding:22px 18px;gap:18px}.entry-ticket__live>span{width:144px;height:144px}.entry-ticket__live img{width:124px;height:124px}.entry-ticket__window{grid-template-columns:1fr 20px 1fr 20px 1fr;padding:18px 10px}.entry-ticket__window strong{font-size:var(--fs-label)}.entry-ticket__footer{align-items:center}.entry-ticket__footer>span{max-width:150px}}
 @media(max-width:600px){.entry-ticket{width:100%}.entry-ticket__status{padding:26px 22px}.entry-ticket__status>p{margin-top:46px}.entry-ticket__status>h1{font-size:28px;line-height:1.18}.entry-ticket__pass{padding:42px 18px 28px}.entry-ticket__pass>header{gap:12px}.entry-ticket__brand{min-width:0;gap:10px}.entry-ticket__brand img{width:84px;height:84px}.entry-ticket__brand span{min-width:0}.entry-ticket__brand strong{font-size:var(--fs-body-sm);white-space:nowrap}.entry-ticket__pass>header>b{flex:0 0 auto;padding:8px 11px;font-size:22px;white-space:nowrap}.entry-ticket__meta{grid-template-columns:1fr;gap:10px}.entry-ticket__meta>div{padding:15px}.entry-ticket__meta strong{font-size:var(--fs-body-sm)}.entry-ticket__live{min-height:0;flex-direction:column;padding:22px 18px;gap:14px}.entry-ticket__live>span{width:128px;height:128px}.entry-ticket__live img{width:110px;height:110px}.entry-ticket__live>strong{max-width:none;font-size:var(--fs-body-sm);word-break:keep-all}.entry-ticket__footer{padding-inline:2px}}
 @media(max-width:600px){.ticket-cancellation{padding:16px}.ticket-cancellation__intro{align-items:flex-start;flex-direction:column}.ticket-cancellation__intro>button{width:100%}.ticket-cancel-options{grid-template-columns:1fr}.ticket-cancel-summary{flex-direction:column}.ticket-refund-history{padding:16px}}
 
 /* Mobile admission pass: keep the complete gate-facing ticket in one phone viewport. */
 @media(max-width:600px){
-  .entry-ticket{--ticket-label-size:12px;--ticket-body-size:14px;--ticket-value-size:17px;--ticket-title-size:21px}
+  .entry-ticket{--ticket-label-size:11px;--ticket-body-size:13px;--ticket-value-size:15px;--ticket-title-size:19px}
   .my-tickets-screen:has(.ticket-detail-view:not([hidden])){min-height:calc(100dvh - 60px);padding:10px 10px 48px;background:linear-gradient(180deg,var(--ink) 0,var(--ink) 196px,var(--ground-100) 196px)}
   .ticket-detail-view>.back-link{margin:0 4px 10px;color:var(--white);font-size:13px;font-weight:var(--fw-semibold)}
   .entry-ticket{filter:drop-shadow(0 14px 24px rgba(24,24,28,.13))}
-  .entry-ticket__status{min-height:146px;padding:16px 18px 24px;border-radius:22px 22px 0 0;box-shadow:none}
-  .entry-ticket__status-top{align-items:center}
+  .entry-ticket__status{min-height:146px;padding:16px 18px 22px;border-radius:22px 22px 0 0;box-shadow:none}
+  .entry-ticket__status-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
   .entry-ticket__indicators{max-width:none;gap:6px}
-  .entry-ticket__badge,.entry-ticket__discount{height:25px;font-size:11px}
-  .entry-ticket__discount{box-shadow:none}
-  .entry-ticket__discount>span{display:none}
-  .entry-ticket__clock small{display:none}
+  .entry-ticket__badge{display:none}
+  .entry-ticket__discount{height:38px;padding:0 12px;font-size:12px}
+  .entry-ticket__discount img{width:22px;height:22px}
+  .entry-ticket__clock{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+  .entry-ticket__clock small{display:block;font-size:9px}
   .entry-ticket__clock strong{margin:0;font-size:var(--ticket-value-size);font-weight:var(--fw-bold)}
-  .entry-ticket__status>p,.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin:18px 0 3px;font-size:12px}
-  .entry-ticket__status>h1{margin:0 0 4px;font-size:var(--ticket-title-size);line-height:1.2}
-  .entry-ticket__status>strong{font-size:var(--ticket-body-size)}
-  .entry-ticket__pass{position:relative;margin:0;padding:20px 18px 18px;border:0;border-radius:0 0 22px 22px;box-shadow:none}
+  .entry-ticket__status>p,.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin:30px 0 7px;font-size:11px;line-height:1.4}
+  .entry-ticket__status>h1{margin:0 0 5px;font-size:var(--ticket-title-size);line-height:1.3}
+  .entry-ticket__status>strong{font-size:var(--ticket-body-size);font-weight:var(--fw-semibold);line-height:1.5}
+  .entry-ticket__pass{position:relative;margin:0;padding:22px 18px 18px;border:0;border-radius:0 0 22px 22px;box-shadow:none}
   .entry-ticket__pass::before{content:"";position:absolute;left:0;right:0;top:-7px;height:14px;background:radial-gradient(circle at 7px 7px,transparent 6px,var(--white) 6.5px) 0 0/28px 14px repeat-x;pointer-events:none}
-  .entry-ticket__pass>header{padding-bottom:13px;border-bottom:1px solid var(--line)}
-  .entry-ticket__brand img{width:48px;height:48px}
-  .entry-ticket__brand small{font-size:10px}
-  .entry-ticket__brand strong{margin-top:2px;font-size:var(--ticket-body-size)}
-  .entry-ticket__pass>header>b{padding:7px 11px;font-size:var(--ticket-value-size)}
-  .entry-ticket__meta{grid-template-columns:1.15fr .85fr;gap:0;margin-top:16px}
+  .entry-ticket__pass>header{padding-bottom:15px;border-bottom:1px solid var(--line)}
+  .entry-ticket__brand img{width:44px;height:44px}
+  .entry-ticket__brand small{font-size:9px}
+  .entry-ticket__brand strong{margin-top:2px;font-size:16px;line-height:1.3}
+  .entry-ticket__pass>header>b{padding:6px 10px;font-size:var(--ticket-value-size)}
+  .entry-ticket__meta{grid-template-columns:1.15fr .85fr;gap:0;margin-top:15px}
   .entry-ticket__meta>div{padding:0;border:0;border-radius:0}
   .entry-ticket__meta>div:first-child{grid-column:auto}
-  .entry-ticket__meta>div:last-child{grid-column:1/-1;grid-row:1;margin-bottom:13px}
-  .entry-ticket__meta small{font-size:var(--ticket-label-size)}
-  .entry-ticket__meta strong{margin-top:3px;font-size:var(--ticket-value-size);line-height:1.35;overflow:visible;text-overflow:clip}
-  .entry-ticket__meta>div:nth-child(2) strong{font-size:var(--ticket-value-size);letter-spacing:-.02em}
-  .entry-ticket__live{min-height:0;margin-top:16px;padding:12px 14px;border-radius:15px;flex-direction:row;justify-content:flex-start;gap:12px;text-align:left}
-  .entry-ticket__live>span{width:62px;height:62px;border-width:3px}
-  .entry-ticket__live img{width:54px;height:54px}
-  .entry-ticket__live>strong{font-size:12px;line-height:1.45}
+  .entry-ticket__meta>div:last-child{grid-column:1/-1;grid-row:1;margin-bottom:12px}
+  .entry-ticket__meta small{font-size:9px}
+  .entry-ticket__meta strong{margin-top:3px;font-size:12px;line-height:1.35;overflow:visible;text-overflow:clip}
+  .entry-ticket__meta>div:nth-child(2) strong{font-size:12px;letter-spacing:-.02em}
+  .entry-ticket__live{min-height:0;margin-top:15px;padding:11px 13px;border-radius:15px;flex-direction:row;justify-content:flex-start;gap:11px;text-align:left}
+  .entry-ticket__live>span{width:56px;height:56px;border-width:3px}
+  .entry-ticket__live img{width:40px;height:40px}
+  .entry-ticket__live>strong{font-size:11px;line-height:1.5}
   .entry-ticket__pass>dl{margin:10px 0 0;padding-top:9px;border-top:1px dashed var(--line)}
   .entry-ticket__pass>dl div:first-child{display:none}
   .entry-ticket__pass dt,.entry-ticket__pass dd{font-size:var(--ticket-label-size)}
@@ -303,21 +304,21 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
   .entry-ticket__status-top{align-items:flex-start;flex-wrap:wrap}
   .entry-ticket__indicators{flex:1 1 100%}
   .entry-ticket__clock{margin-left:auto}
-  .entry-ticket__status>p,.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:12px;overflow-wrap:anywhere}
+  .entry-ticket__status>p,.entry-ticket__status:has(.entry-ticket__discount:not([hidden]))>p{margin-top:22px;overflow-wrap:anywhere}
   .entry-ticket__status>h1{font-size:20px}
   .entry-ticket__status>strong{display:block;font-size:13px;overflow-wrap:anywhere}
   .entry-ticket__pass{padding:18px 14px 16px}
   .entry-ticket__pass>header{align-items:flex-start;flex-wrap:wrap}
   .entry-ticket__brand{flex:1 1 120px}
   .entry-ticket__brand img{width:40px;height:40px}
-  .entry-ticket__brand strong{white-space:normal;overflow-wrap:anywhere}
+  .entry-ticket__brand strong{font-size:16px;white-space:normal;overflow-wrap:anywhere}
   .entry-ticket__pass>header>b{font-size:17px}
-  .entry-ticket__meta{grid-template-columns:1fr;gap:10px}
-  .entry-ticket__meta>div:last-child{grid-column:auto;grid-row:auto;margin-bottom:0}
-  .entry-ticket__meta strong,.entry-ticket__meta>div:nth-child(2) strong{font-size:16px;white-space:normal;overflow-wrap:anywhere}
+  .entry-ticket__meta{grid-template-columns:1.15fr .85fr;gap:0}
+  .entry-ticket__meta>div:last-child{grid-column:1/-1;grid-row:1;margin-bottom:10px}
+  .entry-ticket__meta strong,.entry-ticket__meta>div:nth-child(2) strong{font-size:12px;white-space:normal;overflow-wrap:anywhere}
   .entry-ticket__live{padding:10px;gap:9px}
   .entry-ticket__live>span{width:50px;height:50px}
-  .entry-ticket__live img{width:43px;height:43px}
+  .entry-ticket__live img{width:36px;height:36px}
   .entry-ticket__live>strong{min-width:0;font-size:12px;overflow-wrap:anywhere}
   .entry-ticket__pass>dl div{align-items:flex-start;flex-wrap:wrap}
   .entry-ticket__pass dd{max-width:100%;overflow-wrap:anywhere;text-align:right}
