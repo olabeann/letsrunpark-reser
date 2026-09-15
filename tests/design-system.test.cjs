@@ -16,5 +16,8 @@ test('storefront uses design-system colors, radii and category tags', () => {
   assert.doesNotMatch(html, /data-booking-product/);
   assert.equal([...html.matchAll(/href="index\.html\?product=(ride|play)"/g)].length, 2);
   assert.match(html, /class="booking-program-head"/);
-  assert.match(html, /styles\.css\?v=20260915-checkout-layout2/);
+  assert.match(styles, /\.shop-header \.reservation-brand img\{[^}]*height:38\.4px/);
+  assert.match(styles, /\.reservation-brand__context b\{[^}]*font-size:var\(--fs-card\)/);
+  assert.match(html, /styles\.css\?v=20260915-mobile-fit1/);
+  assert.match(styles, /@media\(max-width:420px\)\{[\s\S]*?\.reservation-brand__context\{display:none\}[\s\S]*?\.shop-nav__logout\{display:none\}/);
 });

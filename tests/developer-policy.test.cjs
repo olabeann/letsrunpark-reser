@@ -51,6 +51,11 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /기존 카드와 합치지 않습니다/);
   assert.match(source, /인원은 1명에서 시작하고 해당 이용일의 남은 할인 매수까지만 직접 늘릴 수 있습니다/);
   assert.match(source, /모든 장바구니 카드는 1명으로 고정/);
+  assert.match(source, /기존 장바구니가 비어 있으면 예약 내용 확인 화면으로 바로 이동합니다/);
+  assert.match(source, /기존 상품이 1개 이상이면 선택 상품을 추가한 뒤 장바구니 화면으로 이동/);
+  assert.match(source, /예약하기 진입 경로/);
+  assert.match(source, /담기지 않았습니다\. 기존 상품 확인 후 결제해주세요/);
+  assert.match(source, /선택 상품은 저장하지 않고, 상품명·인원과 미반영 사실을 장바구니 화면에 지속 표시/);
   assert.match(source, /카드별 삭제만 제공/);
   assert.match(source, /다른 상품이나 기존 예약과 시간이 겹쳐도 회차를 선택하고 장바구니에 담을 수 있습니다/);
   assert.match(source, /시간대가 겹치는지만으로 차단하지 않습니다/);

@@ -260,6 +260,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
   const savedStore = store([existing]);
   const messages = [];
   const steps = [];
+  const elements = {};
   let checkoutStarted = false;
   const runtime = vm.createContext({
     currentMember: { id: memberId },
@@ -275,6 +276,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
     programs,
     writeStore: () => { throw new Error('invalid write'); },
     notify: message => messages.push(message),
+    byId: id => (elements[id] ||= {}),
     renderSlots() {}, update() {}, renderCart() {},
     goToStep: step => steps.push(step),
     startCheckout: () => { checkoutStarted = true; },
@@ -282,9 +284,49 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
   vm.runInContext(appFunction('addToCart'), runtime);
   await runtime.addToCart(true);
   assert.deepEqual(steps, [4]);
-  assert.deepEqual(messages, ['장바구니에서 결제를 이어서 해주세요.']);
+  assert.deepEqual(messages, ['선택한 포니랑 놀기 1명은 구매 한도를 초과해 장바구니에 담기지 않았습니다. 기존 상품 확인 후 결제해주세요.']);
+  assert.equal(elements['cart-page-error'].hidden, false);
+  assert.equal(elements['cart-page-error'].textContent, messages[0]);
   assert.equal(checkoutStarted, false);
   assert.deepEqual(savedStore.carts[memberId], [existing]);
+});
+
+test('reserve skips the cart only when it was empty before adding the selection', async () => {
+  async function run(initialCart) {
+    const savedStore = store(initialCart);
+    const messages = [];
+    const steps = [];
+    let checkoutStarted = false;
+    const runtime = vm.createContext({
+      currentMember: { id: memberId },
+      bookingSelectionError: () => '',
+      makeCartItem: () => item({ id: 'new-item', qty: 1 }),
+      withStoreLock: action => Promise.resolve().then(action),
+      readStore: () => savedStore,
+      ownCart: () => savedStore.carts[memberId],
+      BookingRules: { validationError: () => '', quoteItem: entry => entry },
+      programs,
+      writeStore: () => true,
+      notify: message => messages.push(message),
+      renderSlots() {}, update() {}, renderCart() {},
+      goToStep: step => steps.push(step),
+      startCheckout: () => { checkoutStarted = true; },
+    });
+    vm.runInContext(appFunction('addToCart'), runtime);
+    await runtime.addToCart(true);
+    return { savedStore, messages, steps, checkoutStarted };
+  }
+
+  const empty = await run([]);
+  assert.equal(empty.checkoutStarted, true);
+  assert.deepEqual(empty.steps, []);
+  assert.equal(empty.savedStore.carts[memberId].length, 1);
+
+  const existing = await run([item({ id: 'existing-card', qty: 1 })]);
+  assert.equal(existing.checkoutStarted, false);
+  assert.deepEqual(existing.steps, [4]);
+  assert.deepEqual(existing.messages, ['기존 장바구니 상품과 함께 확인해주세요.']);
+  assert.equal(existing.savedStore.carts[memberId].length, 2);
 });
 
 test('each add-to-cart action creates a separate card for the same product session', async () => {

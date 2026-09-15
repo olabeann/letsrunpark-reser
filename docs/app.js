@@ -748,10 +748,13 @@
     var item = makeCartItem();
     var added = false;
     var continueInCart = false;
+    var reviewExistingCart = false;
+    var cartLimitMessage = "";
     try { await withStoreLock(function () {
       if (!currentMember || currentMember.id !== item.memberId) return;
       var store = readStore(); if (!store) return;
       var cart = ownCart(store);
+      reviewExistingCart = continueToCheckout && cart.length > 0;
       // Cart rows are person tickets: selecting N people creates N independent
       // one-person cards, including when the product/date/session are identical.
       var unitItems = Array.from({ length: item.qty }, function (_, index) {
@@ -764,7 +767,11 @@
       var nextCart = cart.concat(unitItems);
       var error = BookingRules.validationError(nextCart, store.reservations, currentMember.id, programs, new Date());
       if (error) {
-        if (continueToCheckout && cart.length && error.indexOf("구매 한도 그룹") !== -1) { continueInCart = true; return; }
+        if (continueToCheckout && cart.length && error.indexOf("구매 한도 그룹") !== -1) {
+          continueInCart = true;
+          cartLimitMessage = "선택한 " + item.name + " " + item.qty + "명은 구매 한도를 초과해 장바구니에 담기지 않았습니다. 기존 상품 확인 후 결제해주세요.";
+          return;
+        }
         notify(error); return;
       }
       store.carts[currentMember.id] = nextCart.map(function (entry) { return BookingRules.quoteItem(entry, programs); });
@@ -778,11 +785,16 @@
     renderSlots(); update(); renderCart();
     if (continueInCart) {
       goToStep(4);
-      notify("장바구니에서 결제를 이어서 해주세요.");
+      byId("cart-page-error").textContent = cartLimitMessage;
+      byId("cart-page-error").hidden = false;
+      notify(cartLimitMessage);
       return;
     }
     if (added) {
-      if (continueToCheckout) startCheckout();
+      if (continueToCheckout && reviewExistingCart) {
+        goToStep(4);
+        notify("기존 장바구니 상품과 함께 확인해주세요.");
+      } else if (continueToCheckout) startCheckout();
       else notify("장바구니에 담았습니다.");
     }
   }
