@@ -237,8 +237,6 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 .entry-ticket[data-access-state="ended"] .entry-ticket__status{background:var(--grey)}
 .entry-ticket[data-access-state="ended"] .entry-ticket__badge{border-color:var(--line);background:var(--white);color:var(--grey)}
 .entry-ticket[data-access-state="ended"] .entry-ticket__badge i{background:var(--soft)}
-.booking-slots .chip.is-booked{border-color:var(--coral-300);background:var(--coral-100);color:var(--ink);box-shadow:none}
-.booking-slots .chip.is-booked small{color:var(--grey)}
 @keyframes ticketPulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 12px var(--green-200)}}
 @media(max-width:997px){.reservation-header{height:60px}.reservation-brand img{height:50px}.reservation-header__actions .header-login{height:36px;padding-inline:12px}.back-link{margin-bottom:20px}}
 @media(max-width:560px){.login-dialog__body{padding:30px 22px 24px}.login-dialog h2{font-size:24px}}

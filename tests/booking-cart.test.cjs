@@ -26,7 +26,7 @@ test('starts local booking data from the post-reservation-number schema', () => 
   assert.match(source, /demoCancellationStorageKey = "ponylandDemoTicketCancellationsV2"/);
 });
 
-test('blocks identical, contained and partially overlapping intervals in either order across programs', () => {
+test('detects identical, contained and partially overlapping intervals in either order', () => {
   for (const time of ['14:00~14:20', '14:20~14:45', '15:00~15:20', '13:50~14:10', '14:50~15:30', '13:00~16:00']) {
     const pony = item({ time });
     assert.equal(rules.overlaps(pony, tour()), true, time);
@@ -34,10 +34,11 @@ test('blocks identical, contained and partially overlapping intervals in either 
   }
 });
 
-test('allows adding the exact same product session while blocking a different overlapping product', () => {
-  const candidate = item({ qty: 1 });
-  assert.equal(rules.findConflict(candidate, [item({ id: 'paid-same', qty: 1 })], memberId, true), null);
-  assert.equal(rules.findConflict(candidate, [item({ id: 'paid-play', programKey: 'play', name: '포니랑 놀기', qty: 1 })], memberId, true).id, 'paid-play');
+test('allows overlapping product sessions when capacity and purchase limits remain', () => {
+  const ride = item({ qty: 1 });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', qty: 1 });
+  assert.equal(error([ride, play]), '');
+  assert.equal(error([ride], [play]), '');
 });
 
 test('allows adjacent intervals and the same time on another date', () => {
@@ -52,22 +53,13 @@ test('legacy tour start-only values reserve all 80 minutes and overnight interva
   assert.equal(rules.overlaps(item({ time: '23:50~00:20' }), item({ dateKey: '2026-08-30', time: '00:00~00:30' })), true);
 });
 
-test('uses member ownership, never attendee count, provider name alone or example tickets', () => {
-  const saved = item({ qty: 1 });
-  assert.equal(rules.findConflict(item({ qty: 4 }), [saved], memberId), saved);
-  for (const other of [item({ memberId: 'demo:카카오:2' }), item({ memberId: 'demo:네이버:1' }), item({ memberId: undefined }), item({ isExample: true }), item({ status: 'cancelled' }), item({ qty: 0 })]) {
-    assert.equal(rules.findConflict(item(), [other], memberId), null);
-  }
-  assert.equal(rules.findConflict(item(), [saved], null), null);
-});
-
-test('checks the entire cart and all persisted reservations, not only visible tickets', () => {
-  assert.match(error([tour(), item({ time: '14:20~14:45' })]), /겹칩니다/);
+test('does not block overlapping times in the cart or persisted reservations', () => {
+  assert.equal(error([tour(), item({ time: '14:20~14:45' })]), '');
   const saved = Array.from({ length: 12 }, (_, i) => item({ id: String(i), dateKey: '2026-09-20' }));
   saved.push(tour());
-  assert.match(error([item({ time: '15:00~15:20' })], saved), /겹칩니다/);
+  assert.equal(error([item({ time: '15:00~15:20' })], saved), '');
   assert.equal(error([item(), item({ id: 'duplicate' })]), '');
-  assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), /겹칩니다/);
+  assert.equal(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), '');
 });
 
 test('rejects logged-out, empty or foreign-member carts', () => {
@@ -207,9 +199,9 @@ test('checkout recalculates prices and atomically produces one reservation with 
 });
 
 test('failed checkout preserves the whole cart and all reservations', () => {
-  const before = store([item(), tour()], [tour()]);
+  const before = store([item({ qty: 3 })], [item({ id: 'already-paid', qty: 2 })]);
   const serialized = JSON.stringify(before);
-  assert.throws(() => rules.buildOrder(before, memberId, programs, now, 'bad-order'), /겹칩니다/);
+  assert.throws(() => rules.buildOrder(before, memberId, programs, now, 'bad-order'), /최대 4매/);
   assert.equal(JSON.stringify(before), serialized);
 });
 
@@ -238,13 +230,17 @@ test('booking summary shows the discount note only after a discount is selected'
   const elements = {};
   const state = { qty: 1, date: '', dateKey: '', time: '', discountPolicyId: '' };
   const runtime = vm.createContext({
-    state,
+    state, program: programs.ride,
     amount: () => 5000,
     currentPrice: () => 5000,
     money: value => value + '원',
     selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId } : null,
     selectedDiscountQty: () => state.discountPolicyId ? 1 : 0,
     selectedMaxQty: () => 4,
+    quantityLimitText: () => '수량 제한 안내',
+    bookingSelectionError: () => '',
+    programIsVisible: () => true,
+    setExplainedButtonState: (button, blocked, reason) => { button.disabled = blocked; button.title = blocked ? reason : ''; },
     byId: id => {
       if (!elements[id]) elements[id] = {};
       return elements[id];
@@ -267,6 +263,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
   let checkoutStarted = false;
   const runtime = vm.createContext({
     currentMember: { id: memberId },
+    bookingSelectionError: () => '',
     makeCartItem: () => item({ id: 'new-item', programKey: 'play', name: '포니랑 놀기', qty: 1 }),
     withStoreLock: action => Promise.resolve().then(action),
     readStore: () => savedStore,
@@ -298,6 +295,7 @@ test('each add-to-cart action creates a separate card for the same product sessi
   const runtime = vm.createContext({
     state: {},
     currentMember: { id: memberId },
+    bookingSelectionError: () => '',
     makeCartItem: () => addedItem,
     withStoreLock: action => Promise.resolve().then(action),
     readStore: () => savedStore,
@@ -410,12 +408,12 @@ test('opening another program resets date, session, headcount and discount optio
   assert.equal(elements.get('date-picker').open, false);
 });
 
-test('slot refresh requires explicit selection and never silently picks a replacement', () => {
+test('slot refresh requires explicit selection and keeps it while capacity remains', () => {
   const state = { dateKey: '', time: '' };
   const elements = { 'slot-placeholder': {}, 'booking-slots': { replaceChildren() { this.innerHTML = ''; } } };
   const runtime = vm.createContext({
     state, program: programs.ride, byId: id => elements[id],
-    hasTimeConflict: (_date, time) => time === '10:00~10:20', slotHasStarted: () => false,
+    slotHasStarted: () => false,
     slotRemainingCapacity: () => 4, slotOperationException: () => null,
     document: { querySelectorAll: () => [] },
   });
@@ -425,12 +423,13 @@ test('slot refresh requires explicit selection and never silently picks a replac
   state.dateKey = '2026-08-29';
   runtime.renderSlots();
   assert.equal(state.time, '', 'Opening a date must not pick the first available slot');
+  assert.doesNotMatch(elements['booking-slots'].innerHTML, /data-booked|다른 일정과 시간 중복/);
   state.time = '10:20~10:45';
   runtime.renderSlots();
   assert.equal(state.time, '10:20~10:45', 'An available explicit choice remains selected');
   state.time = '10:00~10:20';
   runtime.renderSlots();
-  assert.equal(state.time, '', 'A newly conflicting choice must be cleared, not replaced');
+  assert.equal(state.time, '10:00~10:20', 'An overlapping choice remains available when seats remain');
 });
 
 test('same-session selection limits the added headcount to the remaining daily allowance', () => {
@@ -457,6 +456,63 @@ test('discount selection caps a new card at the remaining discount quantity', ()
   });
   vm.runInContext(appFunction('selectedMaxQty'), runtime);
   assert.equal(runtime.selectedMaxQty(), 2);
+});
+
+test('discount selection fixes the quantity to every remaining discount ticket', () => {
+  const state = { qty: 1, discountPolicyId: 'gwacheon', discountQty: 0 };
+  const runtime = vm.createContext({
+    state,
+    selectedMaxQty: () => 2,
+    selectedDiscountPolicy: () => state.discountPolicyId ? programs.ride.discountPolicy : null,
+    selectedDiscountQty: () => state.discountPolicyId ? state.qty : 0,
+  });
+  vm.runInContext(appFunction('syncQuantityWithDiscount'), runtime);
+  runtime.syncQuantityWithDiscount();
+  assert.equal(state.qty, 2);
+  assert.equal(state.discountQty, 2);
+
+  state.discountPolicyId = '';
+  state.qty = 4;
+  runtime.selectedMaxQty = () => 3;
+  runtime.syncQuantityWithDiscount();
+  assert.equal(state.qty, 3, 'Regular tickets remain adjustable but respect the available maximum');
+  assert.equal(state.discountQty, 0);
+});
+
+test('quantity controls are locked for a selected discount and regular tickets advertise four-ticket selection', () => {
+  assert.match(source, /quantityLocked = !!selectedPolicy/);
+  assert.match(source, /selectedDiscountPolicy\(\) \|\| state\.qty >= selectedMaxQty\(\)/);
+  assert.match(pageSource, /id="booking-quantity-limit" aria-live="polite"/);
+});
+
+test('requires date and time in order before later booking controls can change', () => {
+  const state = { dateKey: '', time: '' };
+  const runtime = vm.createContext({ state });
+  vm.runInContext(appFunction('bookingSelectionError'), runtime);
+  assert.equal(runtime.bookingSelectionError(), '이용 날짜를 먼저 선택해주세요.');
+  state.dateKey = '2026-08-29';
+  assert.equal(runtime.bookingSelectionError(), '이용 시간을 먼저 선택해주세요.');
+  state.time = '10:00~10:20';
+  assert.equal(runtime.bookingSelectionError(), '');
+  assert.match(source, /booking-quantity-discount[^]*notify\(error\)/);
+});
+
+test('explains when existing cart tickets leave room for only one more person', () => {
+  const saved = store(Array.from({ length: 3 }, (_, index) => item({ id: 'cart-' + index, qty: 1 })), []);
+  const state = { dateKey: '2026-08-29', time: '10:00~10:20', discountPolicyId: 'gwacheon' };
+  const runtime = vm.createContext({
+    state, program: programs.ride, programs, currentMember: { id: memberId }, BookingRules: rules,
+    readStore: () => saved, ownCart: () => saved.carts[memberId],
+    selectedDiscountPolicy: () => programs.ride.discountPolicy,
+    remainingDiscountQty: () => 1,
+    selectedMaxQty: () => 1,
+    slotRemainingCapacity: () => 8,
+  });
+  vm.runInContext(['purchaseLimitUsage', 'quantityLimitText'].map(appFunction).join('\n'), runtime);
+  assert.equal(
+    runtime.quantityLimitText(),
+    '장바구니 3매 · 추가 가능 1매'
+  );
 });
 
 test('shop routes restore independent programs and send stale checkout links back to the cart', () => {

@@ -53,20 +53,6 @@
     }, []);
   }
 
-  function sameSellableSession(left, right) {
-    function sellableProgramKey(item) {
-      return item && item.programKey === "pony" && item.experience ? item.experience : item && item.programKey;
-    }
-    return !!(left && right && left.dateKey === right.dateKey && left.time === right.time && sellableProgramKey(left) === sellableProgramKey(right));
-  }
-
-  function findConflict(candidate, items, memberId, allowSameSession) {
-    if (!memberId) return null;
-    return ticketRecords(items).find(function (item) {
-      return item && item.memberId === memberId && isActive(item) && !(allowSameSession && sameSellableSession(candidate, item)) && overlaps(candidate, item);
-    }) || null;
-  }
-
   function quoteItem(item, programs) {
     if (!item || typeof item !== "object") throw new Error("예약 정보를 다시 확인해주세요.");
     var program = programs[item.programKey];
@@ -197,7 +183,6 @@
     var discountError = discountLimitError(items, reservations, memberId, programs);
     if (discountError) return discountError;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var checked = [];
     for (var i = 0; i < items.length; i += 1) {
       var item = items[i];
       if (!item || item.memberId !== memberId) return "현재 로그인한 계정의 장바구니만 결제할 수 있습니다.";
@@ -211,10 +196,6 @@
       if (range.start <= now.getTime() || midnight < today || midnight > lastDay || !saleDays.includes(date.getDay()) || (itemProgram.saleStartDate && item.dateKey < itemProgram.saleStartDate) || (itemProgram.saleEndDate && item.dateKey > itemProgram.saleEndDate)) {
         return "예약 기간이 지났거나 운영하지 않는 회차가 있습니다. 일정을 다시 선택해주세요.";
       }
-      var canAddSameSession = !!(itemProgram && itemProgram.purchasePolicy && itemProgram.purchasePolicy.group && itemProgram.purchasePolicy.maxQty);
-      var conflict = findConflict(item, reservations, memberId, canAddSameSession) || findConflict(item, checked, memberId, true);
-      if (conflict) return item.name + " " + item.time + "은(는) " + conflict.name + " " + conflict.time + "과 이용 시간이 겹칩니다.";
-      checked.push(item);
     }
     return "";
   }
@@ -298,5 +279,5 @@
     };
   }
 
-  return { interval: interval, overlaps: overlaps, isActive: isActive, ticketRecords: ticketRecords, findConflict: findConflict, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
+  return { interval: interval, overlaps: overlaps, isActive: isActive, ticketRecords: ticketRecords, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
 });

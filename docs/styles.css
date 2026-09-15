@@ -7,7 +7,7 @@
 .shop-page{background:var(--white)!important}
 .shop-container{width:min(var(--container),calc(100% - var(--pad-page)*2));margin-inline:auto}
 .shop-page button:focus-visible,.shop-page a:focus-visible,.shop-page summary:focus-visible,.shop-page select:focus-visible{outline:3px solid var(--ground-500);outline-offset:2px}
-.shop-page button:disabled{cursor:not-allowed}.shop-page .btn:disabled,.shop-page .quantity-control button:disabled{opacity:.4}
+.shop-page button:disabled,.shop-page button[aria-disabled="true"]{cursor:not-allowed}.shop-page .btn:disabled,.shop-page .btn[aria-disabled="true"],.shop-page .quantity-control button:disabled,.shop-page .quantity-control button[aria-disabled="true"]{opacity:.4}
 .shop-page .btn{min-height:48px;font-size:var(--fs-body-sm);font-weight:var(--fw-bold)}
 .shop-page .btn--cta{background:var(--ground-500);color:var(--ink);box-shadow:none;transition:background-color .18s}.shop-page .btn--cta:hover{background:var(--ground-400);box-shadow:none;transform:none}
 .shop-page .ds-btn-outline{background:var(--white);border:1px solid var(--line);color:var(--ink)}

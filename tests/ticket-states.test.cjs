@@ -13,7 +13,7 @@ const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
   'ticketTiming', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
   'ticketReservationNumber',
-  'defaultTicketReservations', 'persistDefaultTicketReservations', 'hasTimeConflict',
+  'defaultTicketReservations', 'persistDefaultTicketReservations',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
 const functions = names.map(name => {
@@ -99,7 +99,6 @@ for (const count of [0, 1, 2, 8, 20]) {
     const tickets = context.ticketListReservations();
     if (count === 0) assert.equal(tickets.length, 3);
     else assert.deepEqual(Array.from(tickets, item => item.id), saved.map(item => item.id));
-    if (count > 3) assert.equal(context.hasTimeConflict(saved[count - 1].dateKey, saved[count - 1].time), true);
     assert.equal(JSON.stringify(saved), before, 'Stored reservations must remain untouched');
   });
 }

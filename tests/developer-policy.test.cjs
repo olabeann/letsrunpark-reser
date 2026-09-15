@@ -49,9 +49,12 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /포트원 거래번호는 관리자 결제 상세에서만 표시/);
   assert.match(source, /선택 인원수만큼 1명 단위 장바구니 카드를 만듭니다/);
   assert.match(source, /기존 카드와 합치지 않습니다/);
-  assert.match(source, /1명 단위 할인 카드 2개와 할인 미적용 카드 2개/);
+  assert.match(source, /할인 선택 시 인원을 해당 이용일의 남은 할인 매수로 자동 고정/);
   assert.match(source, /모든 장바구니 카드는 1명으로 고정/);
   assert.match(source, /카드별 삭제만 제공/);
+  assert.match(source, /다른 상품이나 기존 예약과 시간이 겹쳐도 회차를 선택하고 장바구니에 담을 수 있습니다/);
+  assert.match(source, /시간대가 겹치는지만으로 차단하지 않습니다/);
+  assert.doesNotMatch(storefront, /다른 일정과 시간 중복|시간이 겹치는 상품은 예약할 수 없습니다/);
   assert.doesNotMatch(source, /새 줄을 만들지 않고 기존 항목의 인원수에 더합니다/);
   assert.doesNotMatch(source, /예약 항목마다 주문번호 뒤에 담긴 순서대로|상품이 1개뿐인 주문에도 -1/);
   assert.match(source, /className = "policy-marker"/);

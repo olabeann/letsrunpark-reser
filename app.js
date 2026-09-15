@@ -508,6 +508,24 @@
     return policy ? state.qty : 0;
   }
 
+  function bookingSelectionError() {
+    if (!state.dateKey) return "이용 날짜를 먼저 선택해주세요.";
+    if (!state.time) return "이용 시간을 먼저 선택해주세요.";
+    return "";
+  }
+
+  function setExplainedButtonState(button, blocked, reason) {
+    button.disabled = false;
+    button.setAttribute("aria-disabled", String(!!blocked));
+    button.title = blocked ? reason : "";
+  }
+
+  function syncQuantityWithDiscount() {
+    var maxQty = selectedMaxQty();
+    state.qty = selectedDiscountPolicy() ? maxQty : Math.min(state.qty, maxQty);
+    state.discountQty = selectedDiscountQty();
+  }
+
   function remainingDiscountQty(policy) {
     var maxQty = Number(policy && (policy.maxQtyPerDate || policy.maxQty));
     if (!Number.isFinite(maxQty)) return Infinity;
@@ -717,6 +735,8 @@
   }
 
   async function addToCart(continueToCheckout) {
+    var selectionError = bookingSelectionError();
+    if (selectionError) { notify(selectionError); return; }
     if (!currentMember) { openLoginDialog(continueToCheckout ? "reserve" : "add"); return; }
     var item = makeCartItem();
     var added = false;
@@ -992,19 +1012,6 @@
     });
   }
 
-  function hasTimeConflict(dateValue, timeValue) {
-    if (!currentMember) return false;
-    var store = readStore(); if (!store) return true;
-    // The same product/session can be selected again to add people while capacity and the
-    // per-date purchase limit remain. Other overlapping sessions are still unavailable.
-    var canAddSameSession = !!(program.purchasePolicy && program.purchasePolicy.group && program.purchasePolicy.maxQty);
-    return !!BookingRules.findConflict({ dateKey: dateValue, time: timeValue, programKey: program.key }, store.reservations.concat(ownCart(store)), currentMember.id, canAddSameSession);
-  }
-
-  function notifyTimeConflict() {
-    notify("이 계정의 기존 예약 또는 장바구니와 시간이 겹칩니다. 다른 회차를 선택해주세요.");
-  }
-
   function renderTicketList() {
     var list = byId("ticket-list");
     ticketReservations = ticketListReservations();
@@ -1095,24 +1102,22 @@
     byId("booking-slots").hidden = !state.dateKey;
     if (!state.dateKey) { byId("booking-slots").replaceChildren(); return; }
     var selectedSlot = program.slots.find(function (slot) { return slot.time === state.time; });
-    if (!selectedSlot || selectedSlot.disabled || slotOperationException(selectedSlot) || slotRemainingCapacity(selectedSlot) < 1 || slotHasStarted(selectedSlot) || hasTimeConflict(state.dateKey, selectedSlot.time)) {
+    if (!selectedSlot || selectedSlot.disabled || slotOperationException(selectedSlot) || slotRemainingCapacity(selectedSlot) < 1 || slotHasStarted(selectedSlot)) {
       state.time = "";
     }
     byId("booking-slots").innerHTML = program.slots.map(function (slot, index) {
-      var booked = hasTimeConflict(state.dateKey, slot.time);
       var remaining = slotRemainingCapacity(slot);
       var soldOut = remaining < 1;
       var operationClosed = !!slotOperationException(slot);
       var selected = slot.time === state.time;
-      var className = "chip chip--slots" + (selected ? " is-selected" : "") + (booked ? " is-booked" : "");
-      var stockText = booked ? "다른 일정과 시간 중복" : slotHasStarted(slot) ? "시작된 회차" : (index + 1) + "회차 · " + (operationClosed ? "휴장" : soldOut || slot.disabled ? "마감" : remaining + "자리");
-      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" data-booked="' + booked + '" aria-pressed="' + selected + '"' + (slot.disabled || operationClosed || soldOut || booked || slotHasStarted(slot) ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
+      var className = "chip chip--slots" + (selected ? " is-selected" : "");
+      var stockText = slotHasStarted(slot) ? "시작된 회차" : (index + 1) + "회차 · " + (operationClosed ? "휴장" : soldOut || slot.disabled ? "마감" : remaining + "자리");
+      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" aria-pressed="' + selected + '"' + (slot.disabled || operationClosed || soldOut || slotHasStarted(slot) ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
     }).join("");
     document.querySelectorAll("#booking-slots button:not([disabled])").forEach(function (button) {
       button.addEventListener("click", function () {
-        if (button.getAttribute("data-booked") === "true") { notifyTimeConflict(); return; }
         state.time = button.getAttribute("data-time");
-        state.qty = Math.min(state.qty, selectedMaxQty());
+        syncQuantityWithDiscount();
         document.querySelectorAll("#booking-slots button").forEach(function (item) {
           var selected = item === button;
           item.classList.toggle("is-selected", selected);
@@ -1227,10 +1232,46 @@
     var selectedPolicy = selectedDiscountPolicy();
     byId("product-discount-note").hidden = !selectedPolicy;
     if (selectedPolicy) byId("product-discount-note").textContent = selectedPolicy.label + " · " + selectedDiscountQty() + "명 적용";
-    byId("add-to-cart").disabled = !state.dateKey || !state.time || !programIsVisible(program);
-    byId("book-now").disabled = !state.dateKey || !state.time || !programIsVisible(program);
-    byId("qty-minus").disabled = state.qty <= 1;
-    byId("qty-plus").disabled = state.qty >= selectedMaxQty();
+    var selectionError = bookingSelectionError();
+    var actionError = selectionError || (!programIsVisible(program) ? "현재 예약할 수 없는 프로그램입니다." : "");
+    setExplainedButtonState(byId("add-to-cart"), !!actionError, actionError);
+    setExplainedButtonState(byId("book-now"), !!actionError, actionError);
+    var quantityLocked = !!selectedPolicy;
+    var limitText = quantityLimitText();
+    setExplainedButtonState(byId("qty-minus"), !!selectionError || quantityLocked || state.qty <= 1, selectionError || limitText);
+    setExplainedButtonState(byId("qty-plus"), !!selectionError || quantityLocked || state.qty >= selectedMaxQty(), selectionError || limitText);
+    byId("booking-quantity-limit").textContent = selectedPolicy ? "할인 적용 수량은 자동으로 설정돼요." : "할인 미적용은 최대 4매까지 선택할 수 있어요.";
+  }
+
+  function purchaseLimitUsage() {
+    var purchasePolicy = program.purchasePolicy;
+    if (!purchasePolicy || !purchasePolicy.group || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return null;
+    var store = readStore();
+    if (!store) return null;
+    function matchingQty(items) {
+      return BookingRules.ticketRecords(items).filter(function (item) {
+        var itemProgram = item && programs[item.programKey];
+        return item && item.memberId === currentMember.id && BookingRules.isActive(item) && item.dateKey === state.dateKey && itemProgram && itemProgram.purchasePolicy && itemProgram.purchasePolicy.group === purchasePolicy.group;
+      }).reduce(function (sum, item) { return sum + (Number.isInteger(item.qty) ? item.qty : 0); }, 0);
+    }
+    var cartQty = matchingQty(ownCart(store));
+    var reservationQty = matchingQty(store.reservations);
+    return { limit: purchasePolicy.maxQty, cartQty: cartQty, reservationQty: reservationQty, total: cartQty + reservationQty };
+  }
+
+  function quantityLimitText() {
+    var selectedPolicy = selectedDiscountPolicy();
+    var usage = purchaseLimitUsage();
+    if (usage && usage.total > 0) {
+      var source = usage.cartQty && usage.reservationQty ? "장바구니와 기존 예약에" : usage.cartQty ? "장바구니에" : "기존 예약에";
+      var remaining = Math.max(0, usage.limit - usage.total);
+      return source.replace(/에$/, "") + " " + usage.total + "매 · 추가 가능 " + remaining + "매";
+    }
+    var slot = program.slots.find(function (entry) { return entry.time === state.time; });
+    var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
+    if (remainingCapacity < 4) return "선택한 회차에는 " + remainingCapacity + "자리만 남아 최대 " + remainingCapacity + "매까지 담을 수 있어요.";
+    if (selectedPolicy) return "할인 선택 시 남은 할인 가능 " + remainingDiscountQty(selectedPolicy) + "매로 인원이 자동 고정돼요.";
+    return "할인 미적용은 최대 4매까지 인원을 선택할 수 있어요.";
   }
 
   function selectedMaxQty() {
@@ -1260,6 +1301,7 @@
     if (selectedPolicy && remainingDiscountQty(selectedPolicy) < 1) {
       state.discountPolicyId = ""; state.discount = false; state.discountQty = 0; selectedPolicy = null;
     }
+    syncQuantityWithDiscount();
     wrap.innerHTML = '<label class="discount-check"><input type="radio" name="booking-discount" value="" ' + (!state.discountPolicyId ? "checked" : "") + '> 할인 미적용</label>' + policies.map(function (policy) {
       var remaining = remainingDiscountQty(policy);
       var limitText = remaining < 1 ? "한도 소진" : remaining < Number(policy.maxQty || remaining) ? "잔여 " + remaining + "매" : "최대 " + policy.maxQty + "매";
@@ -1269,8 +1311,7 @@
       input.addEventListener("change", function () {
         state.discountPolicyId = input.value;
         state.discount = !!input.value;
-        state.qty = Math.min(state.qty, selectedMaxQty());
-        state.discountQty = selectedDiscountQty();
+        syncQuantityWithDiscount();
         update();
       });
     });
@@ -1399,8 +1440,23 @@
     renderCalendar();
   });
 
-  byId("qty-minus").addEventListener("click", function () { state.qty = Math.max(1, state.qty - 1); update(); });
-  byId("qty-plus").addEventListener("click", function () { state.qty = Math.min(selectedMaxQty(), state.qty + 1); update(); });
+  byId("booking-quantity-discount").addEventListener("click", function (event) {
+    var error = bookingSelectionError();
+    if (!error) return;
+    event.preventDefault(); event.stopPropagation(); notify(error);
+  }, true);
+  byId("qty-minus").addEventListener("click", function () {
+    var error = bookingSelectionError();
+    if (error) { notify(error); return; }
+    if (selectedDiscountPolicy() || state.qty <= 1) { notify(quantityLimitText()); return; }
+    state.qty = Math.max(1, state.qty - 1); update();
+  });
+  byId("qty-plus").addEventListener("click", function () {
+    var error = bookingSelectionError();
+    if (error) { notify(error); return; }
+    if (selectedDiscountPolicy() || state.qty >= selectedMaxQty()) { notify(quantityLimitText()); return; }
+    state.qty = Math.min(selectedMaxQty(), state.qty + 1); update();
+  });
   byId("add-to-cart").addEventListener("click", function () { addToCart(false); });
   byId("book-now").addEventListener("click", function () { addToCart(true); });
   byId("to-checkout").addEventListener("click", startCheckout);
