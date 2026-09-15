@@ -209,19 +209,33 @@
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
+  function storedTicketRecords(store) {
+    if (!store || !Array.isArray(store.reservations)) return [];
+    return store.reservations.reduce(function (records, reservation) {
+      if (!reservation) return records;
+      if (Array.isArray(reservation.tickets) && reservation.tickets.some(function (ticket) { return ticket && typeof ticket === "object"; })) {
+        reservation.tickets.forEach(function (ticket) {
+          records.push(Object.assign({ memberId: reservation.memberId, reservationId: reservation.id, paymentId: reservation.paymentId, createdAt: reservation.createdAt, paymentMethod: reservation.paymentMethod }, ticket));
+        });
+      } else records.push(reservation);
+      return records;
+    }, []);
+  }
+
   function readBookingReservations() {
     try {
       var store = JSON.parse(localStorage.getItem(reservationStoreKey) || "null");
       if (!store || !Array.isArray(store.reservations)) return [];
-      return store.reservations.filter(function (item) { return item && item.id && Number.isInteger(item.qty); }).map(function (item, index) {
+      var ticketRecords = storedTicketRecords(store);
+      return ticketRecords.filter(function (item) { return item && item.id && Number.isInteger(item.qty); }).map(function (item, index) {
         return {
-          id: item.id, orderId: item.orderId || "PAY-ORDER-" + (index + 1), memberId: item.memberId,
+          id: item.id, reservationId: item.reservationId || item.orderId || item.id, orderId: item.paymentId || item.orderId || "PAY-ORDER-" + (index + 1), memberId: item.memberId,
           location: item.location || "서울", department: item.department || "공원화사업추진TF",
           programKey: item.programKey === "play" ? "play" : "ride",
           program: item.name || (item.programKey === "play" ? "포니랑 놀기" : "포니 타기"), dateKey: item.dateKey,
           date: item.date || item.dateKey, time: item.time, qty: item.qty, price: item.price || 0, discount: !!item.discount,
           status: item.status === "cancelled" ? "취소 완료" : "예약 확정", createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("ko-KR") : "예약 생성", createdTimestamp: item.createdAt ? new Date(item.createdAt).getTime() : 0,
-          method: item.paymentMethod === "demo-card" ? "신용카드" : "기타 결제", tickets: Array.from({ length: item.qty }, function () { return item.status === "cancelled" ? "cancelled" : "confirmed"; }),
+          method: item.paymentMethod === "demo-card" ? "신용카드" : "기타 결제", ticketIds: Array.isArray(item.ticketIds) ? item.ticketIds.slice() : [], tickets: Array.from({ length: item.qty }, function () { return item.status === "cancelled" ? "cancelled" : "confirmed"; }),
           cancellationEvents: (item.cancellationHistory || []).map(function (event) { return { source: "customer", qty: Number(event.qty || 0), amount: Number(event.amount || 0), reason: "고객 직접 취소", createdAt: event.createdAt ? new Date(event.createdAt).toLocaleString("ko-KR") : "접수 시간 미기록" }; })
         };
       });
@@ -257,10 +271,14 @@
     return "";
   }
 
+  function reservationNumber(item) {
+    return item.reservationId || item.id.replace(/-G\d+$/, "").replace(/-\d+$/, "");
+  }
+
   function reservationRow(item) {
     var row = document.createElement("tr");
     row.dataset.reservationId = item.id;
-    row.innerHTML = '<td><strong>' + escapeHtml(item.id) + '</strong></td>' +
+    row.innerHTML = '<td><strong>' + escapeHtml(reservationNumber(item)) + '</strong><br><small>' + escapeHtml(item.id) + '</small></td>' +
       '<td><strong>' + escapeHtml(item.location) + '</strong><br><small>' + escapeHtml(item.department) + '</small></td>' +
       '<td><span class="table-program"><img src="' + (programs[item.programKey] ? programs[item.programKey].image : "assets/pony/cover.jpg") + '" alt=""><span class="table-program-info"><strong>' + escapeHtml(item.program) + '</strong></span></span></td>' +
       '<td><strong>' + escapeHtml(item.date) + '</strong><br><small>' + escapeHtml(item.time) + '</small></td>' +
@@ -284,7 +302,7 @@
     var status = byId("reservation-status").value;
     return allReservations().filter(function (item) {
       var inAccountScope = !currentAccount || currentAccount.scope === "all" || canManageDepartment(item.location, item.department);
-      return inAccountScope && (!search || item.id.toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey >= date) && (!endDate || item.dateKey <= endDate) && (!program || item.program === program) && (!status || item.status === status);
+      return inAccountScope && (!search || (reservationNumber(item) + " " + item.id + " " + item.orderId).toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey >= date) && (!endDate || item.dateKey <= endDate) && (!program || item.program === program) && (!status || item.status === status);
     }).sort(function (a, b) { return (b.createdTimestamp || Date.parse(b.createdAt) || 0) - (a.createdTimestamp || Date.parse(a.createdAt) || 0); });
   }
 
@@ -952,7 +970,12 @@
     var original = (sessionData[session.programKey] || []).find(function (item, index) { return session.programKey + "-session-" + index === session.key; });
     var times = [session.start + "~" + session.end];
     if (original) times.push(original[1] + "~" + original[2]);
-    var hasHistory = demoReservations.concat(store.reservations).some(function (item) {
+    var storedItems = store.reservations.reduce(function (items, reservation) {
+      if (reservation && Array.isArray(reservation.tickets) && reservation.tickets.some(function (ticket) { return ticket && typeof ticket === "object"; })) return items.concat(reservation.tickets);
+      if (reservation) items.push(reservation);
+      return items;
+    }, []);
+    var hasHistory = demoReservations.concat(storedItems).some(function (item) {
       if (!item) return false;
       if (item.sessionKey === session.key) return true;
       return (item.programKey === session.programKey || item.program === program.programName || item.name === program.programName) && times.indexOf(String(item.time || "").replace(/\s/g, "")) !== -1;
@@ -992,12 +1015,17 @@
     try {
       var store = JSON.parse(localStorage.getItem(reservationStoreKey) || "null");
       if (!store || !Array.isArray(store.reservations)) return;
-      var target = store.reservations.find(function (candidate) { return candidate.id === item.id; });
+      var parent = store.reservations.find(function (candidate) { return candidate.id === item.reservationId && Array.isArray(candidate.tickets); });
+      var target = parent ? parent.tickets.find(function (candidate) { return candidate.id === item.id; }) : store.reservations.find(function (candidate) { return candidate.id === item.id; });
       if (!target) return;
       target.cancellationHistory = target.cancellationHistory || [];
       target.cancellationHistory.push({ createdAt: new Date().toISOString(), qty: target.qty, amount: target.price || 0, status: "cancelled", reason: reason });
       target.status = "cancelled";
       target.qty = 0;
+      if (parent) {
+        parent.total = parent.tickets.reduce(function (sum, ticket) { return sum + Number(ticket.price || 0); }, 0);
+        parent.status = parent.tickets.every(function (ticket) { return ticket.status === "cancelled" || ticket.qty === 0; }) ? "cancelled" : "confirmed";
+      }
       localStorage.setItem(reservationStoreKey, JSON.stringify(store));
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
@@ -1408,8 +1436,8 @@
   function openDrawer(reservationId) {
     activeReservation = allReservations().find(function (item) { return item.id === reservationId; });
     if (!activeReservation) return;
-    byId("drawer-title").textContent = activeReservation.id;
-    byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약 식별</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일</dt><dd>' + escapeHtml(activeReservation.date) + '</dd></div><div><dt>회차</dt><dd>' + escapeHtml(activeReservation.time) + '</dd></div></dl>';
+    byId("drawer-title").textContent = reservationNumber(activeReservation);
+    byId("drawer-summary").innerHTML = '<h3>' + escapeHtml(activeReservation.program) + '</h3><dl><div><dt>예약번호</dt><dd>' + escapeHtml(reservationNumber(activeReservation)) + '</dd></div><div><dt>티켓 묶음</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상태</dt><dd><span class="table-status ' + statusClass(activeReservation.status) + '">' + activeReservation.status + '</span></dd></div><div><dt>이용일 · 회차</dt><dd>' + escapeHtml(activeReservation.date + " " + activeReservation.time) + '</dd></div></dl>';
     renderDrawerTickets();
     byId("payment-detail").innerHTML = '<div><dt>통합 결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>결제 수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제·환불 상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div><div><dt>구매금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불 누계</dt><dd>' + money(ticketRefundTotal(activeReservation)) + '</dd></div><div><dt>결제금액</dt><dd>' + money(activeReservation.price - ticketRefundTotal(activeReservation)) + '</dd></div>';
     var cancellationEvents = Array.isArray(activeReservation.cancellationEvents) ? activeReservation.cancellationEvents : [];
@@ -1427,7 +1455,7 @@
   function openPaymentReceipt() {
     if (!activeReservation) return;
     var refund = ticketRefundTotal(activeReservation);
-    byId("receipt-booking-info").innerHTML = '<div><dt>결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>예약번호</dt><dd>' + escapeHtml(activeReservation.id) + '</dd></div><div><dt>예약 상품</dt><dd>' + escapeHtml(activeReservation.program) + ' · ' + activeReservation.qty + '명</dd></div><div><dt>이용 일정</dt><dd>' + escapeHtml(activeReservation.date) + ' ' + escapeHtml(activeReservation.time) + '</dd></div><div><dt>운영 지점</dt><dd>' + escapeHtml(activeReservation.location) + ' · ' + escapeHtml(activeReservation.department) + '</dd></div>';
+    byId("receipt-booking-info").innerHTML = '<div><dt>결제번호</dt><dd>' + escapeHtml(activeReservation.orderId) + '</dd></div><div><dt>예약번호</dt><dd>' + escapeHtml(reservationNumber(activeReservation)) + '</dd></div><div><dt>예약 상품</dt><dd>' + escapeHtml(activeReservation.program) + ' · ' + activeReservation.qty + '명</dd></div><div><dt>이용 일정</dt><dd>' + escapeHtml(activeReservation.date) + ' ' + escapeHtml(activeReservation.time) + '</dd></div><div><dt>운영 지점</dt><dd>' + escapeHtml(activeReservation.location) + ' · ' + escapeHtml(activeReservation.department) + '</dd></div>';
     byId("receipt-amount-info").innerHTML = '<div><dt>구매금액</dt><dd>' + money(activeReservation.price) + '</dd></div><div><dt>환불금액</dt><dd>' + (refund ? '−' : '') + money(refund) + '</dd></div><div class="receipt-total"><dt>결제금액</dt><dd>' + money(activeReservation.price - refund) + '</dd></div>';
     byId("receipt-payment-info").innerHTML = '<div><dt>결제일시</dt><dd>' + escapeHtml(activeReservation.createdAt) + '</dd></div><div><dt>결제수단</dt><dd>' + escapeHtml(activeReservation.method) + '</dd></div><div><dt>결제상태</dt><dd>' + escapeHtml(paymentStatusLabel(activeReservation)) + '</dd></div>';
     byId("payment-receipt-dialog").showModal();
@@ -1452,7 +1480,8 @@
     var canManage = canManageDepartment(activeReservation.location, activeReservation.department);
     activeReservation.tickets.forEach(function (status, index) {
       var label = document.createElement("label"); label.className = "individual-ticket" + (status !== "confirmed" ? " is-cancelled" : "");
-      label.innerHTML = '<input type="checkbox" value="' + index + '" ' + (status !== "confirmed" || !canManage ? "disabled" : "") + '><span><strong>' + escapeHtml(activeReservation.id) + '-T' + String(index + 1).padStart(2, "0") + '</strong><small>배분 결제액 ' + money(ticketUnitPrice(activeReservation)) + '</small></span>' + (status === "cancelled" ? '<span class="ticket-cancelled-status">취소 완료</span>' : '');
+      var ticketId = Array.isArray(activeReservation.ticketIds) && activeReservation.ticketIds[index] ? activeReservation.ticketIds[index] : reservationNumber(activeReservation) + '-T' + String(index + 1).padStart(2, "0");
+      label.innerHTML = '<input type="checkbox" value="' + index + '" ' + (status !== "confirmed" || !canManage ? "disabled" : "") + '><span><strong>' + escapeHtml(ticketId) + '</strong><small>배분 결제액 ' + money(ticketUnitPrice(activeReservation)) + '</small></span>' + (status === "cancelled" ? '<span class="ticket-cancelled-status">취소 완료</span>' : '');
       label.querySelector("input").addEventListener("change", updateSelectedTickets); list.append(label);
     });
     byId("cancel-selected").title = canManage ? "" : "다른 지역 예약은 조회만 가능합니다.";
@@ -1609,7 +1638,7 @@
     var items = filteredReservations();
     if (!items.length) { notify("내려받을 예약 내역이 없습니다."); return; }
     var rows = [["예약번호", "지역", "담당부서", "프로그램", "이용일", "회차", "인원", "구매금액", "결제금액", "상태"]];
-    items.forEach(function (item) { rows.push([item.id, item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.price - ticketRefundTotal(item), item.status]); });
+    items.forEach(function (item) { rows.push([reservationNumber(item), item.location, item.department, item.program, item.date, item.time, item.qty, item.price, item.price - ticketRefundTotal(item), item.status]); });
     downloadCsv("렛츠런플레이_통합예약목록.csv", rows);
   });
   byId("download-settlement").addEventListener("click", function () {

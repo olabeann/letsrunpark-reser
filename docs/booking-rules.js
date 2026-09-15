@@ -31,9 +31,31 @@
     return item && !item.isExample && item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
   }
 
+  // New records are stored as one reservation with many product/session tickets.
+  // Legacy prototypes stored those tickets directly in `reservations`, so flatten both
+  // shapes at the policy boundary until existing browser data has naturally migrated.
+  function ticketRecords(reservations) {
+    return (reservations || []).reduce(function (records, reservation) {
+      if (!reservation) return records;
+      if (Array.isArray(reservation.tickets) && reservation.tickets.some(function (ticket) { return ticket && typeof ticket === "object"; })) {
+        reservation.tickets.forEach(function (ticket) {
+          if (!ticket || typeof ticket !== "object") return;
+          records.push(Object.assign({
+            memberId: reservation.memberId,
+            reservationId: reservation.id,
+            paymentId: reservation.paymentId,
+            createdAt: reservation.createdAt,
+            paymentMethod: reservation.paymentMethod
+          }, ticket));
+        });
+      } else records.push(reservation);
+      return records;
+    }, []);
+  }
+
   function findConflict(candidate, items, memberId) {
     if (!memberId) return null;
-    return items.find(function (item) {
+    return ticketRecords(items).find(function (item) {
       return item && item.memberId === memberId && isActive(item) && overlaps(candidate, item);
     }) || null;
   }
@@ -95,7 +117,7 @@
         totals[key] = (totals[key] || 0) + (Number.isInteger(entry.qty) ? entry.qty : 0);
       });
     }
-    tally(reservations);
+    tally(ticketRecords(reservations));
     tally(items);
     for (var i = 0; i < items.length; i += 1) {
       var program = programFor(items[i], programs), policy = program && program.purchasePolicy;
@@ -119,7 +141,7 @@
         totals[key] = (totals[key] || 0) + (Number.isInteger(discountedQty) ? discountedQty : 0);
       });
     }
-    tally(reservations);
+    tally(ticketRecords(reservations));
     tally(items);
     var exceededItem = items.find(function (item) {
       var program = programFor(item, programs), policy = program && program.discountPolicy;
@@ -171,19 +193,20 @@
   }
 
   function capacityConflict(items, reservations, programs) {
+    var paidTickets = ticketRecords(reservations);
     return items.find(function (item) {
       var program = programFor(item, programs);
       var slot = program && program.slots && program.slots.find(function (candidate) { return candidate.time === item.time; });
       if (!slot) return false;
       var capacity = slotCapacity(slot);
-      var paidSeats = reservations.filter(function (entry) {
+      var paidSeats = paidTickets.filter(function (entry) {
         return isActive(entry) && entry.programKey === item.programKey && entry.dateKey === item.dateKey && entry.time === item.time;
       }).reduce(function (sum, entry) { return sum + (Number.isInteger(entry.qty) ? entry.qty : 0); }, 0);
       return paidSeats + item.qty > capacity;
     }) || null;
   }
 
-  function buildOrder(store, memberId, programs, now, orderId) {
+  function buildOrder(store, memberId, programs, now, reservationId) {
     var cart = store.carts[memberId] || [];
     var error = validationError(cart, store.reservations, memberId, programs, now);
     if (error) throw new Error(error);
@@ -193,7 +216,8 @@
       conflictError.code = "SESSION_TAKEN";
       throw conflictError;
     }
-    if (store.reservations.some(function (item) { return item.orderId === orderId; })) throw new Error("이미 처리된 결제입니다.");
+    if (store.reservations.some(function (item) { return item.id === reservationId || item.reservationId === reservationId || item.orderId === reservationId; })) throw new Error("이미 처리된 결제입니다.");
+    var personSequence = 0;
     var tickets = cart.map(function (item, index) {
       var quoted = quoteItem(item, programs);
       var discountedQty = item.discount ? item.qty : 0;
@@ -201,19 +225,35 @@
       var unitAmounts = Array.from({ length: quoted.qty }, function (_, unitIndex) {
         return unitAmount + (unitIndex < quoted.price % quoted.qty ? 1 : 0);
       });
+      var ticketIds = Array.from({ length: quoted.qty }, function () {
+        personSequence += 1;
+        return reservationId + "-T" + String(personSequence).padStart(2, "0");
+      });
       return Object.assign(quoted, {
-        id: orderId + "-" + (index + 1), orderId: orderId,
+        id: reservationId + "-G" + String(index + 1).padStart(2, "0"), reservationId: reservationId,
+        ticketIds: ticketIds,
         discountQty: discountedQty, unitAmounts: unitAmounts,
         status: "confirmed", createdAt: now.toISOString(), paymentMethod: "demo-card"
       });
     });
+    var total = tickets.reduce(function (sum, item) { return sum + item.price; }, 0);
+    var reservation = {
+      id: reservationId,
+      memberId: memberId,
+      paymentId: "DEMO-PAY-" + reservationId,
+      paymentMethod: "demo-card",
+      createdAt: now.toISOString(),
+      status: "confirmed",
+      total: total,
+      tickets: tickets
+    };
     var carts = Object.assign({}, store.carts); carts[memberId] = [];
     return {
-      store: { revision: store.revision + 1, reservations: tickets.concat(store.reservations), carts: carts },
-      tickets: tickets, orderId: orderId,
-      total: tickets.reduce(function (sum, item) { return sum + item.price; }, 0)
+      store: { revision: store.revision + 1, reservations: [reservation].concat(store.reservations), carts: carts },
+      reservation: reservation, tickets: tickets, reservationId: reservationId,
+      total: total
     };
   }
 
-  return { interval: interval, overlaps: overlaps, isActive: isActive, findConflict: findConflict, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
+  return { interval: interval, overlaps: overlaps, isActive: isActive, ticketRecords: ticketRecords, findConflict: findConflict, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
 });

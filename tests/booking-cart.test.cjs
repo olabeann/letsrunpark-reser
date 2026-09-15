@@ -135,13 +135,17 @@ test('keeps ride and play as independent sellable programs in one cart', () => {
   assert.equal(error([ride, play]), '');
 });
 
-test('checkout recalculates prices and atomically produces one order with separate session tickets', () => {
+test('checkout recalculates prices and atomically produces one reservation with separate session tickets', () => {
   const before = store([item({ price: 1, discount: true }), tour({ price: 2 })]);
   const serialized = JSON.stringify(before);
   const order = rules.buildOrder(before, memberId, programs, now, 'order-1');
   assert.equal(order.total, 21000);
-  assert.deepEqual(order.tickets.map(ticket => ticket.orderId), ['order-1', 'order-1']);
+  assert.equal(order.reservation.id, 'order-1');
+  assert.equal(order.store.reservations[0].id, 'order-1');
+  assert.equal(order.store.reservations[0].tickets.length, 2);
+  assert.deepEqual(order.tickets.map(ticket => ticket.reservationId), ['order-1', 'order-1']);
   assert.equal(new Set(order.tickets.map(ticket => ticket.id)).size, 2);
+  assert.deepEqual(order.tickets.flatMap(ticket => ticket.ticketIds), ['order-1-T01', 'order-1-T02', 'order-1-T03', 'order-1-T04']);
   assert.equal(order.tickets[0].qty, 2, 'One customer ticket groups the session headcount');
   assert.deepEqual(order.tickets[0].unitAmounts, [2500, 2500], 'Each ticket keeps its paid amount snapshot');
   assert.equal(order.store.carts[memberId].length, 0);
@@ -202,7 +206,7 @@ test('storage failure does not report payment complete or clear the persisted ca
     checkoutSnapshot: JSON.stringify(original.carts[memberId]), reservationStorageKey: 'test-store',
     Date: class extends Date { constructor(...args) { super(...(args.length ? args : [now.getTime()])); } },
     window: { localStorage: { getItem: () => serialized, setItem: () => { throw new Error('Quota exceeded'); } } },
-    byId: id => elements[id], notify: message => messages.push(message), newId: () => 'failed-order',
+    byId: id => elements[id], notify: message => messages.push(message), nextOrderId: () => 'failed-order',
     withStoreLock: action => Promise.resolve().then(action),
     renderSlots() {}, update() {}, renderCart() {}, renderBookingItems() {},
     goToStep: () => { completed = true; },

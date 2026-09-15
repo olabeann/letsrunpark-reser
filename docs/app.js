@@ -276,8 +276,8 @@
     byId("ticket-time").textContent = ticketReservation.time;
     byId("ticket-people").textContent = ticketReservation.qty + "명";
     byId("ticket-admission-count").textContent = "총 " + ticketReservation.qty + "명";
-    byId("ticket-reservation-number").textContent = ticketReservation.id;
-    byId("ticket-order-number").textContent = ticketReservation.orderId || ticketReservation.id;
+    byId("ticket-reservation-number").textContent = ticketReservation.reservationId || ticketReservation.id;
+    byId("ticket-order-number").textContent = ticketReservation.reservationId || ticketReservation.id;
     byId("ticket-payment-date").textContent = formatPaymentDate(ticketReservation.createdAt);
     byId("ticket-payment-method").textContent = paymentMethodLabel(ticketReservation.paymentMethod);
     byId("ticket-payment-status").textContent = ticketPaymentStatus(ticketReservation);
@@ -415,7 +415,7 @@
 
   function readReservations() {
     var store = readStore();
-    return currentMember && store ? store.reservations.filter(function (item) { return item && item.memberId === currentMember.id && BookingRules.isActive(item); }) : [];
+    return currentMember && store ? BookingRules.ticketRecords(store.reservations).filter(function (item) { return item && item.memberId === currentMember.id && BookingRules.isActive(item); }) : [];
   }
 
   function writeStore(store) {
@@ -447,21 +447,33 @@
     var paidAmounts = ticketPaidAmounts(ticketReservation);
     var cancelledIndexes = selected.map(function (input) { return Number(input.dataset.index); });
     var remainingUnitAmounts = paidAmounts.filter(function (_, index) { return !cancelledIndexes.includes(index); });
+    var remainingTicketIds = Array.isArray(ticketReservation.ticketIds) ? ticketReservation.ticketIds.filter(function (_, index) { return !cancelledIndexes.includes(index); }) : undefined;
     var historyItem = { createdAt: new Date().toISOString(), qty: selected.length, discountQty: discountedCancelled, regularQty: regularCancelled, amount: refundAmount, status: "cancelled" };
     var updated = Object.assign({}, ticketReservation, {
       qty: ticketReservation.qty - selected.length,
       price: Math.max(0, ticketReservation.price - refundAmount),
       discountQty: Math.max(0, ticketDiscountQty(ticketReservation) - discountedCancelled),
       unitAmounts: remainingUnitAmounts,
+      ticketIds: remainingTicketIds,
       cancellationHistory: (ticketReservation.cancellationHistory || []).concat(historyItem)
     });
     updated.discount = updated.discountQty > 0;
     if (updated.qty === 0) updated.status = "cancelled";
 
     var store = readStore();
-    var storedIndex = store && store.reservations.findIndex(function (item) { return item.id === ticketReservation.id; });
-    if (store && storedIndex >= 0) {
-      store.reservations[storedIndex] = updated; store.revision += 1;
+    var storedReservation = store && store.reservations.find(function (item) {
+      return item.id === ticketReservation.reservationId && Array.isArray(item.tickets);
+    });
+    var storedTicketIndex = storedReservation && storedReservation.tickets.findIndex(function (item) { return item.id === ticketReservation.id; });
+    var legacyIndex = store && store.reservations.findIndex(function (item) { return item.id === ticketReservation.id; });
+    if (storedReservation && storedTicketIndex >= 0) {
+      storedReservation.tickets[storedTicketIndex] = updated;
+      storedReservation.total = storedReservation.tickets.reduce(function (sum, item) { return sum + Number(item.price || 0); }, 0);
+      storedReservation.status = storedReservation.tickets.every(function (item) { return item.status === "cancelled" || item.qty === 0; }) ? "cancelled" : "confirmed";
+      store.revision += 1;
+      if (!writeStore(store)) return;
+    } else if (store && legacyIndex >= 0) {
+      store.reservations[legacyIndex] = updated; store.revision += 1;
       if (!writeStore(store)) return;
     } else saveDemoCancellation(updated);
 
@@ -671,13 +683,13 @@
           notify("예약 정보가 변경되었습니다. 금액과 일정을 다시 확인하고 동의해주세요."); return;
         }
         var order = BookingRules.buildOrder(store, memberId, programs, new Date(), nextOrderId(new Date()));
-        // One storage write commits all session tickets and clears the cart together.
+        // One storage write commits one reservation containing all session tickets.
         if (!writeStore(order.store)) return;
         completedOrder = order; ticketReservation = null;
         renderBookingItems(byId("complete-items"), order.tickets, false);
-        byId("complete-order-id").textContent = order.orderId;
+        byId("complete-order-id").textContent = order.reservationId;
         byId("complete-total").textContent = money(order.total);
-        byId("complete-count").textContent = order.tickets.length + "개 회차의 예약이 완료되었어요.";
+        byId("complete-count").textContent = "예약 1건에 " + order.tickets.length + "개 티켓이 발급되었어요.";
         goToStep(3); notify("결제가 완료되었습니다.");
       });
     } catch (error) {
@@ -735,9 +747,9 @@
     endedDate.setDate(endedDate.getDate() - 1);
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     var defaults = [
-      { id: ticketReservationId(now, active.slot.time), orderId: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(upcomingDate, secondSlot) + "-4", orderId: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(endedDate, endedSlot), orderId: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
+      { id: ticketReservationId(now, active.slot.time) + "-G01", reservationId: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(upcomingDate, secondSlot) + "-G01", reservationId: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(endedDate, endedSlot) + "-G01", reservationId: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
@@ -746,12 +758,8 @@
   function ticketListReservations(now) {
     now = now || new Date();
     var reservations = readReservations();
-    // Demo samples always show one ticket per status (upcoming/active/ended) so the three
-    // states stay visible for reference even after the account has its own real bookings.
-    var reservedIds = {};
-    reservations.forEach(function (item) { reservedIds[item.id] = true; });
-    var samples = defaultTicketReservations(now).filter(function (item) { return !reservedIds[item.id]; });
-    var visibleReservations = reservations.concat(samples);
+    // Samples explain the three states only while this demo account has no real tickets.
+    var visibleReservations = reservations.length ? reservations : defaultTicketReservations(now);
     var stateOrder = { upcoming: 0, active: 1, ended: 2 };
     return visibleReservations.sort(function (first, second) {
       return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
@@ -1043,9 +1051,8 @@
       goToStep(1, { history: false });
     } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
     else if (route.get("view") === "complete") {
-      // Completed-order receipt isn't persisted across reloads; a stale link can't be replayed into the cart.
-      selectProgram(state.programKey, false);
-      goToStep(1, { history: false });
+      // Completed reservation receipts are not persisted; return to the cart for a fresh review.
+      renderCart(); goToStep(4, { replace: true });
     } else if (["cart", "checkout"].includes(route.get("view"))) {
       // Returning to checkout always requires a fresh review from the cart.
       renderCart(); goToStep(4, { replace: true });
