@@ -22,12 +22,13 @@ test('exact dates, cards, search and scope constrain screen/export source identi
  assert.ok(L.payments.every(p=>/^LRP-\d{6}-\d{5}$/.test(p.reservation)));
  assert.equal(L.filter({...may,search:'LRP-260510-00003'},()=>true).length,3);
  assert.ok(!L.payments.some(p=>p.method==='계좌이체'));
+ assert.ok(L.payments.every(p=>p.method==='카드'&&!p.easyPay));
  assert.ok(!L.headers.includes('예약번호'));
  assert.ok(!L.headers.includes('수수료 공급가액'));
  const rows=L.filter({...may,card:'국민카드',start:'2026-05-31'},()=>true);
  assert.equal(rows.length,1);assert.equal(L.totals(rows).net,10000);
  assert.equal(L.sheets(rows,may)[1].rows.length,2);
- assert.equal(L.filter({...may,type:'취소'},()=>true).length,4);
+ assert.equal(L.filter({...may,type:'취소'},()=>true).length,10,'summary filters must keep approvals and cancellations together');
 });
 test('demo fees are populated and June cancellation does not rewrite May',()=>{
  const row=L.filter({...may,start:'2026-05-31'},()=>true)[0];
@@ -61,7 +62,7 @@ test('xlsx is a ZIP workbook with numeric amounts and literal formula-like strin
 test('cancellation rows distinguish partial from full and preserve event-time balance',()=>{
  const partial=L.events.filter(e=>e.paymentId==='demo-pay-003'&&e.type==='취소');
  assert.deepEqual(partial.map(L.balance),[10000,5000]);
- assert.deepEqual(partial.map(e=>e.ticketIds),[['LRP-260510-00003-T01'],['LRP-260510-00003-T02','LRP-260510-00003-T03']]);
+ assert.deepEqual(partial.map(e=>e.ticketIds),[['LRP-260510-00003-T01'],['LRP-260510-00003-T02']]);
  assert.ok(partial.every(e=>L.state(e)==='부분 취소'));
  const full=L.events.find(e=>e.paymentId==='demo-pay-004'&&e.type==='취소');
  assert.equal(L.state(full),'전체 취소');
@@ -69,9 +70,11 @@ test('cancellation rows distinguish partial from full and preserve event-time ba
 });
 
 test('admin rendering and download use identical filtered ledger and reject reversed dates',async()=>{
- const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),source=fs.readFileSync(path.join(__dirname,'../admin.js'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../admin-reference.css'),'utf8');
- const elements={};
- for(const id of ['settlement-start-date','settlement-end-date','settlement-card-filter','settlement-region-filter','settlement-department-filter','settlement-type-filter','settlement-detail-search','download-settlement','settlement-date-error','settlement-metrics','settlement-card-count','settlement-summary-body','settlement-summary-foot','settlement-detail-body'])elements[id]={value:'',innerHTML:'',textContent:'',addEventListener(_,fn){this.click=fn;}};
+ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),source=fs.readFileSync(path.join(__dirname,'../admin.js'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../admin-reference.css'),'utf8'),html=fs.readFileSync(path.join(__dirname,'../admin.html'),'utf8');
+  const elements={};
+ for(const id of ['settlement-start-date','settlement-end-date','settlement-card-filter','settlement-region-filter','settlement-department-filter','settlement-detail-search','download-settlement','settlement-date-error','settlement-metrics','settlement-card-count','settlement-summary-body','settlement-summary-foot','settlement-detail-body'])elements[id]={value:'',innerHTML:'',textContent:'',addEventListener(_,fn){this.click=fn;}};
+ assert.ok(!html.includes('id="settlement-type-filter"'));
+ assert.ok(!source.includes('byId("settlement-type-filter")'));
  elements['settlement-start-date'].value='2026-06-01';elements['settlement-end-date'].value='2026-06-30';elements['settlement-detail-search'].value='포니 타기';
  let downloaded;
  const ctx={SettlementLedger:L,SettlementXlsx,byId:id=>elements[id],canManageDepartment:()=>true,money:n=>n+'원',escapeHtml:String,notify:()=>{},setTimeout:()=>{},URL:{createObjectURL:blob=>{downloaded=blob;return 'blob:test';}},document:{createElement:()=>({click(){},remove(){}}),body:{appendChild(){}}}};
@@ -79,15 +82,24 @@ test('admin rendering and download use identical filtered ledger and reject reve
  vm.runInContext(source.slice(source.indexOf('  function settlementFilters()'),source.indexOf('  function closeSettlementDrawer()')),ctx);
  vm.runInContext(source.slice(source.indexOf('  byId("download-settlement").addEventListener'),source.indexOf('  function openDeveloperPolicy()')),ctx);
  assert.equal(ctx.renderSettlementSummary(),true);
- assert.match(elements['settlement-card-count'].textContent,/4개 거래/);
+ assert.match(elements['settlement-card-count'].textContent,/2건 결제 · 4개 거래/);
  assert.ok(!elements['settlement-detail-body'].innerHTML.includes('확인 대기'));
- assert.match(elements['settlement-detail-body'].innerHTML, /<td>2026-06-06<\/td><td>카드<\/td><td>국민카드<\/td>/);
- assert.match(elements['settlement-detail-body'].innerHTML, /지급예정액<\/dt><dd>0원<\/dd>/);
- assert.match(elements['settlement-detail-body'].innerHTML, /지급예정일<\/dt><dd>—<\/dd>/);
- assert.match(elements['settlement-detail-body'].innerHTML, /예약번호<\/dt><dd>LRP-260510-00003<\/dd>/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /LRP-260510-00003[\s\S]*15000원[\s\S]*−10000원[\s\S]*5000원[\s\S]*100원[\s\S]*4900원/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /aria-label="거래 3건 펼치기"/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /승인 · 취소 거래 이력/);
+ assert.match(elements['settlement-detail-body'].innerHTML, /결제수단<\/dt><dd>카드<\/dd>[\s\S]*카드사<\/dt><dd>국민카드<\/dd>/);
  assert.match(elements['settlement-detail-body'].innerHTML, /취소 티켓 번호<\/dt><dd>LRP-260510-00003-T01<\/dd>/);
  assert.match(elements['settlement-detail-body'].innerHTML, /<strong>LRP-260510-00003<\/strong><small>포니 타기<\/small>/);
- assert.match(css, /settlement-readable-table th:first-child[^}]*min-width:170px/);
+ assert.equal((elements['settlement-detail-body'].innerHTML.match(/<strong>LRP-260510-00003<\/strong>/g)||[]).length,1);
+ assert.match(css, /settlement-readable-table \{[^}]*table-layout:fixed/);
+ assert.match(css, /settlement-readable-table th \{[^}]*text-align:center[^}]*vertical-align:middle/);
+ assert.match(css, /settlement-readable-table td \{[^}]*text-align:center[^}]*vertical-align:middle/);
+ assert.match(css, /money-cell \{ text-align:center/);
+ assert.match(css, /settlement-readable-table th:first-child[^}]*text-align:left/);
+ assert.match(css, /settlement-readable-table th:first-child[^}]*padding-left:32px/);
+ assert.match(css, /settlement-readable-table th:last-child[^}]*padding-right:32px[^}]*text-align:right/);
+ assert.match(css, /settlement-timeline-item:not\(:last-child\):after/);
+ assert.ok(!elements['settlement-detail-body'].innerHTML.includes('<small>수수료'));
  assert.match(elements['settlement-metrics'].innerHTML,/<small>승인금액<\/small><strong>42000원<\/strong>/);
  assert.match(elements['settlement-metrics'].innerHTML,/취소 수수료 조정 반영 완료/);
  assert.match(elements['settlement-metrics'].innerHTML,/순매출 - 수수료/);

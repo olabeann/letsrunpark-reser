@@ -319,6 +319,13 @@
     return date.getFullYear() + "." + String(date.getMonth() + 1).padStart(2, "0") + "." + String(date.getDate()).padStart(2, "0") + " " + formatTime(date, false);
   }
 
+  function formatTicketGroupDate(value) {
+    if (!value) return "결제일 확인 중";
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "결제일 확인 중";
+    return formatBookingDate(date);
+  }
+
   function paymentMethodLabel(method) {
     return method === "demo-card" || method === "card" || !method ? "신용카드" : method;
   }
@@ -797,7 +804,19 @@
 
   function renderBookingItems(container, items, editable) {
     container.replaceChildren();
-    items.forEach(function (item) {
+    var displayItems = editable ? items : Array.from(items.reduce(function (groups, item) {
+      var key = [item.programKey, item.experience || "", item.dateKey || item.date, item.time, item.discountPolicyId || "", item.discount ? "discount" : "regular"].join("|");
+      var grouped = groups.get(key);
+      if (!grouped) {
+        groups.set(key, Object.assign({}, item));
+      } else {
+        grouped.qty += item.qty;
+        grouped.price += item.price;
+        grouped.discountQty = (grouped.discountQty || 0) + (item.discountQty || 0);
+      }
+      return groups;
+    }, new Map()).values());
+    displayItems.forEach(function (item) {
       var card = document.createElement("article"); card.className = "cart-item";
       var thumbnail = document.createElement("img"); thumbnail.className = "cart-item__image";
       var itemProgram = programs[item.programKey] || programs.ride;
@@ -845,7 +864,8 @@
     renderBookingItems(byId("cart-items"), pricedCart, true);
     renderBookingItems(byId("confirm-items"), pricedCart, false);
     byId("final-price").textContent = money(total);
-    byId("checkout-account").textContent = currentMember ? currentMember.label + " · " + cart.length + "명 일괄결제" : "";
+    var checkoutTotal = byId("checkout-total");
+    if (checkoutTotal) checkoutTotal.textContent = money(total);
     var error = store && cart.length ? BookingRules.validationError(cart, store.reservations, currentMember.id, programs, new Date()) : "";
     byId("cart-error").textContent = error;
     byId("cart-error").hidden = !error;
@@ -954,13 +974,29 @@
     var endedDate = new Date(now);
     endedDate.setDate(endedDate.getDate() - 1);
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
+    var groupedReservationId = ticketReservationId(samplePaidDate, 1);
     var defaults = [
-      { id: ticketReservationId(samplePaidDate, 1) + "-G01", reservationId: ticketReservationId(samplePaidDate, 1), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(samplePaidDate, 3) + "-G01", reservationId: ticketReservationId(samplePaidDate, 3), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
+      { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
+  }
+
+  function exampleTicketsNeedRefresh(records) {
+    if (!records.length || !records.every(function (item) { return item.isExample; })) return false;
+    if (!ticketListGroups(records).some(function (group) { return group.tickets.length > 1; })) return true;
+    var byUsageDate = new Map();
+    records.forEach(function (item) {
+      var totals = byUsageDate.get(item.dateKey) || { qty: 0, discountQty: 0 };
+      totals.qty += Number(item.qty) || 0;
+      totals.discountQty += ticketDiscountQty(item);
+      byUsageDate.set(item.dateKey, totals);
+    });
+    return Array.from(byUsageDate.values()).some(function (totals) {
+      return totals.qty > 4 || totals.discountQty > 2;
+    });
   }
 
   function persistDefaultTicketReservations(tickets) {
@@ -968,32 +1004,55 @@
     var store = readStore();
     if (!store) return tickets;
     var memberRecords = BookingRules.ticketRecords(store.reservations).filter(function (item) { return item && item.memberId === currentMember.id; });
-    if (memberRecords.length) return memberRecords.filter(function (item) {
-      return item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
-    });
-    var parents = tickets.map(function (ticket) {
+    if (memberRecords.length) {
+      var activeMemberRecords = memberRecords.filter(function (item) {
+        return item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
+      });
+      var shouldRefreshExamples = exampleTicketsNeedRefresh(activeMemberRecords);
+      if (!shouldRefreshExamples) return activeMemberRecords;
+      store.reservations = store.reservations.filter(function (reservation) {
+        return !(reservation && reservation.isExample && reservation.memberId === currentMember.id);
+      });
+    }
+    var parentsById = new Map();
+    tickets.forEach(function (ticket) {
+      var parent = parentsById.get(ticket.reservationId);
+      if (!parent) {
+        parent = {
+          id: ticket.reservationId,
+          memberId: currentMember.id,
+          paymentId: "DEMO-PAY-" + ticket.reservationId,
+          paymentMethod: "demo-card",
+          createdAt: ticket.createdAt,
+          status: "confirmed",
+          total: 0,
+          isExample: true,
+          tickets: [],
+          personSequence: 0
+        };
+        parentsById.set(ticket.reservationId, parent);
+      }
       var discountQty = Number.isInteger(ticket.discountQty) ? ticket.discountQty : ticket.discount ? ticket.qty : 0;
       var regularAmount = (programs[ticket.programKey] || programs.ride).price;
       var discountAmount = discountQty ? Math.round((ticket.price - regularAmount * (ticket.qty - discountQty)) / discountQty) : regularAmount;
       var unitAmounts = Array.from({ length: ticket.qty }, function (_, index) { return index < discountQty ? discountAmount : regularAmount; });
+      var ticketIds = Array.from({ length: ticket.qty }, function () {
+        parent.personSequence += 1;
+        return ticket.reservationId + "-T" + String(parent.personSequence).padStart(2, "0");
+      });
       var savedTicket = Object.assign({}, ticket, {
         memberId: currentMember.id,
         isExample: true,
         status: "confirmed",
-        ticketIds: Array.from({ length: ticket.qty }, function (_, index) { return ticket.reservationId + "-T" + String(index + 1).padStart(2, "0"); }),
+        ticketIds: ticketIds,
         unitAmounts: unitAmounts
       });
-      return {
-        id: ticket.reservationId,
-        memberId: currentMember.id,
-        paymentId: "DEMO-PAY-" + ticket.reservationId,
-        paymentMethod: "demo-card",
-        createdAt: ticket.createdAt,
-        status: "confirmed",
-        total: ticket.price,
-        isExample: true,
-        tickets: [savedTicket]
-      };
+      parent.total += ticket.price;
+      parent.tickets.push(savedTicket);
+    });
+    var parents = Array.from(parentsById.values()).map(function (parent) {
+      delete parent.personSequence;
+      return parent;
     });
     store.reservations = parents.concat(store.reservations);
     store.revision += 1;
@@ -1005,11 +1064,57 @@
     var reservations = readReservations();
     // Persist the first demo tickets in the same reservation store the admin reads,
     // so both screens always show the exact same reservation number.
-    var visibleReservations = reservations.length ? reservations : persistDefaultTicketReservations(defaultTicketReservations(now));
+    var needsExampleRefresh = exampleTicketsNeedRefresh(reservations);
+    var visibleReservations = !reservations.length || needsExampleRefresh ? persistDefaultTicketReservations(defaultTicketReservations(now)) : reservations;
     var stateOrder = { upcoming: 0, active: 1, ended: 2 };
     return visibleReservations.sort(function (first, second) {
       return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
     });
+  }
+
+  function ticketListGroups(reservations) {
+    var groups = [];
+    var byReservationId = new Map();
+    reservations.forEach(function (reservation) {
+      var groupId = reservation.reservationId || ticketReservationNumber(reservation);
+      var group = byReservationId.get(groupId);
+      if (!group) {
+        group = { id: groupId, tickets: [], date: reservation.date || formatTicketGroupDate(reservation.createdAt), total: 0 };
+        byReservationId.set(groupId, group);
+        groups.push(group);
+      }
+      group.tickets.push(reservation);
+      group.total += Number(reservation.price) || 0;
+      if ((!group.date || group.date === "결제일 확인 중") && reservation.date) group.date = reservation.date;
+    });
+    return groups;
+  }
+
+  function createTicketListCard(reservation) {
+    var programData = programs[reservation.programKey] || programs.ride;
+    var timing = ticketTiming(reservation, new Date());
+    var card = document.createElement("button");
+    card.type = "button";
+    card.className = "ticket-list-card";
+    card.setAttribute("data-reservation-id", reservation.id);
+    card.setAttribute("aria-label", reservation.name + " 티켓 보기");
+
+    var image = document.createElement("img");
+    var experienceData = programData.experiences && programData.experiences[reservation.experience];
+    image.src = experienceData ? experienceData.image : programData.image;
+    image.alt = "";
+    var body = document.createElement("span");
+    body.className = "ticket-list-card__body";
+    var status = createTextElement("small", "ticket-list-card__status ticket-list-card__status--" + timing.accessState, timing.status.label);
+    status.setAttribute("data-ticket-status", "");
+    card.setAttribute("data-access-state", timing.accessState);
+    body.append(status);
+    body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
+    body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
+    body.append(createTextElement("span", "ticket-list-card__meta", reservation.qty + "명 · " + money(reservation.price)));
+    card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
+    card.addEventListener("click", function () { showTicketDetail(reservation.id); });
+    return card;
   }
 
   function renderTicketList() {
@@ -1030,33 +1135,19 @@
       return;
     }
 
-    ticketReservations.forEach(function (reservation) {
-      var programData = programs[reservation.programKey] || programs.ride;
-      var timing = ticketTiming(reservation, new Date());
-      var card = document.createElement("button");
-      card.type = "button";
-      card.className = "ticket-list-card";
-      card.setAttribute("data-reservation-id", reservation.id);
-      card.setAttribute("aria-label", reservation.name + " 티켓 보기");
-
-      var image = document.createElement("img");
-      var experienceData = programData.experiences && programData.experiences[reservation.experience];
-      image.src = experienceData ? experienceData.image : programData.image;
-      image.alt = "";
-      var body = document.createElement("span");
-      body.className = "ticket-list-card__body";
-      var status = createTextElement("small", "ticket-list-card__status ticket-list-card__status--" + timing.accessState, timing.status.label);
-      status.setAttribute("data-ticket-status", "");
-      card.setAttribute("data-access-state", timing.accessState);
-      body.append(status);
-      body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
-      body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-      var metaText = reservation.qty + "명 · " + money(reservation.price) + (ticketDiscountQty(reservation) ? " · " + (reservation.discountLabel || "할인 적용") : "");
-      var meta = createTextElement("span", "ticket-list-card__meta", metaText);
-      body.append(meta);
-      card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
-      card.addEventListener("click", function () { showTicketDetail(reservation.id); });
-      list.append(card);
+    ticketListGroups(ticketReservations).forEach(function (group) {
+      var groupCard = document.createElement("article");
+      groupCard.className = "ticket-list-group";
+      groupCard.setAttribute("aria-label", group.date + " 예약 티켓 " + group.tickets.length + "개");
+      var header = document.createElement("header");
+      header.className = "ticket-list-group__header";
+      header.append(createTextElement("span", "ticket-list-group__date", group.date));
+      header.append(createTextElement("strong", "ticket-list-group__total", money(group.total)));
+      var items = document.createElement("div");
+      items.className = "ticket-list-group__items";
+      group.tickets.forEach(function (reservation) { items.append(createTicketListCard(reservation)); });
+      groupCard.append(header, items);
+      list.append(groupCard);
     });
   }
 

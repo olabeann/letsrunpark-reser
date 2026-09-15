@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>렛츠런파크 체험 예약</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260914-policy-readable1"><link rel="stylesheet" href="styles.css?v=20260915-delete-align1">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260915-ticket-polish2"><link rel="stylesheet" href="styles.css?v=20260915-checkout-layout2">
 </head>
 <body data-page="booking" class="shop-page">
   <header class="reservation-header shop-header">
-    <a class="reservation-brand" href="index.html" aria-label="렛츠런파크 서울 홈"><img src="assets/logo/pony-land.png" alt=""><span class="reservation-brand__context"><b>렛츠런파크 서울</b></span></a>
+    <a class="reservation-brand" href="index.html" aria-label="렛츠런파크 서울 홈"><img src="assets/logo/logo_color.svg" alt=""><span class="reservation-brand__context"><b>렛츠런파크 서울</b></span></a>
     <div class="demo-only-controls" aria-label="지역 및 관리자 메뉴">
       <nav class="region-switch" aria-label="지역 선택"><a href="index.html" class="is-active">서울</a><a href="busan.html">부산경남</a><a href="jeju.html">제주</a></nav>
       <a class="shop-nav__link shop-nav__admin" href="admin.html">관리자</a>
@@ -38,7 +38,7 @@
         <div class="booking-flow__layout">
           <div class="product-options booking-form">
             <div class="option-field booking-first-field"><h2><span aria-hidden="true">01</span>체험 선택</h2><div class="program-picker chips" id="program-picker" role="group" aria-label="체험 선택"><button type="button" class="chip" data-program-key="ride" aria-pressed="false"><strong>포니 타기</strong><small>5,000원</small></button><button type="button" class="chip" data-program-key="play" aria-pressed="false"><strong>포니랑 놀기</strong><small>4,000원</small></button></div></div>
-            <div class="option-field"><h2><span aria-hidden="true">02</span>이용 날짜</h2><details class="date-picker" id="date-picker"><summary><span id="selected-date-label">날짜를 선택해주세요</span><span aria-hidden="true">⌄</span></summary><div class="date-picker-content"><p id="booking-window-note">오늘부터 2주 이내 토·일요일만 예약 가능</p><div class="month-title"><button type="button" id="calendar-prev" aria-label="이전 달">‹</button><strong id="calendar-title" aria-live="polite"></strong><button type="button" id="calendar-next" aria-label="다음 달">›</button></div><div class="calendar-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendar-grid" aria-label="예약 날짜 선택"></div></div></details></div>
+            <div class="option-field"><h2><span aria-hidden="true">02</span>이용 날짜</h2><details class="date-picker" id="date-picker"><summary><span id="selected-date-label">날짜를 선택해주세요</span><span class="date-picker__chevron" aria-hidden="true"></span></summary><div class="date-picker-content"><p id="booking-window-note">오늘부터 2주 이내 토·일요일만 예약 가능</p><div class="month-title"><button type="button" id="calendar-prev" aria-label="이전 달">‹</button><strong id="calendar-title" aria-live="polite"></strong><button type="button" id="calendar-next" aria-label="다음 달">›</button></div><div class="calendar-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendar-grid" aria-label="예약 날짜 선택"></div></div></details></div>
             <div class="option-field"><h2><span aria-hidden="true">03</span>이용 시간</h2><p class="option-placeholder" id="slot-placeholder">날짜를 선택하면 예약 가능한 시간을 확인할 수 있어요.</p><div class="booking-slots chips" id="booking-slots" aria-label="예약 회차 선택"></div><p class="session-duration-note">같은 상품·회차는 일일 구매 한도와 잔여 수량 내에서 인원을 추가할 수 있어요.</p></div>
             <div class="option-field" id="booking-quantity-discount"><div class="quantity-row"><div><h2><span aria-hidden="true">04</span>인원</h2><small id="booking-unit-price">1인 5,000원</small></div><div class="quantity-control"><button type="button" id="qty-minus" aria-label="인원 줄이기" aria-describedby="booking-quantity-limit">−</button><strong id="booking-qty">1</strong><button type="button" id="qty-plus" aria-label="인원 늘리기" aria-describedby="booking-quantity-limit">＋</button></div></div><small class="quantity-limit" id="booking-quantity-limit" aria-live="polite">할인 미적용은 최대 4매까지 인원을 선택할 수 있어요.</small><fieldset class="discount-options" id="booking-discount-options"><legend>할인 선택</legend></fieldset></div>
           </div>
@@ -52,7 +52,25 @@
         <aside class="cart-order-summary" aria-label="결제 예정 금액"><h2>결제 금액</h2><dl><div><dt>상품 금액</dt><dd id="cart-subtotal">0원</dd></div><div><dt>할인 금액</dt><dd id="cart-discount">0원</dd></div></dl><div class="summary-price"><span>총 결제 예정 금액</span><strong id="cart-total">0원</strong></div><button class="btn btn--cta btn--full" id="to-checkout" type="button" disabled><span id="cart-checkout-count">0</span>개 티켓 주문하기</button><small>장바구니 카드 1개당 1명의 티켓이 발급됩니다.</small></aside></div>
       </div>
     </section>
-    <section class="booking-stage" data-booking-step="2"><div class="confirm-wrap shop-checkout"><button class="back-link" id="back-to-select" type="button">← 예약 옵션으로</button><h1>예약 내용 확인</h1><section class="checkout-section"><h2>예약 정보</h2><div id="confirm-items" class="checkout-items"></div></section><p id="cart-error" class="cart-error" role="alert" hidden></p><section class="checkout-section"><h2>예약 계정</h2><p id="checkout-account" class="checkout-account"></p></section><div class="confirm-section"><h2>결제 수단</h2><div class="payment-options"><button class="is-selected" type="button" data-payment-method="card" aria-pressed="true">신용카드</button></div></div><label class="terms"><input type="checkbox" id="terms"> 예약 및 취소 규정에 동의합니다.</label><div class="confirm-bottom"><button class="btn btn--payment btn--full" id="complete-payment"><span id="final-price">0원</span> 결제하기</button></div></div></section>
+    <section class="booking-stage" data-booking-step="2">
+      <div class="confirm-wrap shop-checkout">
+        <button class="back-link" id="back-to-select" type="button">← 예약 옵션으로</button>
+        <header class="checkout-heading"><h1>예약 내용 확인</h1><p>선택한 일정과 결제 정보를 마지막으로 확인해주세요.</p></header>
+        <div class="checkout-layout">
+          <div class="checkout-main">
+            <section class="checkout-section"><h2>예약 정보</h2><div id="confirm-items" class="checkout-items"></div></section>
+            <p id="cart-error" class="cart-error" role="alert" hidden></p>
+          </div>
+          <aside class="checkout-payment" aria-label="결제 정보">
+            <h2>결제 정보</h2>
+            <div class="checkout-total"><span>총 결제 금액</span><strong id="checkout-total">0원</strong></div>
+            <div class="confirm-section"><h3>결제 수단</h3><div class="payment-options"><button class="is-selected" type="button" data-payment-method="card" aria-pressed="true">신용카드 <span aria-hidden="true">✓</span></button></div></div>
+            <label class="terms"><input type="checkbox" id="terms"><span>예약 및 취소 규정에 동의합니다.</span></label>
+            <div class="confirm-bottom"><button class="btn btn--payment btn--full" id="complete-payment"><span id="final-price">0원</span> 결제하기</button></div>
+          </aside>
+        </div>
+      </div>
+    </section>
     <section class="booking-stage" data-booking-step="3">
       <div class="complete-wrap reservation-complete">
         <div class="complete-check" aria-hidden="true">✓</div><h1>예약이 완료되었어요</h1><p id="complete-count"></p><p>하나의 예약번호로 상품·회차별 티켓을 확인할 수 있어요.</p><div class="completed-order"><small>예약번호</small><strong id="complete-order-id"></strong><div class="summary-price"><span>전체 결제 금액</span><strong id="complete-total"></strong></div></div><div id="complete-items" class="checkout-items"></div>
@@ -62,7 +80,7 @@
     <section class="my-tickets-screen" id="my-tickets-screen" hidden>
       <div class="my-tickets-wrap">
         <div id="my-tickets-list-view">
-          <button class="back-link" id="back-from-tickets" type="button">← 예약 화면으로</button><span class="eyebrow">MY TICKETS</span>
+          <button class="back-link" id="back-from-tickets" type="button">← 예약 화면으로</button>
           <div class="my-tickets-head"><div><h1>예약 티켓</h1><p>예약·결제 내역과 실시간 입장 상태를 함께 확인할 수 있어요.</p></div></div>
           <div class="ticket-list" id="ticket-list"></div>
           <div class="ticket-account-links"><button class="ticket-account-links__item" id="member-withdraw" type="button">회원탈퇴</button></div>
@@ -110,6 +128,6 @@
       </div>
     </section>
   </main>
-  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260915-unit-cards1"></script><script src="developer-policy.js?v=20260915-unit-cards1"></script><script src="app.js?v=20260915-unit-cards1"></script><script src="demo-controls.js"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260915-unit-cards1"></script><script src="developer-policy.js?v=20260915-unit-cards1"></script><script src="app.js?v=20260915-ticket-groups3"></script><script src="demo-controls.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   // Demo normalized ledger. Production adapters must join verified provider records on the server.
   var payments = [
     ['001','2026-05-09 09:52:23','국민카드','카드',27000,'포니 타기'],
-    ['002','2026-05-09 09:54:18','삼성카드','간편결제',9000,'포니랑 놀기'],
+    ['002','2026-05-09 09:54:18','삼성카드','카드',9000,'포니랑 놀기'],
     ['003','2026-05-10 10:00:00','현대카드','카드',15000,'포니 타기'],
     ['004','2026-05-11 11:20:00','신한카드','카드',8000,'포니랑 놀기'],
     ['005','2026-05-31 16:00:00','국민카드','카드',10000,'포니 타기'],
@@ -12,7 +12,7 @@
     ['007','2026-05-15 14:00:00','국민카드','카드',4000,'포니랑 놀기']
   ].map(function (p) {
     var reservationId = 'LRP-' + p[1].slice(2,10).replace(/-/g,'') + '-' + String(p[0]).padStart(5,'0');
-    return { id:'demo-pay-'+p[0], impUid:'imp_'+String(304455000247+Number(p[0])), orderId:'DEMO-ORDER-'+p[0], reservation:reservationId, paymentKey:'demo-toss-payment-'+p[0], pgTxId:'demo-toss-payment-'+p[0], paidAt:p[1], card:p[2], method:p[3], amount:p[4], program:p[5], feeAmount:Math.round(p[4]*PG_FEE_RATE), region:'서울', department:'공원화사업추진TF', currency:'KRW', approval:'00'+p[0], cardNumber:p[2]==='해당 없음'?'':'****-****-****-'+p[0]+'1', easyPay:p[0]==='002'?'네이버페이':'', serviceDate:'2026-06-06', completedAt:['001','002','003','007'].includes(p[0])?'2026-06-06T15:00:00+09:00':null, installment:0 };
+    return { id:'demo-pay-'+p[0], impUid:'imp_'+String(304455000247+Number(p[0])), orderId:'DEMO-ORDER-'+p[0], reservation:reservationId, paymentKey:'demo-toss-payment-'+p[0], pgTxId:'demo-toss-payment-'+p[0], paidAt:p[1], card:p[2], method:p[3], amount:p[4], program:p[5], feeAmount:Math.round(p[4]*PG_FEE_RATE), region:'서울', department:'공원화사업추진TF', currency:'KRW', approval:'00'+p[0], cardNumber:p[2]==='해당 없음'?'':'****-****-****-'+p[0]+'1', easyPay:'', serviceDate:'2026-06-06', completedAt:['001','002','003','007'].includes(p[0])?'2026-06-06T15:00:00+09:00':null, installment:0 };
   });
   function monthlyPayoutDate(serviceDate) {
     var parts=serviceDate.split('-'), year=Number(parts[0]), month=Number(parts[1])+1;
@@ -24,7 +24,7 @@
   });
   [
     ['003','2026-05-12 10:00:00',5000,['LRP-260510-00003-T01']],
-    ['003','2026-05-20 10:00:00',5000,['LRP-260510-00003-T02','LRP-260510-00003-T03']],
+    ['003','2026-05-20 10:00:00',5000,['LRP-260510-00003-T02']],
     ['004','2026-05-12 11:00:00',8000,['LRP-260511-00004-T01','LRP-260511-00004-T02']],
     ['006','2026-05-02 14:00:00',12000,['LRP-260430-00006-T01','LRP-260430-00006-T02','LRP-260430-00006-T03']],
     ['005','2026-06-02 10:00:00',10000,['LRP-260531-00005-T01','LRP-260531-00005-T02']]
@@ -41,7 +41,7 @@
       var p=payment(e), serviceBasis=f.basis==='service';
       var date=serviceBasis ? (p.completedAt || '').slice(0,10) : e.at.slice(0,10);
       if(serviceBasis && (!p.completedAt || Date.parse(p.completedAt)>Date.parse(f.asOf || new Date().toISOString()) || Date.parse(e.at.replace(' ','T')+'+09:00')>Date.parse(p.completedAt)))return false;
-      return allowed(p.region,p.department) && (!f.region || p.region===f.region) && (!f.department || p.department===f.department) && (!f.scope || p.region+' · '+p.department===f.scope) && (!f.start || date>=f.start) && (!f.end || date<=f.end) && (!f.card || p.card===f.card) && (!f.type || e.type===f.type) && (!f.search || [p.reservation,p.program,p.card,p.method,p.easyPay,p.serviceDate].concat(e.ticketIds || []).join(' ').toLowerCase().includes(f.search.toLowerCase()));
+      return allowed(p.region,p.department) && (!f.region || p.region===f.region) && (!f.department || p.department===f.department) && (!f.scope || p.region+' · '+p.department===f.scope) && (!f.start || date>=f.start) && (!f.end || date<=f.end) && (!f.card || p.card===f.card) && (!f.search || [p.reservation,p.program,p.card,p.method,p.easyPay,p.serviceDate].concat(e.ticketIds || []).join(' ').toLowerCase().includes(f.search.toLowerCase()));
     }).sort(function(a,b){return b.at.localeCompare(a.at);});
   }
   function totals(rows) {
@@ -52,7 +52,7 @@
   function sheets(rows,f) {
     var t=totals(rows), groups=Array.from(new Set(rows.map(function(e){var p=payment(e);return p.region+' · '+p.department+' · '+p.program;})));
     var legacyScope=(f.scope||'').split(' · '), selectedRegion=f.region||legacyScope[0]||'전체', selectedDepartment=f.department||legacyScope[1]||'전체';
-    var summary=[[],['조회 기간',(f.start||'전체')+' ~ '+(f.end||'전체')+(f.basis==='service'?' · 서비스 완료일 기준':' · 거래일 기준')],['지역',selectedRegion],['담당 부서',selectedDepartment],['조회 조건','카드사: '+(f.card||'전체')+' / 거래유형: '+(f.type||'전체')+' / 검색어: '+(f.search||'없음')],['생성시각',new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false})+' (한국시간)'],[],['승인금액','취소금액','순매출','수수료','지급예정액'],[t.approved,t.cancelled,t.net,t.fee,t.payout],[],['지역·부서·상품','승인건수','승인금액','취소건수','취소금액','순매출','수수료','지급예정액']];
+    var summary=[[],['조회 기간',(f.start||'전체')+' ~ '+(f.end||'전체')+(f.basis==='service'?' · 서비스 완료일 기준':' · 거래일 기준')],['지역',selectedRegion],['담당 부서',selectedDepartment],['조회 조건','카드사: '+(f.card||'전체')+' / 검색어: '+(f.search||'없음')],['생성시각',new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false})+' (한국시간)'],[],['승인금액','취소금액','순매출','수수료','지급예정액'],[t.approved,t.cancelled,t.net,t.fee,t.payout],[],['지역·부서·상품','승인건수','승인금액','취소건수','취소금액','순매출','수수료','지급예정액']];
     groups.forEach(function(group){var s=totals(rows.filter(function(e){var p=payment(e);return p.region+' · '+p.department+' · '+p.program===group;}));summary.push([group,s.approvals,s.approved,s.cancels,s.cancelled,s.net,s.fee,s.payout]);});
     var totalRow = summary.length + 1;
     summary.push(['합계',t.approvals,t.approved,t.cancels,t.cancelled,t.net,t.fee,t.payout]);

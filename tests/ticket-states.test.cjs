@@ -11,8 +11,10 @@ const componentCss = readFileSync(resolve(__dirname, '../components.css'), 'utf8
 const programSource = source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query ='));
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
-  'ticketTiming', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
+  'ticketTiming', 'ticketDiscountQty', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
   'ticketReservationNumber',
+  'formatTicketGroupDate', 'ticketListGroups',
+  'exampleTicketsNeedRefresh',
   'defaultTicketReservations', 'persistDefaultTicketReservations',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
@@ -82,9 +84,35 @@ test('default tickets use admin reservation format and persist to the shared boo
   tickets.forEach(ticket => assert.match(ticket.reservationId, /^LRP-\d{6}-\d{5}$/));
   const store = fixture.writtenStore();
   assert.ok(store);
-  assert.equal(store.reservations.length, 3);
+  assert.equal(store.reservations.length, 2);
+  assert.equal(store.reservations[0].tickets.length, 2);
+  assert.equal(store.reservations[0].total, 13000);
+  assert.equal(store.reservations[0].tickets.reduce((sum, ticket) => sum + ticket.qty, 0), 4);
+  assert.equal(store.reservations[0].tickets.reduce((sum, ticket) => sum + ticket.discountQty, 0), 2);
+  assert.equal(new Set(store.reservations[0].tickets.flatMap(ticket => ticket.ticketIds)).size, 4);
   assert.deepEqual(Array.from(BookingRules.ticketRecords(store.reservations), ticket => ticket.reservationId).sort(), Array.from(tickets, ticket => ticket.reservationId).sort());
   assert.ok(store.reservations.every(reservation => reservation.isExample && reservation.memberId === 'member-1'));
+  assert.equal(fixture.context.ticketListGroups(tickets)[0].tickets.length, 2);
+});
+
+test('refreshes only example data that violates the daily quantity or discount limits', () => {
+  const { context } = runtime(now);
+  const base = { isExample: true, reservationId: 'sample-order', dateKey: '2026-09-19', time: '13:20~13:45' };
+  assert.equal(context.exampleTicketsNeedRefresh([
+    { ...base, id: 'sample-order-G01', qty: 2, discount: true, discountQty: 2 },
+    { ...base, id: 'sample-order-G02', qty: 4, discount: true, discountQty: 2 },
+  ]), true);
+  assert.equal(context.exampleTicketsNeedRefresh([
+    { ...base, id: 'sample-order-G01', qty: 2, discount: true, discountQty: 2 },
+    { ...base, id: 'sample-order-G02', qty: 2, discount: false, discountQty: 0 },
+  ]), false);
+  assert.equal(context.exampleTicketsNeedRefresh([
+    { ...base, id: 'sample-order-G01', qty: 2, discount: true, discountQty: 2 },
+    { ...base, id: 'sample-order-G02', qty: 2, discount: true, discountQty: 1 },
+  ]), true);
+  assert.equal(context.exampleTicketsNeedRefresh([
+    { ...base, isExample: false, id: 'real-order-G01', qty: 6, discount: false },
+  ]), false);
 });
 
 const now = new Date(2026, 7, 27, 11, 23);
@@ -112,6 +140,25 @@ test('uses a saved ended ticket when one exists', () => {
   const tickets = context.ticketListReservations();
   assert.equal(tickets.length, 2);
   assert.equal(tickets[1].id, 'ended');
+});
+
+test('shows the same date and total group header for single and multi-ticket payments', () => {
+  const { context } = runtime(now);
+  const groups = context.ticketListGroups([
+    { id: 'order-1-G01', reservationId: 'order-1', date: '2026.09.19 (토)', createdAt: '2026-09-15T03:00:00.000Z', price: 12000 },
+    { id: 'order-1-G02', reservationId: 'order-1', date: '2026.09.19 (토)', createdAt: '2026-09-15T03:00:00.000Z', price: 5000 },
+    { id: 'order-2-G01', reservationId: 'order-2', date: '2026.09.13 (일)', createdAt: '2026-09-12T03:00:00.000Z', price: 10000 },
+  ]);
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].tickets.length, 2);
+  assert.equal(groups[0].total, 17000);
+  assert.equal(groups[0].date, '2026.09.19 (토)');
+  assert.doesNotMatch(source.slice(source.indexOf('  function createTicketListCard'), source.indexOf('  function updateTicketListStatuses')), /discountLabel|할인 적용/);
+  assert.doesNotMatch(source, /createTextElement\([^\n]+함께 예약한 티켓/);
+  assert.doesNotMatch(source, /group\.tickets\.length === 1/);
+  assert.match(source, /group\.date \+ " 예약 티켓 " \+ group\.tickets\.length \+ "개"/);
+  assert.match(source, /ticket-list-group__date/);
+  assert.match(source, /ticket-list-group__total/);
 });
 
 test('example states remain distinct across a full week and month boundary', () => {
