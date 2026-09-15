@@ -47,6 +47,12 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /imp_로 시작하는 포트원 거래번호는 포트원이 발급하는 외부 결제 식별자/);
   assert.match(source, /‘통합 결제번호’가 아닌 ‘결제번호’로 표시/);
   assert.match(source, /포트원 거래번호는 관리자 결제 상세에서만 표시/);
+  assert.match(source, /선택 인원수만큼 1명 단위 장바구니 카드를 만듭니다/);
+  assert.match(source, /기존 카드와 합치지 않습니다/);
+  assert.match(source, /1명 단위 할인 카드 2개와 할인 미적용 카드 2개/);
+  assert.match(source, /모든 장바구니 카드는 1명으로 고정/);
+  assert.match(source, /카드별 삭제만 제공/);
+  assert.doesNotMatch(source, /새 줄을 만들지 않고 기존 항목의 인원수에 더합니다/);
   assert.doesNotMatch(source, /예약 항목마다 주문번호 뒤에 담긴 순서대로|상품이 1개뿐인 주문에도 -1/);
   assert.match(source, /className = "policy-marker"/);
   assert.match(source, /className = "policy-inspector"/);

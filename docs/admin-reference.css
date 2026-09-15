@@ -77,6 +77,7 @@
 }
 .admin-user {border-top:1px solid #eceef0;padding:16px 0 0}
 .admin-user>span {background:#eef4ff;color:var(--admin-blue)}
+.admin-user>span svg {width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .admin-user strong {color:#26292e}
 .admin-user small,.admin-user button {color:#8b9096}
 .admin-user {grid-template-columns:36px minmax(0,1fr) auto}
@@ -200,6 +201,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .individual-ticket input {accent-color:#1769ff}
 .individual-ticket>span:last-child:not(.ticket-cancelled-status){padding:0;border-radius:0;background:transparent;color:inherit;font-weight:400}
 .individual-ticket>.ticket-cancelled-status{background:#eceeed;color:#6d7772}
+.reservation-drawer{width:min(560px,100vw)}
 .admin-button--danger {background:#e05263}
 .toast {background:#24272b}
 
@@ -415,7 +417,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .admin-menu:before {font-size:11px}
 .admin-menu button span {font-size:14px}
 .admin-sidebar__footer>a {font-size:13px}
-.admin-user strong {font-size:13px}
+.admin-user strong {font-size:11px;letter-spacing:-.03em;white-space:nowrap}
 .admin-user small {font-size:11px}
 .topbar-path {font-size:13px}
 .system-state,.topbar-actions>a {font-size:12px}
@@ -709,6 +711,7 @@ td small {font-size:11px}
 [data-view="settlement"] .settlement-readable-table th:nth-child(8),
 [data-view="settlement"] .settlement-readable-table td:nth-child(8) { padding-left:34px; }
 [data-view="settlement"] .money-cell { text-align:right; font-variant-numeric:tabular-nums; }
+[data-view="settlement"] .settlement-readable-table th:first-child,[data-view="settlement"] .settlement-readable-table td:first-child{min-width:170px}[data-view="settlement"] .settlement-readable-table td:first-child strong,[data-view="settlement"] .settlement-readable-table td:first-child small{display:block}[data-view="settlement"] .settlement-readable-table td:first-child small{margin-top:4px;color:var(--admin-muted)}
 .settlement-status { display:inline-block; border-radius:5px; padding:5px 8px; background:#edf6f1; color:#337357; font-size:12px; font-weight:700; }
 .settlement-status.is-cancelled { background:#fdf0ee; color:#b95043; }
 .settlement-readable-table .is-negative { color:#b95043; }

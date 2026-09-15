@@ -53,10 +53,17 @@
     }, []);
   }
 
-  function findConflict(candidate, items, memberId) {
+  function sameSellableSession(left, right) {
+    function sellableProgramKey(item) {
+      return item && item.programKey === "pony" && item.experience ? item.experience : item && item.programKey;
+    }
+    return !!(left && right && left.dateKey === right.dateKey && left.time === right.time && sellableProgramKey(left) === sellableProgramKey(right));
+  }
+
+  function findConflict(candidate, items, memberId, allowSameSession) {
     if (!memberId) return null;
     return ticketRecords(items).find(function (item) {
-      return item && item.memberId === memberId && isActive(item) && overlaps(candidate, item);
+      return item && item.memberId === memberId && isActive(item) && !(allowSameSession && sameSellableSession(candidate, item)) && overlaps(candidate, item);
     }) || null;
   }
 
@@ -83,7 +90,7 @@
     var discountPerUnit = item.discount ? (discountPolicy.type === "fixed" ? Number(discountPolicy.value || 0) : Math.round(product.price * discountRate)) : 0;
     if (discountPolicy && discountPolicy.maxAmount) discountPerUnit = Math.min(discountPerUnit, discountPolicy.maxAmount);
     if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > maxQty) throw new Error("회차별 인원과 할인 적용 수량을 확인해주세요.");
-    if (!Number.isInteger(discountQty) || discountQty < 0 || discountQty > item.qty || (discountPolicy && discountQty > discountPolicy.maxQty)) throw new Error("회차별 인원과 할인 적용 수량을 확인해주세요.");
+    if (!Number.isInteger(discountQty) || discountQty < 0 || discountQty > item.qty || (item.discount && discountQty !== item.qty) || (!item.discount && discountQty !== 0) || (discountPolicy && discountQty > discountPolicy.maxQty)) throw new Error("할인 카드와 할인 미적용 카드의 인원을 나누어 담아주세요.");
     return Object.assign({}, item, {
       name: product.name,
       price: Math.max(0, product.price * item.qty - discountPerUnit * discountQty),
@@ -204,7 +211,8 @@
       if (range.start <= now.getTime() || midnight < today || midnight > lastDay || !saleDays.includes(date.getDay()) || (itemProgram.saleStartDate && item.dateKey < itemProgram.saleStartDate) || (itemProgram.saleEndDate && item.dateKey > itemProgram.saleEndDate)) {
         return "예약 기간이 지났거나 운영하지 않는 회차가 있습니다. 일정을 다시 선택해주세요.";
       }
-      var conflict = findConflict(item, reservations.concat(checked), memberId);
+      var canAddSameSession = !!(itemProgram && itemProgram.purchasePolicy && itemProgram.purchasePolicy.group && itemProgram.purchasePolicy.maxQty);
+      var conflict = findConflict(item, reservations, memberId, canAddSameSession) || findConflict(item, checked, memberId, true);
       if (conflict) return item.name + " " + item.time + "은(는) " + conflict.name + " " + conflict.time + "과 이용 시간이 겹칩니다.";
       checked.push(item);
     }

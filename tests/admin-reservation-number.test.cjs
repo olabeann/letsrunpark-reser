@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const script = readFileSync(resolve(__dirname, '../admin.js'), 'utf8');
 const html = readFileSync(resolve(__dirname, '../admin.html'), 'utf8');
+const referenceCss = readFileSync(resolve(__dirname, '../admin-reference.css'), 'utf8');
 
 test('admin reservation UI exposes only the shared reservation number', () => {
   assert.doesNotMatch(script, /<small>' \+ escapeHtml\(item\.id\) \+ '<\/small>/);
@@ -15,6 +16,15 @@ test('admin reservation UI exposes only the shared reservation number', () => {
   assert.match(script, /reservationId: "LRP-260902-00001"/);
   assert.match(script, /adminStateKey = "letsrunPlayAdminDemoV4"/);
   assert.match(script, /localStorage\.removeItem\("letsrunPlayAdminDemoV3"\)/);
+});
+
+test('admin identity uses account scope without personal manager names', () => {
+  assert.match(html, /<strong>통합 운영 관리자<\/strong><small>전체 지역·부서<\/small>/);
+  assert.match(html, /class="admin-user"><span aria-hidden="true"><svg/);
+  assert.match(script, /currentAccount\.department/);
+  assert.match(script, /currentAccount\.region \+ " · 관리자"/);
+  assert.match(script, /function currentAdminActor\(\)/);
+  assert.doesNotMatch(script + html, /[가-힣]+ 매니저/);
 });
 
 test('admin groups product tickets under one reservation and labels each person ticket', () => {
@@ -53,6 +63,9 @@ test('admin cancellation uses the checkout deadline snapshot and rechecks it on 
   assert.equal(context.adminTicketCanCancel(detail, new Date(2026, 8, 20, 9, 29)), true);
   assert.equal(context.adminTicketCanCancel(detail, new Date(2026, 8, 20, 9, 30)), false);
   assert.match(script, /selected\.some\(function \(index\) \{ return !adminTicketCanCancel/);
+  assert.match(script, /ticket-cancelled-status">취소 불가/);
+  assert.doesNotMatch(script, /ticket-cancelled-status">취소 마감/);
+  assert.match(referenceCss, /\.reservation-drawer\{width:min\(560px,100vw\)\}/);
 });
 
 test('stored customer and operation cancellations preserve original ticket snapshots', () => {

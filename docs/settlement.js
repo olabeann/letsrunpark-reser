@@ -11,7 +11,8 @@
     ['006','2026-04-30 13:00:00','삼성카드','카드',12000,'포니랑 놀기'],
     ['007','2026-05-15 14:00:00','국민카드','카드',4000,'포니랑 놀기']
   ].map(function (p) {
-    return { id:'demo-pay-'+p[0], impUid:'imp_'+String(304455000247+Number(p[0])), orderId:'DEMO-ORDER-'+p[0], reservation:'DEMO-RES-'+p[0]+'-1', paymentKey:'demo-toss-payment-'+p[0], pgTxId:'demo-toss-payment-'+p[0], paidAt:p[1], card:p[2], method:p[3], amount:p[4], program:p[5], feeAmount:Math.round(p[4]*PG_FEE_RATE), region:'서울', department:'공원화사업추진TF', currency:'KRW', approval:'00'+p[0], cardNumber:p[2]==='해당 없음'?'':'****-****-****-'+p[0]+'1', easyPay:p[0]==='002'?'네이버페이':'', serviceDate:'2026-06-06', completedAt:['001','002','003','007'].includes(p[0])?'2026-06-06T15:00:00+09:00':null, installment:0 };
+    var reservationId = 'LRP-' + p[1].slice(2,10).replace(/-/g,'') + '-' + String(p[0]).padStart(5,'0');
+    return { id:'demo-pay-'+p[0], impUid:'imp_'+String(304455000247+Number(p[0])), orderId:'DEMO-ORDER-'+p[0], reservation:reservationId, paymentKey:'demo-toss-payment-'+p[0], pgTxId:'demo-toss-payment-'+p[0], paidAt:p[1], card:p[2], method:p[3], amount:p[4], program:p[5], feeAmount:Math.round(p[4]*PG_FEE_RATE), region:'서울', department:'공원화사업추진TF', currency:'KRW', approval:'00'+p[0], cardNumber:p[2]==='해당 없음'?'':'****-****-****-'+p[0]+'1', easyPay:p[0]==='002'?'네이버페이':'', serviceDate:'2026-06-06', completedAt:['001','002','003','007'].includes(p[0])?'2026-06-06T15:00:00+09:00':null, installment:0 };
   });
   function monthlyPayoutDate(serviceDate) {
     var parts=serviceDate.split('-'), year=Number(parts[0]), month=Number(parts[1])+1;
@@ -21,8 +22,14 @@
   var events = payments.map(function (p) {
     return { paymentId:p.id, key:'demo-tx-'+p.id+'-approve', at:p.paidAt, type:'승인', amount:p.amount, feeAmount:p.feeAmount, soldDate:p.paidAt.slice(0,10), paidOutDate:monthlyPayoutDate(p.serviceDate), reason:'', cancelId:'', status:'성공' };
   });
-  [ ['003','2026-05-12 10:00:00',5000], ['003','2026-05-20 10:00:00',5000], ['004','2026-05-12 11:00:00',8000], ['006','2026-05-02 14:00:00',12000], ['005','2026-06-02 10:00:00',10000] ].forEach(function (c,i) {
-    events.push({ paymentId:'demo-pay-'+c[0], key:'demo-tx-cancel-'+i, at:c[1], type:'취소', amount:-c[2], feeAmount:-Math.round(c[2]*PG_FEE_RATE), soldDate:c[1].slice(0,10), paidOutDate:'', reason:i===2?'운영 취소':'고객 요청', cancelId:'demo-cancel-'+i, status:'성공' });
+  [
+    ['003','2026-05-12 10:00:00',5000,['LRP-260510-00003-T01']],
+    ['003','2026-05-20 10:00:00',5000,['LRP-260510-00003-T02','LRP-260510-00003-T03']],
+    ['004','2026-05-12 11:00:00',8000,['LRP-260511-00004-T01','LRP-260511-00004-T02']],
+    ['006','2026-05-02 14:00:00',12000,['LRP-260430-00006-T01','LRP-260430-00006-T02','LRP-260430-00006-T03']],
+    ['005','2026-06-02 10:00:00',10000,['LRP-260531-00005-T01','LRP-260531-00005-T02']]
+  ].forEach(function (c,i) {
+    events.push({ paymentId:'demo-pay-'+c[0], key:'demo-tx-cancel-'+i, at:c[1], type:'취소', amount:-c[2], feeAmount:-Math.round(c[2]*PG_FEE_RATE), soldDate:c[1].slice(0,10), paidOutDate:'', reason:i===2?'운영 취소':'고객 요청', cancelId:'demo-cancel-'+i, ticketIds:c[3], status:'성공' });
   });
   events.forEach(function(e){ e.payOutAmount = e.amount-e.feeAmount; });
   function balance(e) { var p=payment(e); return p.amount+events.filter(function(c){return c.paymentId===p.id && c.type==='취소' && c.at<=e.at;}).reduce(function(n,c){return n+c.amount;},0); }
@@ -34,7 +41,7 @@
       var p=payment(e), serviceBasis=f.basis==='service';
       var date=serviceBasis ? (p.completedAt || '').slice(0,10) : e.at.slice(0,10);
       if(serviceBasis && (!p.completedAt || Date.parse(p.completedAt)>Date.parse(f.asOf || new Date().toISOString()) || Date.parse(e.at.replace(' ','T')+'+09:00')>Date.parse(p.completedAt)))return false;
-      return allowed(p.region,p.department) && (!f.scope || p.region+' · '+p.department===f.scope) && (!f.start || date>=f.start) && (!f.end || date<=f.end) && (!f.card || p.card===f.card) && (!f.type || e.type===f.type) && (!f.search || [p.program,p.card,p.method,p.easyPay,p.serviceDate].join(' ').toLowerCase().includes(f.search.toLowerCase()));
+      return allowed(p.region,p.department) && (!f.scope || p.region+' · '+p.department===f.scope) && (!f.start || date>=f.start) && (!f.end || date<=f.end) && (!f.card || p.card===f.card) && (!f.type || e.type===f.type) && (!f.search || [p.reservation,p.program,p.card,p.method,p.easyPay,p.serviceDate].concat(e.ticketIds || []).join(' ').toLowerCase().includes(f.search.toLowerCase()));
     }).sort(function(a,b){return b.at.localeCompare(a.at);});
   }
   function totals(rows) {

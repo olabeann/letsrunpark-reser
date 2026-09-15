@@ -34,6 +34,12 @@ test('blocks identical, contained and partially overlapping intervals in either 
   }
 });
 
+test('allows adding the exact same product session while blocking a different overlapping product', () => {
+  const candidate = item({ qty: 1 });
+  assert.equal(rules.findConflict(candidate, [item({ id: 'paid-same', qty: 1 })], memberId, true), null);
+  assert.equal(rules.findConflict(candidate, [item({ id: 'paid-play', programKey: 'play', name: '포니랑 놀기', qty: 1 })], memberId, true).id, 'paid-play');
+});
+
 test('allows adjacent intervals and the same time on another date', () => {
   assert.equal(rules.overlaps(item(), item({ time: '10:20~10:45' })), false);
   assert.equal(rules.overlaps(tour(), item({ time: '15:20~15:45' })), false);
@@ -60,7 +66,7 @@ test('checks the entire cart and all persisted reservations, not only visible ti
   const saved = Array.from({ length: 12 }, (_, i) => item({ id: String(i), dateKey: '2026-09-20' }));
   saved.push(tour());
   assert.match(error([item({ time: '15:00~15:20' })], saved), /겹칩니다/);
-  assert.match(error([item(), item({ id: 'duplicate' })]), /겹칩니다/);
+  assert.equal(error([item(), item({ id: 'duplicate' })]), '');
   assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), /겹칩니다/);
 });
 
@@ -84,8 +90,10 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.notEqual(error([tour({ discount: true })]), '');
   assert.notEqual(error([item({ programKey: 'missing' })]), '');
   assert.equal(error([item({ qty: 2, discount: true })]), '');
-  assert.equal(error([item({ qty: 4, discount: true, discountQty: 2, time: '15:00~15:20' })]), '');
-  assert.equal(rules.quoteItem(item({ qty: 4, discount: true, discountQty: 2, time: '15:00~15:20' }), programs).price, 15000);
+  assert.match(error([item({ qty: 4, discount: true, discountQty: 2, time: '15:00~15:20' })]), /나누어 담아주세요/);
+  const discountedCard = rules.quoteItem(item({ id: 'discounted-card', qty: 2, discount: true, discountQty: 2, time: '15:00~15:20' }), programs);
+  const regularCard = rules.quoteItem(item({ id: 'regular-card', qty: 2, discount: false, discountQty: 0, time: '15:00~15:20' }), programs);
+  assert.equal(discountedCard.price + regularCard.price, 15000);
 });
 
 test('caps combined ride/play purchases at 4 and enforces per-usage-date citizen discount limits', () => {
@@ -128,12 +136,12 @@ test('uses configured sale weekdays and blocks stored operation closures', () =>
   assert.equal(rules.validationError([monday], [], memberId, weekdayPrograms, now), '');
 });
 
-test('blocks re-booking the same session and resets the discount cap per usage date', () => {
+test('allows capped same-session additions and resets the discount cap per usage date', () => {
   const usedOnSameDate = [
     item({ id: 'used-1', qty: 1 }),
     item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1 }),
   ];
-  assert.match(error([item({ qty: 1 })], usedOnSameDate), /겹칩니다/);
+  assert.equal(error([item({ qty: 1 })], usedOnSameDate), '');
   assert.equal(error([item({ dateKey: '2026-08-30', qty: 4 })], usedOnSameDate), '');
   const usedDiscountSameDate = [item({ id: 'used-discount', qty: 2, discount: true })];
   assert.match(error([item({ qty: 1, discount: true })], usedDiscountSameDate), /최대 2매/);
@@ -154,6 +162,7 @@ test('caps combined ride and play purchases at 4 per usage date across cart and 
   const ride = item({ qty: 2 });
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2, price: 8000 });
   assert.equal(error([ride, play]), '');
+  assert.equal(error([item({ qty: 2 })], [item({ id: 'saved-same-session', qty: 1 })]), '');
   const savedRide = item({ id: 'saved-ride', qty: 3 });
   assert.match(error([play], [savedRide]), /최대 4매/);
   assert.match(error([ride, play, item({ id: 'extra', time: '11:00~11:20', qty: 1 })]), /최대 4매/);
@@ -204,11 +213,13 @@ test('failed checkout preserves the whole cart and all reservations', () => {
   assert.equal(JSON.stringify(before), serialized);
 });
 
-test('rechecking latest store blocks repeat payment and another tab booking the same interval', () => {
+test('rechecking latest store allows same-session additions only within the daily cap', () => {
   const first = rules.buildOrder(store(), memberId, programs, now, 'order-1');
   assert.throws(() => rules.buildOrder(first.store, memberId, programs, now, 'order-2'), /담아주세요/);
   const stale = { ...first.store, carts: { [memberId]: [item()] } };
-  assert.throws(() => rules.buildOrder(stale, memberId, programs, now, 'order-3'), /겹칩니다/);
+  assert.equal(rules.buildOrder(stale, memberId, programs, now, 'order-3').reservation.id, 'order-3');
+  const overLimit = { ...first.store, carts: { [memberId]: [item({ qty: 3 })] } };
+  assert.throws(() => rules.buildOrder(overLimit, memberId, programs, now, 'order-4'), /최대 4매/);
 });
 
 test('invalid time strings are not interpreted as valid booking intervals', () => {
@@ -279,6 +290,32 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
   assert.deepEqual(savedStore.carts[memberId], [existing]);
 });
 
+test('each add-to-cart action creates a separate card for the same product session', async () => {
+  const existing = item({ id: 'existing-card', qty: 1 });
+  const addedItem = item({ id: 'new-card', qty: 2 });
+  const savedStore = store([existing]);
+  const messages = [];
+  const runtime = vm.createContext({
+    state: {},
+    currentMember: { id: memberId },
+    makeCartItem: () => addedItem,
+    withStoreLock: action => Promise.resolve().then(action),
+    readStore: () => savedStore,
+    ownCart: () => savedStore.carts[memberId],
+    BookingRules: { validationError: () => '', quoteItem: entry => entry },
+    programs,
+    writeStore: () => true,
+    notify: message => messages.push(message),
+    renderSlots() {}, update() {}, renderCart() {}, renderDiscountOptions() {}, startCheckout() {}, goToStep() {},
+  });
+  vm.runInContext(appFunction('addToCart'), runtime);
+  await runtime.addToCart(false);
+  assert.equal(savedStore.carts[memberId].length, 3);
+  assert.deepEqual(savedStore.carts[memberId].map(entry => entry.id), ['existing-card', 'new-card-P01', 'new-card-P02']);
+  assert.deepEqual(savedStore.carts[memberId].map(entry => entry.qty), [1, 1, 1]);
+  assert.deepEqual(messages, ['장바구니에 담았습니다.']);
+});
+
 test('unreadable storage is not replaced with an empty reservation store', () => {
   for (const raw of ['{broken', 'null', JSON.stringify({ revision: 1, reservations: [null], carts: {} })]) {
     let writes = 0;
@@ -297,12 +334,20 @@ test('unreadable storage is not replaced with an empty reservation store', () =>
 test('storage failure does not report payment complete or clear the persisted cart', async () => {
   const original = store();
   const serialized = JSON.stringify(original);
+  const normalizedSnapshot = original.carts[memberId].flatMap(entry => Array.from({ length: entry.qty }, (_, index) => ({
+    ...entry,
+    id: entry.id + '-P' + String(index + 1).padStart(2, '0'),
+    qty: 1,
+    discount: !!entry.discount && index < (entry.discountQty ?? entry.qty),
+    discountQty: entry.discount && index < (entry.discountQty ?? entry.qty) ? 1 : 0,
+    price: Math.round(entry.price / entry.qty),
+  })));
   const messages = [];
   const elements = { terms: { checked: true }, 'complete-payment': { disabled: false } };
   let completed = false;
   const runtime = vm.createContext({
     BookingRules: rules, programs, currentMember: { id: memberId }, state: { step: 2 }, isPaying: false,
-    checkoutSnapshot: JSON.stringify(original.carts[memberId]), reservationStorageKey: 'test-store',
+    checkoutSnapshot: JSON.stringify(normalizedSnapshot), reservationStorageKey: 'test-store',
     Date: class extends Date { constructor(...args) { super(...(args.length ? args : [now.getTime()])); } },
     window: { localStorage: { getItem: () => serialized, setItem: () => { throw new Error('Quota exceeded'); } } },
     byId: id => elements[id], notify: message => messages.push(message), nextOrderId: () => 'failed-order',
@@ -327,6 +372,17 @@ test('app reads only the signed-in member cart and active reservations', () => {
   runtime.currentMember = null;
   assert.equal(runtime.readReservations().length, 0);
   assert.equal(runtime.ownCart(saved).length, 0);
+});
+
+test('legacy multi-person cart rows become stable one-person discount and regular cards', () => {
+  const saved = store([item({ id: 'legacy-card', qty: 4, price: 15000, discount: true, discountQty: 2 })], []);
+  const runtime = vm.createContext({ currentMember: { id: memberId } });
+  vm.runInContext(appFunction('ownCart'), runtime);
+  const cards = runtime.ownCart(saved);
+  assert.equal(cards.length, 4);
+  assert.deepEqual(Array.from(cards, entry => entry.id), ['legacy-card-P01', 'legacy-card-P02', 'legacy-card-P03', 'legacy-card-P04']);
+  assert.deepEqual(Array.from(cards, entry => entry.qty), [1, 1, 1, 1]);
+  assert.deepEqual(Array.from(cards, entry => entry.discount), [true, true, false, false]);
 });
 
 test('opening another program resets date, session, headcount and discount options', () => {
@@ -375,6 +431,32 @@ test('slot refresh requires explicit selection and never silently picks a replac
   state.time = '10:00~10:20';
   runtime.renderSlots();
   assert.equal(state.time, '', 'A newly conflicting choice must be cleared, not replaced');
+});
+
+test('same-session selection limits the added headcount to the remaining daily allowance', () => {
+  const saved = store([item({ qty: 1 })], []);
+  const state = { dateKey: '2026-08-29', time: '10:00~10:20' };
+  const runtime = vm.createContext({
+    state, program: programs.ride, programs, currentMember: { id: memberId }, BookingRules: rules,
+    readStore: () => saved, ownCart: () => saved.carts[memberId], slotRemainingCapacity: () => 8,
+    selectedDiscountPolicy: () => null, remainingDiscountQty: () => Infinity,
+  });
+  vm.runInContext(appFunction('selectedMaxQty'), runtime);
+  assert.equal(runtime.selectedMaxQty(), 3);
+  saved.carts[memberId][0].qty = 4;
+  assert.equal(runtime.selectedMaxQty(), 1, 'A full cart keeps the booking action available so it can redirect to checkout');
+});
+
+test('discount selection caps a new card at the remaining discount quantity', () => {
+  const saved = store([], []);
+  const state = { dateKey: '2026-08-29', time: '10:00~10:20', discountPolicyId: 'gwacheon' };
+  const runtime = vm.createContext({
+    state, program: programs.ride, programs, currentMember: { id: memberId }, BookingRules: rules,
+    readStore: () => saved, ownCart: () => saved.carts[memberId], slotRemainingCapacity: () => 8,
+    selectedDiscountPolicy: () => programs.ride.discountPolicy, remainingDiscountQty: () => 2,
+  });
+  vm.runInContext(appFunction('selectedMaxQty'), runtime);
+  assert.equal(runtime.selectedMaxQty(), 2);
 });
 
 test('shop routes restore independent programs and send stale checkout links back to the cart', () => {
