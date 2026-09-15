@@ -5,6 +5,7 @@ const vm = require('node:vm');
 const rules = require('../booking-rules.js');
 
 const source = readFileSync(require.resolve('../app.js'), 'utf8');
+const pageSource = readFileSync(require.resolve('../index.html'), 'utf8');
 const context = vm.createContext({});
 vm.runInContext(source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query =')), context);
 const programs = context.programs;
@@ -179,6 +180,30 @@ function appFunction(name) {
   assert.notEqual(offset, -1, name);
   return source.slice(offset, source.indexOf('\n  }', offset) + 4);
 }
+
+test('booking summary shows the discount note only after a discount is selected', () => {
+  const elements = {};
+  const state = { qty: 1, date: '', dateKey: '', time: '', discountPolicyId: '' };
+  const runtime = vm.createContext({
+    state,
+    amount: () => 5000,
+    currentPrice: () => 5000,
+    money: value => value + '원',
+    selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId } : null,
+    selectedMaxQty: () => 4,
+    byId: id => {
+      if (!elements[id]) elements[id] = {};
+      return elements[id];
+    },
+  });
+  vm.runInContext(appFunction('update'), runtime);
+  runtime.update();
+  assert.equal(runtime.byId('product-discount-note').hidden, true);
+  state.discountPolicyId = 'gwacheon-resident';
+  runtime.update();
+  assert.equal(runtime.byId('product-discount-note').hidden, false);
+  assert.match(pageSource, /id="product-discount-note" hidden/);
+});
 
 test('unreadable storage is not replaced with an empty reservation store', () => {
   for (const raw of ['{broken', 'null', JSON.stringify({ revision: 1, reservations: [null], carts: {} })]) {

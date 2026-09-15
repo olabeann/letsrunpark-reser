@@ -984,6 +984,7 @@
     byId("selected-date-label").textContent = state.date || "날짜를 선택해주세요";
     byId("selected-option-summary").textContent = state.dateKey && state.time ? state.date + " · " + state.time + " · " + state.qty + "명" : "날짜와 시간을 선택해주세요.";
     byId("summary-price").textContent = money(price);
+    byId("product-discount-note").hidden = !selectedDiscountPolicy();
     byId("add-to-cart").disabled = !state.dateKey || !state.time;
     byId("book-now").disabled = !state.dateKey || !state.time;
     byId("qty-minus").disabled = state.qty <= 1;
