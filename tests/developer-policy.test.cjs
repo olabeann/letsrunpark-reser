@@ -42,6 +42,7 @@ test('policy viewer joins confirmed service, frontend and backend rules without 
   assert.match(source, /renderLane\("backend"/);
   assert.match(source, /renderLane\("service"/);
   assert.match(source, /과천시민 할인/);
+  assert.doesNotMatch(source, /예약 항목마다 주문번호 뒤에 담긴 순서대로|상품이 1개뿐인 주문에도 -1/);
   assert.match(source, /className = "policy-marker"/);
   assert.match(source, /className = "policy-inspector"/);
   assert.match(source, /window\.DeveloperPolicy = createInspector/);

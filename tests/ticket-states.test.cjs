@@ -12,7 +12,8 @@ const programSource = source.slice(source.indexOf('  var ponySlots ='), source.i
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
   'ticketTiming', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
-  'defaultTicketReservations', 'hasTimeConflict',
+  'ticketReservationNumber',
+  'defaultTicketReservations', 'persistDefaultTicketReservations', 'hasTimeConflict',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
 const functions = names.map(name => {
@@ -24,6 +25,7 @@ const functions = names.map(name => {
 function runtime(now, saved = [], examples = false) {
   let clock = now.getTime();
   let renders = 0;
+  let writtenStore = null;
   const elements = {
     'my-tickets-screen': { hidden: false },
     'my-tickets-list-view': { hidden: false },
@@ -39,7 +41,8 @@ function runtime(now, saved = [], examples = false) {
     Date: ClockDate,
     weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
     readReservations: () => saved,
-    readStore: () => ({ reservations: saved, carts: {} }),
+    readStore: () => ({ revision: 0, reservations: saved, carts: {} }),
+    writeStore: store => { writtenStore = store; return true; },
     ownCart: () => [],
     readDemoCancellations: () => ({}),
     currentMember: { id: 'member-1' },
@@ -52,7 +55,7 @@ function runtime(now, saved = [], examples = false) {
     renderTicketList: () => { renders += 1; },
   });
   vm.runInContext(programSource + '\n' + functions, context);
-  return { context, elements, cards, setNow: date => { clock = date.getTime(); }, renders: () => renders };
+  return { context, elements, cards, setNow: date => { clock = date.getTime(); }, renders: () => renders, writtenStore: () => writtenStore };
 }
 
 function assertStates(context, tickets, now) {
@@ -61,6 +64,28 @@ function assertStates(context, tickets, now) {
   assert.equal(new Set(Array.from(tickets, item => item.id)).size, 3);
   assert.equal(tickets[1].discount, true, 'Active sample retains citizen discount information');
 }
+
+test('user ticket displays one shared reservation number for current and legacy records', () => {
+  const { context } = runtime(now);
+  assert.equal(context.ticketReservationNumber({ reservationId: 'LRP-260915-00001', id: 'LRP-260915-00001-G02' }), 'LRP-260915-00001');
+  assert.equal(context.ticketReservationNumber({ id: 'LRP-260915-00001-2' }), 'LRP-260915-00001');
+  assert.equal(context.ticketReservationNumber({ id: 'GP-a7f798e3-19cf-4a95-9672-2399f01187a5-4' }), 'GP-a7f798e3-19cf-4a95-9672-2399f01187a5');
+  assert.equal(context.ticketReservationNumber({ id: 'order-1' }), 'order-1');
+  assert.match(source, /ticket-reservation-number"\)\.textContent = ticketReservationNumber\(ticketReservation\)/);
+  assert.match(source, /ticket-order-number"\)\.textContent = ticketReservationNumber\(ticketReservation\)/);
+});
+
+test('default tickets use admin reservation format and persist to the shared booking store', () => {
+  const fixture = runtime(now);
+  const tickets = fixture.context.ticketListReservations();
+  assert.equal(tickets.length, 3);
+  tickets.forEach(ticket => assert.match(ticket.reservationId, /^LRP-\d{6}-\d{5}$/));
+  const store = fixture.writtenStore();
+  assert.ok(store);
+  assert.equal(store.reservations.length, 3);
+  assert.deepEqual(Array.from(BookingRules.ticketRecords(store.reservations), ticket => ticket.reservationId).sort(), Array.from(tickets, ticket => ticket.reservationId).sort());
+  assert.ok(store.reservations.every(reservation => reservation.isExample && reservation.memberId === 'member-1'));
+});
 
 const now = new Date(2026, 7, 27, 11, 23);
 for (const count of [0, 1, 2, 8, 20]) {
@@ -131,7 +156,7 @@ test('staff discount notice is a compact design-system badge beside the ticket s
   const sessionSummary = ticketHtml.indexOf('id="ticket-session-summary"');
   assert.ok(statusStart < indicators && indicators < statusBadge && statusBadge < notice && notice < clock && clock < sessionSummary && sessionSummary < statusEnd);
   assert.equal([...ticketHtml.matchAll(/id="ticket-discount-proof"/g)].length, 1);
-  assert.match(ticketHtml, /<strong>할인 적용<\/strong><span>증빙 확인 필요<\/span>/);
+  assert.match(ticketHtml, /<strong id="ticket-discount-label">할인 적용<\/strong><span>증빙 확인 필요<\/span>/);
   assert.match(ticketHtml, /aria-label="할인 적용 티켓입니다\. 현장에서 증빙을 확인해주세요\."/);
 });
 
@@ -146,6 +171,7 @@ test('ticket colors use only design-system tokens instead of one-off color value
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {
-  assert.match(source, /ticket-discount-proof"\)\.hidden = !ticketDiscountQty\(ticketReservation\)/);
+  assert.match(source, /ticket-discount-proof"\)\.hidden = !hasDiscount/);
+  assert.match(source, /ticket-discount-label"\)\.textContent = discountLabel/);
   assert.match(source, /ticket\.setAttribute\("data-access-state", timing\.accessState\)/);
 });

@@ -27,7 +27,7 @@ function runtime() {
   const context = {
     pendingOperationClosureAction: null,
     byId: id => elements[id],
-    allReservations: () => [
+    allTicketGroups: () => [
       { location: '서울', dateKey: '2026-09-05', programKey: 'ride', time: '10:00~10:20', tickets: ['confirmed', 'confirmed'], status: '예약 확정' },
       { location: '서울', dateKey: '2026-09-05', programKey: 'ride', time: '10:00~10:20', qty: 1, status: '예약 확정' },
       { location: '서울', dateKey: '2026-09-05', programKey: 'ride', time: '10:00~10:20', qty: 4, status: '취소 완료' },

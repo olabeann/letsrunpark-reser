@@ -66,23 +66,34 @@
   if (document.body.getAttribute("data-page") !== "booking") return;
 
   var ponySlots = [
-        { time: "10:00~10:20", stock: "1회차 · 8자리" },
-        { time: "10:20~10:45", stock: "2회차 · 6자리" },
-        { time: "11:00~11:20", stock: "3회차 · 7자리" },
-        { time: "11:20~11:45", stock: "4회차 · 4자리" },
-        { time: "13:00~13:20", stock: "5회차 · 8자리" },
-        { time: "13:20~13:45", stock: "6회차 · 5자리" },
-        { time: "14:00~14:20", stock: "7회차 · 6자리" },
+        { time: "10:00~10:20", stock: "1회차 · 8자리", capacity: 8 },
+        { time: "10:20~10:45", stock: "2회차 · 6자리", capacity: 6 },
+        { time: "11:00~11:20", stock: "3회차 · 8자리", capacity: 8 },
+        { time: "11:20~11:45", stock: "4회차 · 4자리", capacity: 4 },
+        { time: "13:00~13:20", stock: "5회차 · 8자리", capacity: 8 },
+        { time: "13:20~13:45", stock: "6회차 · 5자리", capacity: 5 },
+        { time: "14:00~14:20", stock: "7회차 · 6자리", capacity: 6 },
         { time: "14:20~14:45", stock: "8회차 · 3자리", capacity: 3 },
-        { time: "15:00~15:20", stock: "9회차 · 8자리" },
-        { time: "15:20~15:45", stock: "10회차 · 6자리" },
-        { time: "16:00~16:20", stock: "11회차 · 4자리" },
-        { time: "16:20~16:45", stock: "12회차 · 마감", disabled: true }
+        { time: "15:00~15:20", stock: "9회차 · 8자리", capacity: 8 },
+        { time: "15:20~15:45", stock: "10회차 · 6자리", capacity: 6 },
+        { time: "16:00~16:20", stock: "11회차 · 4자리", capacity: 4 },
+        { time: "16:20~16:45", stock: "12회차 · 마감", capacity: 4, disabled: true }
+  ];
+  var playSlots = [
+        { time: "10:00~10:20", stock: "1회차 · 8자리", capacity: 8 },
+        { time: "10:20~10:45", stock: "2회차 · 8자리", capacity: 8 },
+        { time: "11:00~11:20", stock: "3회차 · 8자리", capacity: 8 },
+        { time: "11:20~11:45", stock: "4회차 · 8자리", capacity: 8 },
+        { time: "13:00~13:20", stock: "5회차 · 8자리", capacity: 8 },
+        { time: "13:20~13:45", stock: "6회차 · 8자리", capacity: 8 },
+        { time: "14:00~14:20", stock: "7회차 · 8자리", capacity: 8 },
+        { time: "14:20~14:45", stock: "8회차 · 8자리", capacity: 8 }
   ];
 
   var programs = {
     ride: {
       key: "ride",
+      userBookable: true,
       name: "포니 타기",
       meta: "서울 렛츠런파크 · 1인 5,000원",
       price: 5000,
@@ -95,7 +106,7 @@
       department: "공원화사업추진TF",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
       cancelMinutes: 10,
@@ -103,6 +114,7 @@
     },
     play: {
       key: "play",
+      userBookable: true,
       name: "포니랑 놀기",
       meta: "서울 렛츠런파크 · 1인 4,000원",
       price: 4000,
@@ -116,11 +128,11 @@
       noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.",
       description: "포니를 빗질하고 꾸며준 뒤 함께 산책하며 가까이에서 교감해보세요.",
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
       purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
       bookingWindow: 14,
       cancelMinutes: 10,
-      slots: ponySlots
+      slots: playSlots
     },
     pony: {
       key: "pony",
@@ -162,20 +174,91 @@
   var weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
   var baseBookingWindowDays = { ride: programs.ride.bookingWindow, play: programs.play.bookingWindow };
   var baseCancelMinutes = { ride: programs.ride.cancelMinutes, play: programs.play.cancelMinutes };
+  var baseProgramSettings = {
+    ride: { name: programs.ride.name, price: programs.ride.price, image: programs.ride.image, noticeText: programs.ride.noticeText || "", purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: ponySlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.ride.discountPolicy) },
+    play: { name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy) }
+  };
   var operationExceptions = [];
   var bookingStart, bookingEnd, calendarFirstMonth;
 
   function applyBookingWindowOverrides() {
     try {
-      var adminState = JSON.parse(window.localStorage.getItem("letsrunPlayAdminDemoV3") || "null");
+      var adminState = JSON.parse(window.localStorage.getItem("letsrunPlayAdminDemoV4") || "null");
       var catalog = adminState && adminState.catalog;
       operationExceptions = adminState && Array.isArray(adminState.operationExceptions) ? adminState.operationExceptions : [];
+      Object.keys(programs).forEach(function (key) {
+        if (programs[key].adminCreated) { delete programs[key]; delete baseProgramSettings[key]; delete baseBookingWindowDays[key]; delete baseCancelMinutes[key]; }
+      });
+      (catalog && catalog.addedPrograms || []).filter(function (item) { return !item.deleted && item.location === "서울"; }).forEach(function (item) {
+        var key = item.key;
+        programs[key] = {
+          key: key, userBookable: true, adminCreated: true, name: item.programName, price: item.price,
+          image: item.image || "assets/pony/cover.jpg", subtitle: item.noticeText || "렛츠런파크 체험 프로그램",
+          noticeText: item.noticeText || "", region: item.location, department: item.department,
+          bookingWindow: item.bookingWindow || 14, cancelMinutes: Number.isFinite(item.cancelMinutes) ? item.cancelMinutes : 10,
+          slots: []
+        };
+        baseBookingWindowDays[key] = programs[key].bookingWindow;
+        baseCancelMinutes[key] = programs[key].cancelMinutes;
+        baseProgramSettings[key] = {
+          name: item.programName, price: item.price, image: programs[key].image, noticeText: programs[key].noticeText,
+          purchaseGroup: item.purchaseGroup || "", saleStartDate: item.saleStartDate || "", saleEndDate: item.saleEndDate || "",
+          visibleStartAt: item.visibleStartAt || "", visibleEndAt: item.visibleEndAt || "", saleDays: Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0],
+          active: item.active !== false, slots: [], discountPolicy: null
+        };
+      });
       Object.keys(baseBookingWindowDays).forEach(function (key) {
         var override = catalog && catalog.programOverrides && catalog.programOverrides[key];
         var added = catalog && (catalog.addedPrograms || []).find(function (item) { return item.key === key; });
-        var source = override || added;
+        var source = override || added || {};
+        var base = baseProgramSettings[key];
+        programs[key].name = source.programName || base.name;
         programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
         programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
+        programs[key].price = Number.isFinite(source.price) ? source.price : base.price;
+        programs[key].image = source.image || base.image;
+        programs[key].noticeText = typeof source.noticeText === "string" ? source.noticeText : base.noticeText;
+        programs[key].saleStartDate = source.saleStartDate || base.saleStartDate;
+        programs[key].saleEndDate = source.saleEndDate || base.saleEndDate;
+        programs[key].visibleStartAt = source.visibleStartAt || base.visibleStartAt;
+        programs[key].visibleEndAt = source.visibleEndAt || base.visibleEndAt;
+        programs[key].saleDays = Array.isArray(source.saleDays) ? source.saleDays.map(Number) : base.saleDays.slice();
+        programs[key].active = source.active !== undefined ? source.active : base.active;
+        var purchaseGroup = source.purchaseGroup !== undefined ? source.purchaseGroup : base.purchaseGroup;
+        programs[key].purchasePolicy = purchaseGroup ? { group: purchaseGroup, maxQty: 4 } : null;
+        var sessionOverrides = catalog && catalog.sessionOverrides || {};
+        var configuredSlots = base.slots.map(function (slot, index) {
+          var configured = sessionOverrides[key + "-session-" + index] || {};
+          return Object.assign({}, slot, {
+            key: key + "-session-" + index,
+            time: configured.start && configured.end ? configured.start + "~" + configured.end : slot.time,
+            capacity: Number.isFinite(configured.capacity) ? configured.capacity : slot.capacity,
+            disabled: configured.deleted || (configured.active === undefined ? !!slot.disabled : configured.active === false)
+          });
+        }).filter(function (slot, index) { return !(sessionOverrides[key + "-session-" + index] || {}).deleted; });
+        (catalog && catalog.addedSessions || []).filter(function (session) { return session.programKey === key && !session.deleted; }).forEach(function (session) {
+          configuredSlots.push({ key: session.key, time: session.start + "~" + session.end, capacity: session.capacity, disabled: session.active === false });
+        });
+        configuredSlots.sort(function (a, b) { return a.time.localeCompare(b.time); });
+        programs[key].slots = configuredSlots.map(function (slot, index) {
+          return Object.assign({}, slot, { stock: (index + 1) + "회차 · " + (slot.disabled ? "마감" : slot.capacity + "자리") });
+        });
+        var savedDiscounts = adminState && Array.isArray(adminState.discounts) ? adminState.discounts : null;
+        if (savedDiscounts) {
+          var discountIds = Array.isArray(source.discountIds) ? source.discountIds : base.discountPolicy ? ["gwacheon"] : [];
+          programs[key].discountPolicies = savedDiscounts.filter(function (discount) {
+            var included = discount.allPrograms ? !(discount.excludedPrograms || []).includes(programs[key].name) : discountIds.includes(discount.id) || (discount.programs || []).includes(programs[key].name);
+            return discount.active !== false && included;
+          }).map(function (discount) {
+            var discountName = String(discount.name || "할인").replace(/\s*할인$/, "");
+            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxAmount: discount.maxAmount || 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
+          });
+          programs[key].discountPolicy = programs[key].discountPolicies[0] || null;
+        } else {
+          programs[key].discountPolicies = base.discountPolicy ? [Object.assign({}, base.discountPolicy)] : [];
+          programs[key].discountPolicy = programs[key].discountPolicies[0];
+        }
+        programs[key].operationExceptions = operationExceptions;
       });
     } catch (error) { /* keep base booking window if admin storage is unavailable */ }
   }
@@ -188,7 +271,7 @@
     bookingEnd = new Date(bookingStart);
     bookingEnd.setDate(bookingEnd.getDate() + days);
     var firstBookableDate = new Date(bookingStart);
-    while (firstBookableDate <= bookingEnd && !isWeekend(firstBookableDate)) firstBookableDate.setDate(firstBookableDate.getDate() + 1);
+    while (firstBookableDate <= bookingEnd && !programOperatesOn(programs[programKey], dateKey(firstBookableDate), firstBookableDate.getDay())) firstBookableDate.setDate(firstBookableDate.getDate() + 1);
     calendarFirstMonth = new Date(firstBookableDate.getFullYear(), firstBookableDate.getMonth(), 1);
   }
 
@@ -200,7 +283,24 @@
   }
 
   function operationExceptionFor(dateKeyValue) {
-    return operationExceptions.find(function (item) { return item.status !== "open" && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === state.programKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
+    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === state.programKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
+  }
+
+  function slotOperationException(slot) {
+    return operationExceptions.find(function (item) {
+      return item.status !== "open" && item.sessionKey && item.region === program.region && item.programKey === program.key && item.sessionKey === slot.key && item.startDate <= state.dateKey && item.endDate >= state.dateKey;
+    }) || null;
+  }
+
+  function programIsVisible(programData, now) {
+    now = now || new Date();
+    var start = programData.visibleStartAt ? new Date(programData.visibleStartAt) : null;
+    var end = programData.visibleEndAt ? new Date(programData.visibleEndAt) : null;
+    return programData.active !== false && (!start || Number.isNaN(start.getTime()) || now >= start) && (!end || Number.isNaN(end.getTime()) || now <= end);
+  }
+
+  function programOperatesOn(programData, key, weekday) {
+    return (!programData.saleStartDate || key >= programData.saleStartDate) && (!programData.saleEndDate || key <= programData.saleEndDate) && (programData.saleDays || [6, 0]).includes(weekday);
   }
 
   function formatBookingDate(date) {
@@ -276,14 +376,28 @@
     byId("ticket-time").textContent = ticketReservation.time;
     byId("ticket-people").textContent = ticketReservation.qty + "명";
     byId("ticket-admission-count").textContent = "총 " + ticketReservation.qty + "명";
-    byId("ticket-reservation-number").textContent = ticketReservation.reservationId || ticketReservation.id;
-    byId("ticket-order-number").textContent = ticketReservation.reservationId || ticketReservation.id;
+    byId("ticket-reservation-number").textContent = ticketReservationNumber(ticketReservation);
+    byId("ticket-order-number").textContent = ticketReservationNumber(ticketReservation);
     byId("ticket-payment-date").textContent = formatPaymentDate(ticketReservation.createdAt);
     byId("ticket-payment-method").textContent = paymentMethodLabel(ticketReservation.paymentMethod);
     byId("ticket-payment-status").textContent = ticketPaymentStatus(ticketReservation);
     byId("ticket-price").textContent = money(ticketReservation.price);
-    byId("ticket-discount-proof").hidden = !ticketDiscountQty(ticketReservation);
+    var hasDiscount = ticketDiscountQty(ticketReservation) > 0;
+    var discountLabel = ticketReservation.discountLabel || "할인 적용";
+    byId("ticket-discount-proof").hidden = !hasDiscount;
+    byId("ticket-discount-proof").setAttribute("aria-label", discountLabel + " 티켓입니다. 현장에서 증빙을 확인해주세요.");
+    byId("ticket-discount-label").textContent = discountLabel;
     renderTicketCancellation(timing, now);
+  }
+
+  function ticketReservationNumber(reservation) {
+    var value = reservation && (reservation.reservationId || reservation.id);
+    if (typeof value !== "string" || !value) return "-";
+    value = value.replace(/-G\d+$/, "");
+    var legacyLrp = /^(LRP-\d{6}-\d{5})-\d+$/.exec(value);
+    if (legacyLrp) return legacyLrp[1];
+    var legacyUuid = /^((?:[^-]+-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-\d+$/i.exec(value);
+    return legacyUuid ? legacyUuid[1] : value;
   }
 
   function ticketDiscountQty(reservation) {
@@ -293,7 +407,7 @@
 
   function ticketCancellationDeadline(reservation) {
     var programData = programs[reservation.programKey] || programs.ride;
-    var cancelMinutes = Number.isFinite(programData.cancelMinutes) ? programData.cancelMinutes : 10;
+    var cancelMinutes = Number.isFinite(reservation.cancelMinutes) ? reservation.cancelMinutes : Number.isFinite(programData.cancelMinutes) ? programData.cancelMinutes : 10;
     return new Date(ticketSessionStart(reservation).getTime() - cancelMinutes * 60000);
   }
 
@@ -325,7 +439,7 @@
     for (var index = 0; index < ticketReservation.qty; index += 1) {
       var discounted = index < discountQty;
       var label = document.createElement("label"); label.className = "ticket-cancel-option";
-      label.innerHTML = '<input type="checkbox" data-index="' + index + '" data-discounted="' + discounted + '" data-amount="' + paidAmounts[index] + '"><span><strong>' + (index + 1) + '번째 입장권</strong><small>' + (discounted ? "과천시민 50% 할인" : "정상가") + ' · ' + money(paidAmounts[index]) + '</small></span>';
+      label.innerHTML = '<input type="checkbox" data-index="' + index + '" data-discounted="' + discounted + '" data-amount="' + paidAmounts[index] + '"><span><strong>' + (index + 1) + '번째 입장권</strong><small>' + (discounted ? (ticketReservation.discountLabel || "할인 적용") : "정상가") + ' · ' + money(paidAmounts[index]) + '</small></span>';
       label.querySelector("input").addEventListener("change", updateTicketCancelSelection);
       wrap.append(label);
     }
@@ -353,7 +467,7 @@
     byId("ticket-refunded-price").textContent = "−" + money(refundedAmount);
     byId("ticket-remaining-price").textContent = money(ticketReservation.price);
     byId("ticket-refund-history-list").innerHTML = history.map(function (item) {
-      var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? "과천시민 할인 " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
+      var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? (item.discountLabel || "할인 적용") + " " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
       var requestedAt = new Date(item.createdAt).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
       return '<article><span><strong>' + item.qty + '명 취소 완료</strong><small>' + escapeHtml(detail) + '</small><small>처리 ' + escapeHtml(requestedAt) + '</small></span><div><em>환불 완료</em><b>−' + money(item.amount) + '</b></div></article>';
     }).join("");
@@ -372,18 +486,34 @@
     return date.getDay() === 0 || date.getDay() === 6;
   }
 
-  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, discountPolicyId: "", programKey: initialProgramKey, paymentMethod: "card", step: 0 };
+  var state = { date: "", dateKey: "", time: "", qty: 1, discount: false, discountQty: 0, discountPolicyId: "", programKey: initialProgramKey, paymentMethod: "card", step: 0 };
   var byId = function (id) { return document.getElementById(id); };
   var money = function (value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; };
   var currentName = function () { return program.name; };
   var currentPrice = function () { return program.price; };
   var selectedDiscountPolicy = function () {
     var policies = Array.isArray(program.discountPolicies) ? program.discountPolicies : program.discountPolicy ? [program.discountPolicy] : [];
-    return policies.find(function (policy) { return policy.id === state.discountPolicyId; }) || null;
+    return policies.find(function (policy) { return policy.id === state.discountPolicyId && (!state.dateKey || ((!policy.startDate || state.dateKey >= policy.startDate) && (!policy.endDate || state.dateKey <= policy.endDate))); }) || null;
   };
-  var amount = function () { var policy = selectedDiscountPolicy(); return Math.round(currentPrice() * state.qty * (policy ? 1 - policy.rate : 1)); };
-  var reservationStorageKey = "ponylandBookingStoreV2";
-  var demoCancellationStorageKey = "ponylandDemoTicketCancellationsV1";
+  var amount = function () {
+    var policy = selectedDiscountPolicy();
+    if (!policy) return currentPrice() * state.qty;
+    var perPersonDiscount = policy.type === "fixed" ? Number(policy.value || 0) : Math.round(currentPrice() * Number(policy.rate || 0));
+    if (policy.maxAmount) perPersonDiscount = Math.min(perPersonDiscount, policy.maxAmount);
+    return Math.max(0, currentPrice() * state.qty - perPersonDiscount * selectedDiscountQty());
+  };
+
+  function selectedDiscountQty() {
+    var policy = selectedDiscountPolicy();
+    return policy ? Math.min(state.qty, Number(policy.maxQty || state.qty)) : 0;
+  }
+  var reservationStorageKey = "ponylandBookingStoreV3";
+  var demoCancellationStorageKey = "ponylandDemoTicketCancellationsV2";
+  try {
+    window.localStorage.removeItem("ponylandBookingStoreV2");
+    window.localStorage.removeItem("letsrunPlayAdminDemoV3");
+    window.sessionStorage.removeItem("ponylandDemoTicketCancellationsV1");
+  } catch (error) { /* Storage cleanup is best-effort in restricted browsers. */ }
   var currentMember = readMember();
   var checkoutSnapshot = "";
   var completedOrder = null;
@@ -415,7 +545,9 @@
 
   function readReservations() {
     var store = readStore();
-    return currentMember && store ? BookingRules.ticketRecords(store.reservations).filter(function (item) { return item && item.memberId === currentMember.id && BookingRules.isActive(item); }) : [];
+    return currentMember && store ? BookingRules.ticketRecords(store.reservations).filter(function (item) {
+      return item && item.memberId === currentMember.id && item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
+    }) : [];
   }
 
   function writeStore(store) {
@@ -441,20 +573,42 @@
   function applyPartialTicketCancellation() {
     var selected = Array.from(document.querySelectorAll("#ticket-cancel-options input:checked"));
     if (!selected.length || !ticketReservation) return;
+    var cancellationNow = new Date();
+    if (!ticketCanCancel(ticketReservation, ticketTiming(ticketReservation, cancellationNow), cancellationNow)) {
+      byId("ticket-cancel-panel").hidden = true;
+      updateTicketAccess();
+      notify("취소 가능 시간이 지나 처리할 수 없습니다.");
+      return;
+    }
     var discountedCancelled = selected.filter(function (input) { return input.dataset.discounted === "true"; }).length;
     var regularCancelled = selected.length - discountedCancelled;
     var refundAmount = selected.reduce(function (sum, input) { return sum + Number(input.dataset.amount); }, 0);
     var paidAmounts = ticketPaidAmounts(ticketReservation);
     var cancelledIndexes = selected.map(function (input) { return Number(input.dataset.index); });
+    var currentTicketIds = Array.isArray(ticketReservation.ticketIds) ? ticketReservation.ticketIds.slice() : Array.from({ length: ticketReservation.qty }, function (_, index) { return ticketReservation.id + "-T" + String(index + 1).padStart(2, "0"); });
+    var currentDiscountFlags = Array.from({ length: ticketReservation.qty }, function (_, index) { return index < ticketDiscountQty(ticketReservation); });
+    var originalTicketIds = (ticketReservation.originalTicketIds || currentTicketIds).slice();
+    var originalUnitAmounts = (ticketReservation.originalUnitAmounts || paidAmounts).slice();
+    var originalDiscountFlags = (ticketReservation.originalDiscountFlags || currentDiscountFlags).slice();
+    var adminTicketStatuses = (ticketReservation.adminTicketStatuses || originalTicketIds.map(function () { return "confirmed"; })).slice();
+    cancelledIndexes.forEach(function (index) {
+      var originalIndex = originalTicketIds.indexOf(currentTicketIds[index]);
+      if (originalIndex >= 0) adminTicketStatuses[originalIndex] = "cancelled";
+    });
     var remainingUnitAmounts = paidAmounts.filter(function (_, index) { return !cancelledIndexes.includes(index); });
-    var remainingTicketIds = Array.isArray(ticketReservation.ticketIds) ? ticketReservation.ticketIds.filter(function (_, index) { return !cancelledIndexes.includes(index); }) : undefined;
-    var historyItem = { createdAt: new Date().toISOString(), qty: selected.length, discountQty: discountedCancelled, regularQty: regularCancelled, amount: refundAmount, status: "cancelled" };
+    var remainingTicketIds = currentTicketIds.filter(function (_, index) { return !cancelledIndexes.includes(index); });
+    var historyItem = { source: "customer", reason: "고객 직접 취소", createdAt: new Date().toISOString(), qty: selected.length, discountQty: discountedCancelled, discountLabel: ticketReservation.discountLabel || "", regularQty: regularCancelled, amount: refundAmount, status: "cancelled" };
     var updated = Object.assign({}, ticketReservation, {
       qty: ticketReservation.qty - selected.length,
       price: Math.max(0, ticketReservation.price - refundAmount),
       discountQty: Math.max(0, ticketDiscountQty(ticketReservation) - discountedCancelled),
       unitAmounts: remainingUnitAmounts,
       ticketIds: remainingTicketIds,
+      originalPrice: Number.isFinite(ticketReservation.originalPrice) ? ticketReservation.originalPrice : ticketReservation.price,
+      originalTicketIds: originalTicketIds,
+      originalUnitAmounts: originalUnitAmounts,
+      originalDiscountFlags: originalDiscountFlags,
+      adminTicketStatuses: adminTicketStatuses,
       cancellationHistory: (ticketReservation.cancellationHistory || []).concat(historyItem)
     });
     updated.discount = updated.discountQty > 0;
@@ -523,6 +677,7 @@
       qty: state.qty,
       price: amount(),
       discount: state.discount,
+      discountQty: selectedDiscountQty(),
       discountPolicyId: state.discountPolicyId
     };
   }
@@ -532,6 +687,7 @@
     var item = makeCartItem();
     var added = false;
     var addedToExisting = false;
+    var continueInCart = false;
     try { await withStoreLock(function () {
       if (!currentMember || currentMember.id !== item.memberId) return;
       var store = readStore(); if (!store) return;
@@ -541,16 +697,28 @@
       });
       // Re-adding a slot already in the cart tops up its quantity instead of overwriting it,
       // so picking the same time twice behaves like using the cart's +/- stepper.
-      if (matchingItem) { item.id = matchingItem.id; item.qty = matchingItem.qty + item.qty; }
+      if (matchingItem) {
+        item.id = matchingItem.id;
+        item.qty = matchingItem.qty + item.qty;
+        item.discountQty = item.discount ? Math.min(item.qty, Number((selectedDiscountPolicy() || {}).maxQty || item.qty)) : 0;
+      }
       var nextCart = matchingItem ? cart.map(function (entry) { return entry.id === matchingItem.id ? item : entry; }) : cart.concat(item);
       var error = BookingRules.validationError(nextCart, store.reservations, currentMember.id, programs, new Date());
-      if (error) { notify(error); return; }
+      if (error) {
+        if (continueToCheckout && cart.length && error.indexOf("구매 한도 그룹") !== -1) { continueInCart = true; return; }
+        notify(error); return;
+      }
       store.carts[currentMember.id] = nextCart.map(function (entry) { return BookingRules.quoteItem(entry, programs); });
       store.revision += 1;
       added = writeStore(store);
       addedToExisting = !!matchingItem;
     }); } catch (error) { notify("장바구니에 담지 못했습니다. 다시 시도해주세요."); }
     renderSlots(); update(); renderCart();
+    if (continueInCart) {
+      goToStep(4);
+      notify("장바구니에서 결제를 이어서 해주세요.");
+      return;
+    }
     if (added) {
       if (continueToCheckout) startCheckout();
       else notify(addedToExisting ? "장바구니에 담긴 인원을 추가했습니다." : "장바구니에 담았습니다.");
@@ -568,6 +736,12 @@
       if (delta === null) cart = cart.filter(function (entry) { return entry.id !== id; });
       else {
         var changed = Object.assign({}, item, { qty: item.qty + delta });
+        if (changed.discount) {
+          var changedProgram = programs[changed.programKey];
+          var changedPolicies = Array.isArray(changedProgram.discountPolicies) ? changedProgram.discountPolicies : changedProgram.discountPolicy ? [changedProgram.discountPolicy] : [];
+          var changedPolicy = changedPolicies.find(function (policy) { return !changed.discountPolicyId || policy.id === changed.discountPolicyId; });
+          changed.discountQty = Math.min(changed.qty, Number(changedPolicy && changedPolicy.maxQty || changed.qty));
+        }
         try { changed = BookingRules.quoteItem(changed, programs); }
         catch (error) { notify(error.message); return; }
         var nextCart = cart.map(function (entry) { return entry.id === id ? changed : entry; });
@@ -593,7 +767,7 @@
       var body = document.createElement("div"); body.className = "cart-item__body";
       body.append(createTextElement("strong", "", item.name));
       body.append(createTextElement("p", "", item.date + " · " + item.time));
-      body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · 과천시민 할인" : "")));
+      body.append(createTextElement("small", "", item.qty + "명" + (item.discount ? " · " + (item.discountLabel || "할인 적용") + " " + (item.discountQty || item.qty) + "명" : "")));
       card.append(thumbnail, body, createTextElement("strong", "cart-item__price", money(item.price)));
       if (editable) {
         var actions = document.createElement("div"); actions.className = "cart-item__actions";
@@ -652,7 +826,8 @@
     var addProgramsLabel = document.querySelector("#cart-program-links > span");
     if (addProgramsLabel) addProgramsLabel.textContent = cart.length ? "다른 체험 추가" : "체험 둘러보기";
     addLinks.forEach(function (link) {
-      link.hidden = cartedProgramKeys.includes(link.getAttribute("data-program-key"));
+      var key = link.getAttribute("data-program-key");
+      link.hidden = cartedProgramKeys.includes(key) || !programs[key] || !programIsVisible(programs[key]);
     });
     byId("cart-program-links").hidden = Array.from(addLinks).every(function (link) { return link.hidden; });
   }
@@ -705,8 +880,8 @@
     return element;
   }
 
-  function ticketReservationId(date, time) {
-    return "LRP-" + dateKey(date).slice(2).replace(/-/g, "") + "-" + time.split("~")[0].replace(":", "");
+  function ticketReservationId(paymentDate, sequence) {
+    return "LRP-" + dateKey(paymentDate).slice(2).replace(/-/g, "") + "-" + String(90000 + sequence).padStart(5, "0");
   }
 
   function slotDateTime(date, timeText) {
@@ -733,7 +908,8 @@
 
   function defaultTicketReservations(now) {
     now = now || new Date();
-    var samplePaidAt = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    var samplePaidDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    var samplePaidAt = samplePaidDate.toISOString();
     var active = activeSlotForNow(now);
     var upcomingDate = new Date(now);
     upcomingDate.setHours(0, 0, 0, 0);
@@ -747,19 +923,57 @@
     endedDate.setDate(endedDate.getDate() - 1);
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     var defaults = [
-      { id: ticketReservationId(now, active.slot.time) + "-G01", reservationId: ticketReservationId(now, active.slot.time), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(upcomingDate, secondSlot) + "-G01", reservationId: ticketReservationId(upcomingDate, secondSlot), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: ticketReservationId(endedDate, endedSlot) + "-G01", reservationId: ticketReservationId(endedDate, endedSlot), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
+      { id: ticketReservationId(samplePaidDate, 1) + "-G01", reservationId: ticketReservationId(samplePaidDate, 1), programKey: "ride", name: "포니 타기", dateKey: dateKey(now), date: formatBookingDate(now), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", forceActive: active.forceActive, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 4, price: 12000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: ticketReservationId(samplePaidDate, 3) + "-G01", reservationId: ticketReservationId(samplePaidDate, 3), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
   }
 
+  function persistDefaultTicketReservations(tickets) {
+    if (!currentMember || !tickets.length) return tickets;
+    var store = readStore();
+    if (!store) return tickets;
+    var memberRecords = BookingRules.ticketRecords(store.reservations).filter(function (item) { return item && item.memberId === currentMember.id; });
+    if (memberRecords.length) return memberRecords.filter(function (item) {
+      return item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
+    });
+    var parents = tickets.map(function (ticket) {
+      var discountQty = Number.isInteger(ticket.discountQty) ? ticket.discountQty : ticket.discount ? ticket.qty : 0;
+      var regularAmount = (programs[ticket.programKey] || programs.ride).price;
+      var discountAmount = discountQty ? Math.round((ticket.price - regularAmount * (ticket.qty - discountQty)) / discountQty) : regularAmount;
+      var unitAmounts = Array.from({ length: ticket.qty }, function (_, index) { return index < discountQty ? discountAmount : regularAmount; });
+      var savedTicket = Object.assign({}, ticket, {
+        memberId: currentMember.id,
+        isExample: true,
+        status: "confirmed",
+        ticketIds: Array.from({ length: ticket.qty }, function (_, index) { return ticket.reservationId + "-T" + String(index + 1).padStart(2, "0"); }),
+        unitAmounts: unitAmounts
+      });
+      return {
+        id: ticket.reservationId,
+        memberId: currentMember.id,
+        paymentId: "DEMO-PAY-" + ticket.reservationId,
+        paymentMethod: "demo-card",
+        createdAt: ticket.createdAt,
+        status: "confirmed",
+        total: ticket.price,
+        isExample: true,
+        tickets: [savedTicket]
+      };
+    });
+    store.reservations = parents.concat(store.reservations);
+    store.revision += 1;
+    return writeStore(store) ? BookingRules.ticketRecords(parents) : tickets;
+  }
+
   function ticketListReservations(now) {
     now = now || new Date();
     var reservations = readReservations();
-    // Samples explain the three states only while this demo account has no real tickets.
-    var visibleReservations = reservations.length ? reservations : defaultTicketReservations(now);
+    // Persist the first demo tickets in the same reservation store the admin reads,
+    // so both screens always show the exact same reservation number.
+    var visibleReservations = reservations.length ? reservations : persistDefaultTicketReservations(defaultTicketReservations(now));
     var stateOrder = { upcoming: 0, active: 1, ended: 2 };
     return visibleReservations.sort(function (first, second) {
       return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
@@ -821,7 +1035,7 @@
       body.append(status);
       body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
       body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-      var metaText = reservation.qty + "명 · " + money(reservation.price);
+      var metaText = reservation.qty + "명 · " + money(reservation.price) + (ticketDiscountQty(reservation) ? " · " + (reservation.discountLabel || "할인 적용") : "");
       var meta = createTextElement("span", "ticket-list-card__meta", metaText);
       body.append(meta);
       card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
@@ -872,15 +1086,18 @@
     byId("booking-slots").hidden = !state.dateKey;
     if (!state.dateKey) { byId("booking-slots").replaceChildren(); return; }
     var selectedSlot = program.slots.find(function (slot) { return slot.time === state.time; });
-    if (!selectedSlot || selectedSlot.disabled || slotHasStarted(selectedSlot) || hasTimeConflict(state.dateKey, selectedSlot.time)) {
+    if (!selectedSlot || selectedSlot.disabled || slotOperationException(selectedSlot) || slotRemainingCapacity(selectedSlot) < 1 || slotHasStarted(selectedSlot) || hasTimeConflict(state.dateKey, selectedSlot.time)) {
       state.time = "";
     }
     byId("booking-slots").innerHTML = program.slots.map(function (slot, index) {
       var booked = hasTimeConflict(state.dateKey, slot.time);
+      var remaining = slotRemainingCapacity(slot);
+      var soldOut = remaining < 1;
+      var operationClosed = !!slotOperationException(slot);
       var selected = slot.time === state.time;
       var className = "chip chip--slots" + (selected ? " is-selected" : "") + (booked ? " is-booked" : "");
-      var stockText = booked ? "이미 선택한 시간" : slotHasStarted(slot) ? "시작된 회차" : slot.stock;
-      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" data-booked="' + booked + '" aria-pressed="' + selected + '"' + (slot.disabled || booked || slotHasStarted(slot) ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
+      var stockText = booked ? "이미 선택한 시간" : slotHasStarted(slot) ? "시작된 회차" : (index + 1) + "회차 · " + (operationClosed ? "휴장" : soldOut || slot.disabled ? "마감" : remaining + "자리");
+      return '<button type="button" class="' + className + '" data-time="' + slot.time + '" data-booked="' + booked + '" aria-pressed="' + selected + '"' + (slot.disabled || operationClosed || soldOut || booked || slotHasStarted(slot) ? ' disabled' : '') + '><strong>' + slot.time + '</strong><small>' + stockText + '</small></button>';
     }).join("");
     document.querySelectorAll("#booking-slots button:not([disabled])").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -902,12 +1119,24 @@
     return !range || range.start <= Date.now();
   }
 
+  function slotRemainingCapacity(slot) {
+    var capacity = Number.isInteger(slot.capacity) ? slot.capacity : 4;
+    var store = readStore();
+    if (!store) return 0;
+    var paidSeats = BookingRules.ticketRecords(store.reservations).filter(function (item) {
+      return BookingRules.isActive(item) && item.programKey === program.key && item.dateKey === state.dateKey && item.time === slot.time;
+    }).reduce(function (sum, item) { return sum + (Number.isInteger(item.qty) ? item.qty : 0); }, 0);
+    return Math.max(0, capacity - paidSeats);
+  }
+
   function selectProgram(key, reset) {
-    state.programKey = ["ride", "play"].includes(key) ? key : "ride";
+    applyBookingWindowOverrides();
+    var visibleKeys = Object.keys(programs).filter(function (programKey) { return programs[programKey].userBookable && programIsVisible(programs[programKey]); });
+    state.programKey = visibleKeys.includes(key) ? key : visibleKeys[0] || "ride";
     program = programs[state.programKey];
     refreshBookingWindow(state.programKey);
     if (reset !== false) {
-      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false; state.discountPolicyId = "";
+      state.date = ""; state.dateKey = ""; state.time = ""; state.qty = 1; state.discount = false; state.discountQty = 0; state.discountPolicyId = "";
       calendarMonth = new Date(calendarFirstMonth);
     }
     if (typeof renderDiscountOptions === "function") renderDiscountOptions();
@@ -945,7 +1174,7 @@
       var date = new Date(year, month, day);
       var key = dateKey(date);
       var operationException = operationExceptionFor(key);
-      var available = date >= bookingStart && date <= bookingEnd && isWeekend(date) && !operationException;
+      var available = date >= bookingStart && date <= bookingEnd && programOperatesOn(program, key, date.getDay()) && !operationException;
       var selected = key === state.dateKey;
       var today = key === dateKey(bookingStart);
       var classNames = [];
@@ -967,10 +1196,12 @@
         state.dateKey = button.getAttribute("data-date-key");
         state.date = formatBookingDate(selectedDate);
         state.time = "";
+        if (!selectedDiscountPolicy()) { state.discount = false; state.discountPolicyId = ""; }
         byId("date-picker").open = false;
         byId("date-picker").querySelector("summary").focus();
         renderCalendar();
         renderSlots();
+        renderDiscountOptions();
         update();
       });
     });
@@ -984,22 +1215,24 @@
     byId("selected-date-label").textContent = state.date || "날짜를 선택해주세요";
     byId("selected-option-summary").textContent = state.dateKey && state.time ? state.date + " · " + state.time + " · " + state.qty + "명" : "날짜와 시간을 선택해주세요.";
     byId("summary-price").textContent = money(price);
-    byId("product-discount-note").hidden = !selectedDiscountPolicy();
-    byId("add-to-cart").disabled = !state.dateKey || !state.time;
-    byId("book-now").disabled = !state.dateKey || !state.time;
+    var selectedPolicy = selectedDiscountPolicy();
+    byId("product-discount-note").hidden = !selectedPolicy;
+    if (selectedPolicy) byId("product-discount-note").textContent = selectedPolicy.label + " · " + selectedDiscountQty() + "명 적용";
+    byId("add-to-cart").disabled = !state.dateKey || !state.time || !programIsVisible(program);
+    byId("book-now").disabled = !state.dateKey || !state.time || !programIsVisible(program);
     byId("qty-minus").disabled = state.qty <= 1;
     byId("qty-plus").disabled = state.qty >= selectedMaxQty();
   }
 
   function selectedMaxQty() {
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
-    var policy = selectedDiscountPolicy();
-    return Math.min(policy ? policy.maxQty : 4, slot && Number.isInteger(slot.capacity) ? slot.capacity : 4);
+    return Math.min(4, slot ? slotRemainingCapacity(slot) : 4);
   }
 
   function renderDiscountOptions() {
     var wrap = byId("booking-discount-options");
     var policies = Array.isArray(program.discountPolicies) ? program.discountPolicies : program.discountPolicy ? [program.discountPolicy] : [];
+    policies = policies.filter(function (policy) { return !state.dateKey || ((!policy.startDate || state.dateKey >= policy.startDate) && (!policy.endDate || state.dateKey <= policy.endDate)); });
     wrap.innerHTML = '<label class="discount-check"><input type="radio" name="booking-discount" value="" ' + (!state.discountPolicyId ? "checked" : "") + '> 할인 미적용</label>' + policies.map(function (policy) {
       return '<label class="discount-check"><input type="radio" name="booking-discount" value="' + policy.id + '" ' + (state.discountPolicyId === policy.id ? "checked" : "") + '> ' + policy.label + ' <span>· 최대 ' + policy.maxQty + '매</span></label>';
     }).join("");
@@ -1007,8 +1240,7 @@
       input.addEventListener("change", function () {
         state.discountPolicyId = input.value;
         state.discount = !!input.value;
-        var policy = selectedDiscountPolicy();
-        if (policy && state.qty > policy.maxQty) state.qty = policy.maxQty;
+        state.discountQty = selectedDiscountQty();
         update();
       });
     });
@@ -1047,7 +1279,8 @@
 
   function restoreShopRoute() {
     var route = new URLSearchParams(window.location.search);
-    if (["ride", "play"].includes(route.get("product"))) {
+    applyBookingWindowOverrides();
+    if (programs[route.get("product")] && programs[route.get("product")].userBookable) {
       selectProgram(route.get("product"), state.programKey !== route.get("product"));
       goToStep(1, { history: false });
     } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
@@ -1066,23 +1299,40 @@
   function syncProgramExtras() {
     var picker = byId("program-picker");
     if (picker) {
+      var bookableKeys = Object.keys(programs).filter(function (key) { return programs[key].userBookable; });
       picker.querySelectorAll("[data-program-key]").forEach(function (button) {
-        var selected = button.getAttribute("data-program-key") === state.programKey;
+        if (!bookableKeys.includes(button.getAttribute("data-program-key"))) button.remove();
+      });
+      bookableKeys.forEach(function (key) {
+        if (picker.querySelector('[data-program-key="' + key + '"]')) return;
+        var button = document.createElement("button");
+        button.type = "button"; button.className = "chip"; button.setAttribute("data-program-key", key);
+        button.innerHTML = "<strong></strong><small></small>"; picker.append(button);
+      });
+      picker.querySelectorAll("[data-program-key]").forEach(function (button) {
+        var key = button.getAttribute("data-program-key");
+        var selected = key === state.programKey;
+        button.hidden = !programIsVisible(programs[key]);
+        button.querySelector("strong").textContent = programs[key].name;
+        button.querySelector("small").textContent = money(programs[key].price);
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", String(selected));
       });
     }
     var notice = program.noticeText || "";
-    try {
-      var adminState = JSON.parse(window.localStorage.getItem("letsrunPlayAdminDemoV3") || "null");
-      var catalog = adminState && adminState.catalog;
-      var override = catalog && catalog.programOverrides && catalog.programOverrides[program.key];
-      var added = catalog && (catalog.addedPrograms || []).find(function (item) { return item.key === program.key; });
-      var source = override || added;
-      if (source && typeof source.noticeText === "string") notice = source.noticeText;
-    } catch (error) { /* keep the built-in notice if admin storage is unavailable */ }
     var noticeEl = byId("product-notice");
     if (noticeEl) { noticeEl.textContent = notice; noticeEl.hidden = !notice; }
+    document.querySelectorAll("#cart-program-links [data-program-key]").forEach(function (link) {
+      var key = link.getAttribute("data-program-key");
+      if (!programs[key] || !programs[key].userBookable) { link.remove(); return; }
+      link.textContent = programs[key].name;
+    });
+    var cartLinks = byId("cart-program-links");
+    Object.keys(programs).filter(function (key) { return programs[key].userBookable; }).forEach(function (key) {
+      if (cartLinks.querySelector('[data-program-key="' + key + '"]')) return;
+      var link = document.createElement("a"); link.href = "index.html?product=" + encodeURIComponent(key);
+      link.setAttribute("data-program-key", key); link.textContent = programs[key].name; cartLinks.append(link);
+    });
   }
 
   document.querySelectorAll("[data-shop-home]").forEach(function (button) {
@@ -1101,14 +1351,14 @@
       openDeveloperPolicy();
     }
   });
-  byId("program-picker").querySelectorAll("[data-program-key]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      var key = button.getAttribute("data-program-key");
-      if (key === state.programKey) return;
-      selectProgram(key);
-      goToStep(1);
-      syncProgramExtras();
-    });
+  byId("program-picker").addEventListener("click", function (event) {
+    var button = event.target.closest("[data-program-key]");
+    if (!button) return;
+    var key = button.getAttribute("data-program-key");
+    if (key === state.programKey) return;
+    selectProgram(key);
+    goToStep(1);
+    syncProgramExtras();
   });
   byId("calendar-prev").addEventListener("click", function () {
     calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
@@ -1177,7 +1427,7 @@
   });
 
   window.addEventListener("storage", function (event) {
-    if (event.key === "letsrunPlayAdminDemoV3") { refreshBookingWindow(state.programKey); renderCalendar(); syncProgramExtras(); }
+    if (event.key === "letsrunPlayAdminDemoV4") { selectProgram(state.programKey, false); renderCart(); syncProgramExtras(); }
     if (event.key !== reservationStorageKey && event.key !== null) return;
     var store = readStore();
     var latestCart = JSON.stringify(ownCart(store));

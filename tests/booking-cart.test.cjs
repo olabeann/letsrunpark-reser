@@ -20,6 +20,12 @@ const tour = (overrides = {}) => item({ id: 'cart-tour', programKey: 'tour', nam
 const error = (items, saved = [], clock = now) => rules.validationError(items, saved, memberId, programs, clock);
 const store = (cart = [item(), tour()], saved = []) => ({ revision: 3, reservations: saved, carts: { [memberId]: cart, other: [item({ memberId: 'other' })] } });
 
+test('starts local booking data from the post-reservation-number schema', () => {
+  assert.match(source, /reservationStorageKey = "ponylandBookingStoreV3"/);
+  assert.match(source, /localStorage\.removeItem\("ponylandBookingStoreV2"\)/);
+  assert.match(source, /demoCancellationStorageKey = "ponylandDemoTicketCancellationsV2"/);
+});
+
 test('blocks identical, contained and partially overlapping intervals in either order across programs', () => {
   for (const time of ['14:00~14:20', '14:20~14:45', '15:00~15:20', '13:50~14:10', '14:50~15:30', '13:00~16:00']) {
     const pony = item({ time });
@@ -78,6 +84,8 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.notEqual(error([tour({ discount: true })]), '');
   assert.notEqual(error([item({ programKey: 'missing' })]), '');
   assert.equal(error([item({ qty: 2, discount: true })]), '');
+  assert.equal(error([item({ qty: 4, discount: true, discountQty: 2, time: '15:00~15:20' })]), '');
+  assert.equal(rules.quoteItem(item({ qty: 4, discount: true, discountQty: 2, time: '15:00~15:20' }), programs).price, 15000);
 });
 
 test('caps combined ride/play purchases at 4 and enforces per-usage-date citizen discount limits', () => {
@@ -90,6 +98,34 @@ test('caps combined ride/play purchases at 4 and enforces per-usage-date citizen
   assert.equal(error([discountedRide, discountedPlay]), '');
   assert.match(error([discountedRide], [item({ id: 'used-discount', qty: 2, discount: true })]), /최대 2매/);
   assert.equal(error([discountedRide], [item({ id: 'used-discount', dateKey: '2026-08-30', qty: 2, discount: true })]), '');
+});
+
+test('allows only one discount policy per account and usage date', () => {
+  const alternate = { id: 'staff', type: 'percent', value: 20, rate: 0.2, maxQty: 2, maxQtyPerDate: 2, label: '임직원 20% 할인' };
+  const multiPrograms = {
+    ...programs,
+    ride: { ...programs.ride, discountPolicies: [programs.ride.discountPolicy, alternate] },
+    play: { ...programs.play, discountPolicies: [programs.play.discountPolicy, alternate] },
+  };
+  const ride = item({ qty: 1, discount: true, discountQty: 1, discountPolicyId: 'gwacheon' });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1, discount: true, discountQty: 1, discountPolicyId: 'staff' });
+  assert.match(rules.validationError([ride, play], [], memberId, multiPrograms, now), /하나의 할인 정책/);
+});
+
+test('uses configured sale weekdays and blocks stored operation closures', () => {
+  const weekdayPrograms = {
+    ...programs,
+    ride: {
+      ...programs.ride,
+      saleDays: [1],
+      operationExceptions: [{ status: 'closed', region: '서울', programKey: 'ride', sessionKey: 'ride-session-0', startDate: '2026-08-31', endDate: '2026-08-31' }],
+      slots: programs.ride.slots.map((slot, index) => ({ ...slot, key: 'ride-session-' + index })),
+    },
+  };
+  const monday = item({ dateKey: '2026-08-31' });
+  assert.match(rules.validationError([monday], [], memberId, weekdayPrograms, now), /예약 가능한 날짜와 회차/);
+  weekdayPrograms.ride.operationExceptions = [];
+  assert.equal(rules.validationError([monday], [], memberId, weekdayPrograms, now), '');
 });
 
 test('blocks re-booking the same session and resets the discount cap per usage date', () => {
@@ -149,6 +185,12 @@ test('checkout recalculates prices and atomically produces one reservation with 
   assert.deepEqual(order.tickets.flatMap(ticket => ticket.ticketIds), ['order-1-T01', 'order-1-T02', 'order-1-T03', 'order-1-T04']);
   assert.equal(order.tickets[0].qty, 2, 'One customer ticket groups the session headcount');
   assert.deepEqual(order.tickets[0].unitAmounts, [2500, 2500], 'Each ticket keeps its paid amount snapshot');
+  assert.equal(order.tickets[0].originalPrice, 5000);
+  assert.deepEqual(order.tickets[0].originalTicketIds, order.tickets[0].ticketIds);
+  assert.deepEqual(order.tickets[0].originalUnitAmounts, [2500, 2500]);
+  assert.deepEqual(order.tickets[0].originalDiscountFlags, [true, true]);
+  assert.deepEqual(order.tickets[0].adminTicketStatuses, ['confirmed', 'confirmed']);
+  assert.equal(order.tickets[0].cancelMinutes, 10, 'Cancellation deadline is snapshotted at checkout');
   assert.equal(order.store.carts[memberId].length, 0);
   assert.deepEqual(order.store.carts.other, before.carts.other);
   assert.equal(order.store.revision, 4);
@@ -190,6 +232,7 @@ test('booking summary shows the discount note only after a discount is selected'
     currentPrice: () => 5000,
     money: value => value + '원',
     selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId } : null,
+    selectedDiscountQty: () => state.discountPolicyId ? 1 : 0,
     selectedMaxQty: () => 4,
     byId: id => {
       if (!elements[id]) elements[id] = {};
@@ -203,6 +246,37 @@ test('booking summary shows the discount note only after a discount is selected'
   runtime.update();
   assert.equal(runtime.byId('product-discount-note').hidden, false);
   assert.match(pageSource, /id="product-discount-note" hidden/);
+});
+
+test('reserve redirects to a valid existing cart when a new item exceeds the purchase group limit', async () => {
+  const existing = item({ qty: 4 });
+  const savedStore = store([existing]);
+  const messages = [];
+  const steps = [];
+  let checkoutStarted = false;
+  const runtime = vm.createContext({
+    currentMember: { id: memberId },
+    makeCartItem: () => item({ id: 'new-item', programKey: 'play', name: '포니랑 놀기', qty: 1 }),
+    withStoreLock: action => Promise.resolve().then(action),
+    readStore: () => savedStore,
+    ownCart: () => savedStore.carts[memberId],
+    BookingRules: {
+      validationError: () => '같은 구매 한도 그룹은 이용일 기준 계정당 최대 4매까지 예약할 수 있습니다.',
+      quoteItem: entry => entry,
+    },
+    programs,
+    writeStore: () => { throw new Error('invalid write'); },
+    notify: message => messages.push(message),
+    renderSlots() {}, update() {}, renderCart() {},
+    goToStep: step => steps.push(step),
+    startCheckout: () => { checkoutStarted = true; },
+  });
+  vm.runInContext(appFunction('addToCart'), runtime);
+  await runtime.addToCart(true);
+  assert.deepEqual(steps, [4]);
+  assert.deepEqual(messages, ['장바구니에서 결제를 이어서 해주세요.']);
+  assert.equal(checkoutStarted, false);
+  assert.deepEqual(savedStore.carts[memberId], [existing]);
 });
 
 test('unreadable storage is not replaced with an empty reservation store', () => {
@@ -265,7 +339,8 @@ test('opening another program resets date, session, headcount and discount optio
       if (!elements.has(id)) elements.set(id, { replaceChildren() {}, append() {} });
       return elements.get(id);
     },
-    createTextElement: () => ({}), refreshBookingWindow() {}, renderCalendar() {}, renderSlots() {}, update() {},
+    createTextElement: () => ({}), applyBookingWindowOverrides() {}, programIsVisible: () => true,
+    refreshBookingWindow() {}, renderCalendar() {}, renderSlots() {}, renderDiscountOptions() {}, update() {},
   });
   vm.runInContext(appFunction('selectProgram'), runtime);
   runtime.selectProgram('play');
@@ -285,6 +360,7 @@ test('slot refresh requires explicit selection and never silently picks a replac
   const runtime = vm.createContext({
     state, program: programs.ride, byId: id => elements[id],
     hasTimeConflict: (_date, time) => time === '10:00~10:20', slotHasStarted: () => false,
+    slotRemainingCapacity: () => 4, slotOperationException: () => null,
     document: { querySelectorAll: () => [] },
   });
   vm.runInContext(appFunction('renderSlots'), runtime);
@@ -307,6 +383,7 @@ test('shop routes restore independent programs and send stale checkout links bac
   const runtime = vm.createContext({
     URLSearchParams, programs, state: { programKey: 'ride' }, completedOrder: null,
     window: { location: { search: '?product=play' } },
+    applyBookingWindowOverrides() {},
     selectProgram: (key, reset) => products.push({ key, reset }),
     goToStep: (step, options) => visited.push({ step, options }), renderCart() {},
   });
@@ -326,4 +403,13 @@ test('shop routes restore independent programs and send stale checkout links bac
     runtime.restoreShopRoute();
     assert.equal(visited.at(-1).step, 1);
   }
+});
+
+test('customer catalog consumes administrator programs, sessions, closures and discounts', () => {
+  assert.match(source, /catalog\.addedPrograms \|\| \[\]/);
+  assert.match(source, /userBookable: true, adminCreated: true/);
+  assert.match(source, /catalog\.addedSessions \|\| \[\]/);
+  assert.match(source, /programs\[key\]\.operationExceptions = operationExceptions/);
+  assert.match(source, /savedDiscounts\.filter/);
+  assert.match(source, /Object\.keys\(programs\)\.filter\(function \(programKey\) \{ return programs\[programKey\]\.userBookable/);
 });
