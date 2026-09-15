@@ -18,25 +18,43 @@ test('exact dates, cards, search and scope constrain screen/export source identi
  assert.equal(L.filter({...may,region:'제주'},()=>true).length,0);
  assert.equal(L.filter({...may,region:'서울',department:'공원화사업추진TF'},()=>true).length,10);
  assert.equal(L.filter({...may,region:'서울',department:'서울고객안전부'},()=>true).length,0);
- assert.equal(L.headers.length,14);
+ assert.equal(L.ledgerHeaders.length,12);
+ assert.equal(L.historyHeaders.length,14);
  assert.ok(L.payments.every(p=>/^LRP-\d{6}-\d{5}$/.test(p.reservation)));
  assert.equal(L.filter({...may,search:'LRP-260510-00003'},()=>true).length,3);
  assert.ok(!L.payments.some(p=>p.method==='계좌이체'));
  assert.ok(L.payments.every(p=>p.method==='카드'&&!p.easyPay));
- assert.ok(!L.headers.includes('예약번호'));
- assert.ok(!L.headers.includes('수수료 공급가액'));
+ assert.equal(L.ledgerHeaders[0],'예약번호');
+ assert.equal(L.historyHeaders[1],'포트원 거래번호');
+ assert.ok(!L.ledgerHeaders.includes('수수료 공급가액'));
  const rows=L.filter({...may,card:'국민카드',start:'2026-05-31'},()=>true);
  assert.equal(rows.length,1);assert.equal(L.totals(rows).net,10000);
- assert.equal(L.sheets(rows,may)[1].rows.length,2);
+ const sheets=L.sheets(rows,may);
+ assert.deepEqual(sheets.map(sheet=>sheet.name),['매출 요약','결제·정산 원장','거래 이력']);
+ assert.equal(sheets[1].rows.length,2);
+ assert.equal(sheets[2].rows.length,2);
  assert.equal(L.filter({...may,type:'취소'},()=>true).length,10,'summary filters must keep approvals and cancellations together');
 });
 test('demo fees are populated and June cancellation does not rewrite May',()=>{
  const row=L.filter({...may,start:'2026-05-31'},()=>true)[0];
  assert.equal(L.pgFeeRate,0.02);
- assert.equal(L.fee(row),200);assert.equal(L.detail(row)[L.headers.indexOf('수수료')],200);
+ assert.equal(L.fee(row),200);
  assert.ok(L.events.every(e=>Math.abs(L.fee(e))===Math.round(Math.abs(e.amount)*0.02)));
  assert.ok(L.events.every(e=>Number.isFinite(L.fee(e))));
  assert.equal(L.totals(L.filter({start:'2026-06-01',end:'2026-06-30'},()=>true)).net,-10000);
+});
+
+test('Excel ledger groups each reservation and keeps source events in a separate history sheet',()=>{
+ const rows=L.filter(may,()=>true),sheets=L.sheets(rows,may),ledger=sheets[1].rows,history=sheets[2].rows;
+ assert.equal(ledger.length,L.groups(rows).length+1);
+ assert.equal(history.length,rows.length+1);
+ const grouped=ledger.find(row=>row[0]==='LRP-260510-00003');
+ assert.deepEqual(grouped.slice(5),[15000,10000,5000,100,4900,'2026-07-08',3]);
+ const cancelled=history.find(row=>row[0]==='LRP-260510-00003'&&row[9]==='부분 취소');
+ assert.match(cancelled[1],/^imp_/);
+ assert.equal(cancelled[10],-5000);
+ assert.equal(cancelled[11],'');
+ assert.match(cancelled[12],/^LRP-260510-00003-T0[12]$/);
 });
 
 test('completed services are scheduled for the eighth of the following month',()=>{
@@ -47,7 +65,7 @@ test('completed services are scheduled for the eighth of the following month',()
  assert.ok(L.events.filter(e=>e.type==='승인').every(e=>e.paidOutDate==='2026-07-08'));
  assert.ok(L.events.filter(e=>e.type==='취소').every(e=>e.paidOutDate===''));
  const cancelled=L.events.find(e=>e.type==='취소');
- assert.equal(L.detail(cancelled)[12],'');
+ assert.equal(L.historyDetail(cancelled)[11],'');
 });
 test('xlsx is a ZIP workbook with numeric amounts and literal formula-like strings',async()=>{
  const blob=SettlementXlsx.workbook([{name:'안전',rows:[['ID','금액'],['=1+1',27000],['00123',null]]}]);
@@ -141,8 +159,8 @@ test('service month includes earlier payments and partial refunds but excludes u
  assert.ok(!rows.some(e=>['demo-pay-004','demo-pay-005','demo-pay-006'].includes(e.paymentId)));
  assert.equal(L.filter({...f,start:'2026-05-01',end:'2026-05-31'},()=>true).length,0);
  assert.equal(L.filter({...f,asOf:'2026-06-06T14:59:59+09:00'},()=>true).length,0);
- assert.equal(L.sheets(rows,f)[1].rows[0][3],'서비스 이용일');
- assert.equal(L.sheets(rows,f)[1].rows[1][3],'2026-06-06');
+ assert.equal(L.sheets(rows,f)[1].rows[0][4],'서비스 이용일');
+ assert.equal(L.sheets(rows,f)[1].rows[1][4],'2026-06-06');
 });
 
 test('date basis changes both filtered records and Excel period description',()=>{

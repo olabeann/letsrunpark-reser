@@ -1482,22 +1482,6 @@
     return { basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, region: byId("settlement-region-filter").value, department: byId("settlement-department-filter").value, search: byId("settlement-detail-search").value.trim() };
   }
 
-  function groupSettlementRows(rows) {
-    var groups = [];
-    rows.forEach(function (event) {
-      var payment = SettlementLedger.payment(event);
-      var group = groups.find(function (item) { return item.reservation === payment.reservation; });
-      if (!group) {
-        group = { reservation: payment.reservation, events: [], programs: [], serviceDates: [] };
-        groups.push(group);
-      }
-      group.events.push(event);
-      if (!group.programs.includes(payment.program)) group.programs.push(payment.program);
-      if (!group.serviceDates.includes(payment.serviceDate)) group.serviceDates.push(payment.serviceDate);
-    });
-    return groups;
-  }
-
   function settlementEventTimelineItem(event) {
     var payment = SettlementLedger.payment(event), cancelled = event.type === "취소";
     var status = cancelled ? SettlementLedger.state(event) : "승인";
@@ -1522,15 +1506,14 @@
     byId("settlement-metrics").innerHTML = metrics.map(function(m){return '<article><small>'+m[0]+'</small><strong>'+(typeof m[1] === 'number' ? money(m[1]) : m[1])+'</strong><p>'+m[2]+'</p></article>';}).join("");
     var groups = Array.from(new Set(rows.map(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program;})));
     function cells(group, v) { return '<tr><td>'+escapeHtml(group)+'</td><td>'+money(v.approved)+'<small class="settlement-summary-count">승인 '+v.approvals+'건</small></td><td>'+money(v.cancelled)+'<small class="settlement-summary-count">취소 '+v.cancels+'건</small></td><td>'+money(v.net)+'</td><td>'+money(v.fee)+'</td><td>'+money(v.payout)+'</td></tr>'; }
-    var reservationGroups = groupSettlementRows(rows);
+    var reservationGroups = SettlementLedger.groups(rows);
     byId("settlement-card-count").textContent = reservationGroups.length + "건 결제 · " + rows.length + "개 거래";
     byId("settlement-summary-body").innerHTML = groups.length ? groups.map(function(group){return cells(group,SettlementLedger.totals(rows.filter(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program===group;})));}).join("") : '<tr><td colspan="6" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
     byId("settlement-summary-foot").innerHTML = groups.length ? cells("합계",t) : "";
     byId("settlement-detail-body").innerHTML = reservationGroups.length ? reservationGroups.map(function(group, index) {
       var totals = SettlementLedger.totals(group.events);
       var detailId = 'settlement-ledger-' + index;
-      var payoutDates = Array.from(new Set(group.events.filter(function (event) { return event.type === "승인" && event.paidOutDate; }).map(function (event) { return event.paidOutDate; })));
-      return '<tr class="settlement-ledger-row"><td><strong>' + escapeHtml(group.reservation) + '</strong><small>' + escapeHtml(group.programs.join(' · ')) + '</small></td><td>' + escapeHtml(group.serviceDates.join(' · ')) + '</td><td class="money-cell">' + money(totals.approved) + '</td><td class="money-cell' + (totals.cancelled ? ' is-negative' : '') + '">' + (totals.cancelled ? '−' + money(totals.cancelled) : '0원') + '</td><td class="money-cell settlement-net' + (totals.net < 0 ? ' is-negative' : '') + '">' + money(totals.net) + '</td><td class="money-cell">' + money(totals.fee) + '</td><td class="money-cell settlement-payout' + (totals.payout < 0 ? ' is-negative' : '') + '">' + money(totals.payout) + '</td><td>' + escapeHtml(payoutDates.join(' · ') || '—') + '</td><td><button type="button" class="settlement-expand" aria-expanded="false" aria-controls="' + detailId + '" aria-label="거래 ' + group.events.length + '건 펼치기"><span>거래 ' + group.events.length + '건</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></td></tr>' +
+      return '<tr class="settlement-ledger-row"><td><strong>' + escapeHtml(group.reservation) + '</strong><small>' + escapeHtml(group.programs.join(' · ')) + '</small></td><td>' + escapeHtml(group.serviceDates.join(' · ')) + '</td><td class="money-cell">' + money(totals.approved) + '</td><td class="money-cell' + (totals.cancelled ? ' is-negative' : '') + '">' + (totals.cancelled ? '−' + money(totals.cancelled) : '0원') + '</td><td class="money-cell settlement-net' + (totals.net < 0 ? ' is-negative' : '') + '">' + money(totals.net) + '</td><td class="money-cell">' + money(totals.fee) + '</td><td class="money-cell settlement-payout' + (totals.payout < 0 ? ' is-negative' : '') + '">' + money(totals.payout) + '</td><td>' + escapeHtml(group.payoutDates.join(' · ') || '—') + '</td><td><button type="button" class="settlement-expand" aria-expanded="false" aria-controls="' + detailId + '" aria-label="거래 ' + group.events.length + '건 펼치기"><span>거래 ' + group.events.length + '건</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></td></tr>' +
         '<tr id="' + detailId + '" class="settlement-event-detail" hidden><td colspan="9"><div class="settlement-timeline-head"><strong>승인 · 취소 거래 이력</strong><small>최신 거래순</small></div><ol class="settlement-timeline">' + group.events.map(settlementEventTimelineItem).join('') + '</ol></td></tr>';
     }).join('') : '<tr><td colspan="9" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
     return !invalid;
