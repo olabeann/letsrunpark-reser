@@ -1523,6 +1523,10 @@
     if (programs[route.get("product")] && programs[route.get("product")].userBookable) {
       selectProgram(route.get("product"), state.programKey !== route.get("product"));
       goToStep(1, { history: false });
+    } else if (route.get("view") === "tickets") {
+      selectProgram(state.programKey, false);
+      goToStep(1, { history: false });
+      showMyTickets();
     } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
     else if (route.get("view") === "complete") {
       // Completed reservation receipts are not persisted; return to the cart for a fresh review.
