@@ -118,3 +118,19 @@
 .shop-checkout .checkout-heading{margin-top:10px}
 .discount-options .discount-check .discount-option-copy{min-width:0;margin-left:0;display:flex;flex:1;flex-direction:column;align-items:flex-start;gap:3px}.discount-options .discount-option-copy strong{font-size:var(--fs-caption);font-weight:var(--fw-medium)}.discount-options .discount-option-notice{color:var(--grey);font-size:var(--fs-badge);line-height:1.5;text-align:left;word-break:keep-all}
 .program-guidance{margin-top:14px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--ground-100)}.program-guidance h3{margin:0 0 10px;font-size:var(--fs-caption);font-weight:var(--fw-bold)}.program-guidance__text{margin:0;color:var(--grey);font-size:var(--fs-badge);line-height:1.75;white-space:pre-line;word-break:keep-all}.program-guidance label{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-badge);font-weight:var(--fw-semibold);cursor:pointer}.program-guidance label input{width:16px;height:16px;margin:0;accent-color:var(--ink)}
+
+/* Public site footer */
+.site-footer{display:block;padding:0 0 28px;background:#f7f7f7;border:0;color:#657184;font-size:12px;line-height:1.75;text-align:left}
+.site-footer__inner{width:min(1600px,calc(100% - clamp(40px,9vw,160px)));margin-inline:auto;border-top:1px solid var(--line);padding-top:44px}
+.site-footer__info{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:36px}
+.site-footer address{font-style:normal;min-width:0;overflow-wrap:anywhere}
+.site-footer strong{color:var(--ink);font-weight:700}
+.site-footer p{margin:0}
+.site-footer__contact>a{display:inline-block;color:var(--ink);font-size:17px;font-weight:700;line-height:1.6}
+.site-footer__contact .site-footer__ars{margin-top:14px}
+.site-footer__bottom{display:flex;align-items:center;flex-wrap:wrap;gap:20px 28px;margin-top:36px}
+.site-footer .site-footer__copyright{margin-left:auto}
+.site-footer a:hover{text-decoration:underline;text-underline-offset:4px}
+.site-footer a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+@media(max-width:1100px){.site-footer__info{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}.site-footer .site-footer__copyright{margin-left:0}}
+@media(max-width:600px){.site-footer{padding:0 0 28px;font-size:12px}.site-footer__inner{padding-top:28px}.site-footer__info{grid-template-columns:1fr;gap:24px}.site-footer__bottom{margin-top:28px;align-items:flex-start;gap:20px}.site-footer__copyright{font-size:11px}}
