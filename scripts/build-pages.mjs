@@ -6,13 +6,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = join(root, 'docs');
 // Publish only these browser assets, never repository metadata or internal notes.
 const files = [
-  'index.html', 'tour.html', 'admin.html', 'account-admin.html', 'error.html', 'payment-failed.html', 'app.js', 'admin.js', 'settlement.js', 'xlsx-export.js', 'account-admin.js', 'booking-rules.js', 'developer-policy.js',
+  'index.html', 'busan.html', 'jeju.html', 'admin.html', 'account-admin.html', 'error.html', 'payment-failed.html', 'app.js', 'admin.js', 'settlement.js', 'xlsx-export.js', 'account-admin.js', 'booking-rules.js', 'developer-policy.js', 'demo-controls.js',
   'tokens.css', 'components.css', 'styles.css', 'admin.css', 'admin-reference.css', 'empty-states.css', 'empty-states.html', 'empty-states.js', 'error.css', '.nojekyll',
-  'assets/logo/mascot.png', 'assets/logo/cowboy-malma.png', 'assets/logo/pony-land.png', 'assets/logo/logo_color.svg',
+  'assets/logo/cowboy-malma.png', 'assets/logo/logo_color.svg',
   'assets/icons/discount-proof-alert.svg',
   'assets/characters/pony-rider.png', 'assets/characters/cowboy-child.png',
-  'assets/pony/cover.jpg', 'assets/pony/gallery-01.jpg', 'assets/pony/gallery-02.jpg',
-  'assets/tour/cover.jpg', 'assets/tour/gallery-01.jpg', 'assets/tour/gallery-02.jpg',
+  'assets/pony/cover.jpg', 'assets/pony/gallery-02.jpg',
+  'assets/tour/cover.jpg',
 ];
 
 function verifyDirectory(directory, prefix = '') {

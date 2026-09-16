@@ -1,0 +1,91 @@
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const out = dirname(fileURLToPath(import.meta.url));
+const esc = s => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+// 화면 ID는 이 IA 문서에서 새로 부여한 식별자이며 코드의 DOM ID와 구분한다.
+const rows = [
+['USR-01','이용자','지역 선택','서울','화면','현재','index.html','체험 예약 진입. 포니 타기·포니랑 놀기 선택과 예약 옵션을 한 화면에 제공'],
+['USR-02','이용자','지역 선택','부산경남 / 제주','화면','준비 중','busan.html / jeju.html','준비 중 안내. 지역별 실제 예약은 확장 범위'],
+['USR-03','이용자','체험 예약','체험·날짜·회차 선택','화면 내 영역','현재','index.html / app.js','프로그램별 운영일·판매 상태·잔여 수량 안내'],
+['USR-04','이용자','체험 예약','인원·할인 선택','화면 내 영역','현재','index.html / app.js','구매 수량, 정가·할인 인원 및 결제 예정 금액 확인'],
+['USR-05','이용자','회원 인증','카카오 / 네이버 로그인','팝업','현재·연동 필요','index.html #login-dialog','예약 진행·장바구니·예약 조회 시 인증. 현재는 모의 로그인'],
+['USR-06','이용자','장바구니','담은 티켓 확인·삭제','화면','현재','index.html ?view=cart','동일 이용일의 여러 체험·회차를 모아 확인하고 다른 체험 추가'],
+['USR-07','이용자','주문·결제','예약 내용 / 결제 정보','화면','현재·연동 필요','index.html / app.js','선택 티켓과 최종 금액 확인 후 결제. 실제 PG 결제창·승인은 연결 필요'],
+['USR-08','이용자','주문·결제','예약 완료','화면','현재','index.html / app.js','한 결제의 공통 예약번호, 결제금액, 상품·회차별 티켓 표시'],
+['USR-09','이용자','예약 조회','예약 티켓 목록','화면','현재','index.html #my-tickets-screen','로그인 회원의 예약·결제 내역과 티켓 선택'],
+['USR-10','이용자','예약 조회','티켓 상세·입장 상태','화면','현재','index.html #ticket-detail-view','상품·일시·인원·예약번호, 입장 가능 시간, 할인 증빙 안내 및 결제 정보'],
+['USR-11','이용자','예약 조회','인원 선택 취소·환불 내역','펼침 영역','현재·연동 필요','index.html #ticket-cancellation','취소 대상과 환불 예정 금액 확인, 부분·전체 취소 및 환불 내역. 실환불은 PG 연동 필요'],
+['USR-12','이용자','회원 관리','로그아웃 / 회원탈퇴','버튼·확인창','현재·정책 확인','index.html / app.js','로그아웃은 공통 헤더, 탈퇴는 예약 티켓 목록 하단. 실제 탈퇴·보관 정책 확정 필요'],
+['ADM-01','운영 관리자','접근','관리자 로그인 / 로그아웃','화면·버튼','현재·연동 필요','admin.html #admin-login','부서 공용 계정 또는 통합 관리자 계정으로 접근. 실제 인증·세션 연결 필요'],
+['ADM-02','운영 관리자','예약 · 티켓','검색·목록·내려받기','메뉴 화면','현재','admin.html [data-view=reservations]','지역·부서·이용일·프로그램·상태 필터, 예약번호·결제번호 검색'],
+['ADM-03','운영 관리자','예약 · 티켓','예약 상세 / 인원별 티켓','측면 패널','현재','admin.html #reservation-drawer','공통 예약번호 아래 티켓·결제 정보·처리 이력 확인'],
+['ADM-04','운영 관리자','예약 · 티켓','결제 상세·영수증','팝업','현재·연동 필요','admin.html #payment-receipt-dialog','선택 예약의 결제 상세. 실제 PG 영수증 연결 범위 확인'],
+['ADM-05','운영 관리자','예약 · 티켓','선택 취소·부분환불','확인 팝업','현재·연동 필요','admin.html #cancel-dialog','인원별 티켓 선택, 취소 사유 및 환불 금액 확인'],
+['ADM-06','운영 관리자','프로그램 · 회차','프로그램 목록','메뉴 화면','현재','admin.html [data-view=programs]','지역·부서별 조회, 검색, 가격·운영 일정·회차·할인·판매 상태 확인'],
+['ADM-07','운영 관리자','프로그램 · 회차','프로그램 등록·수정','하위 화면','현재·정책 확인','admin.html [data-view=program-edit]','가격·운영 일정·노출·예약 가능 기간·입장 대기·취소 마감·할인. 이미지와 안내문 입력은 문서와 불일치'],
+['ADM-08','운영 관리자','프로그램 · 회차','판매 상태·프로그램 삭제','버튼·확인 팝업','현재','admin.html / admin.js','판매 상태 변경 및 삭제 영향 안내. 기존 예약 보존·처리 정책 적용'],
+['ADM-09','운영 관리자','프로그램 · 회차','반복 회차 목록','하위 화면','현재','admin.html [data-view=program-sessions]','프로그램별 회차 조회, 시간 순서 기반 회차명'],
+['ADM-10','운영 관리자','프로그램 · 회차','회차 등록·수정·삭제','편집 영역·확인창','현재','admin.html #session-editor','시작·종료 시간, 온라인 판매 수량, 판매 상태 설정'],
+['ADM-11','운영 관리자','프로그램 · 회차','할인 관리','팝업','현재','admin.html #discount-dialog','프로그램 목록에서 진입. 할인 목록·등록·수정·삭제, 정률·정액·상한·수량·기간·적용 프로그램 설정'],
+['ADM-12','운영 관리자','프로그램 · 회차','프로그램 할인 연결','팝업·화면 내 영역','현재','admin.html #discount-picker-dialog','프로그램 등록·수정에서 할인 추가 또는 연결 해제'],
+['ADM-13','운영 관리자','운영일 관리','월별 달력 / 날짜별 프로그램','메뉴 화면','현재','admin.html [data-view=operations]','선택 날짜의 프로그램과 운영 상태 확인'],
+['ADM-14','운영 관리자','운영일 관리','휴장·운영 취소 처리','확인 팝업','현재·연동 필요','admin.html #operation-closure-confirm-dialog','휴장 대상·영향·처리 방식 확인. 실제 취소·환불 및 고객 알림 연결 필요'],
+['ADM-15','운영 관리자','매출 · 정산','조회 조건·결제 정산 원장','메뉴 화면','현재','admin.html [data-view=settlement]','서비스 이용일·지역·부서·카드사별 조회, 승인·취소·순매출·수수료·지급 예정액 표시'],
+['ADM-16','운영 관리자','매출 · 정산','매출 요약 / 거래 상세','펼침 영역·측면 패널','현재','admin.html #settlement-drawer','지역·부서·프로그램별 집계, 일별 내역 및 예약별 승인·취소 거래와 대상 티켓 확인'],
+['ADM-17','운영 관리자','매출 · 정산','엑셀 다운로드','버튼','현재','admin.html #download-settlement / xlsx-export.js','조회 조건에 맞는 정산 자료 다운로드'],
+['ACC-01','운영 관리자','계정 · 권한','계정 목록·검색','메뉴 화면','현재','account-admin.html','통합 관리자 전용. 지역·부서·로그인 ID별 계정 조회'],
+['ACC-02','운영 관리자','계정 · 권한','부서 계정 발급','팝업','현재·연동 필요','account-admin.html #account-dialog','지역·부서·로그인 ID·임시 비밀번호 입력'],
+['ACC-03','운영 관리자','계정 · 권한','계정 수정·비밀번호 재발급','공용 팝업','현재·연동 필요','account-admin.html #account-dialog','기존 계정 정보 조회·수정 및 새 임시 비밀번호 입력'],
+['ACC-04','운영 관리자','계정 · 권한','이용 범위·권한 안내','팝업 내 영역','현재·정책 확인','account-admin.js renderFixedAccessPolicy','현재 화면은 계정 유형에 따른 고정 범위 안내. 기능별 권한 부여·해제 요구사항과 조정 필요'],
+['ACC-05','운영 관리자','계정 · 권한','계정 삭제 / 제한 안내','확인 팝업','현재','account-admin.html #account-delete-dialog','통합 관리자 삭제 금지, 프로그램·업무 이력 연결 시 삭제 제한'],
+['SYS-01','공통','오류·예외','결제 실패 / 중복 결제 안내','별도 페이지','현재·연결 확인','payment-failed.html','결제 예외 안내와 예약 화면 복귀. PG 실패 콜백 연동 필요'],
+['SYS-02','공통','오류·예외','시스템 오류','별도 페이지','현재·연결 확인','error.html','오류 안내, 재시도·홈 복귀'],
+['SYS-03','공통','빈 상태·제한 상태','예약·장바구니·목록 내 안내','화면 내 상태','현재','index.html / app.js / admin.js','빈 장바구니·예약 없음·검색 결과 없음·판매 마감·수량 제한 등. 독립 메뉴로 세지 않음'],
+];
+
+const lanes = [
+ {title:'01  이용자 · 예약',sub:'서울 중심의 현재 예약 흐름',items:[
+ ['지역 선택','서울 / 부산경남·제주 [준비 중]'],['체험 예약','포니 타기 · 포니랑 놀기','날짜 → 회차 → 인원·할인'],['간편로그인','카카오 / 네이버 [외부 연동 필요]'],['장바구니','담은 티켓 · 삭제 · 다른 체험 추가'],['주문·결제','예약 내용 · 결제 정보 → 예약 완료']]},
+ {title:'02  이용자 · 예약 조회',sub:'로그인 회원 전용',items:[
+ ['예약 티켓 목록','예약·결제 내역 · 티켓 선택'],['티켓 상세','프로그램 · 날짜·회차 · 인원','예약번호 · 입장 상태 · 할인 증빙'],['취소·환불','취소 인원 선택 · 환불 금액 확인','부분·전체 취소 · 처리 내역'],['회원 관리','로그아웃 / 회원탈퇴 확인'],['공통 예외 화면','결제 실패 · 시스템 오류','빈 상태 · 판매 마감 · 수량 제한']]},
+ {title:'03  고객사 운영 관리자',sub:'부서 계정 / 통합 관리자 로그인',items:[
+ ['예약 · 티켓','목록·검색 → 예약 상세·개별 티켓','결제 상세 · 선택 취소·부분환불'],['프로그램 · 회차','목록 → 프로그램 등록·수정·삭제','반복 회차 → 등록·수정·판매 관리'],['할인 관리 [프로그램 하위]','정률·정액 · 적용 조건','프로그램별 할인 연결'],['운영일 관리','월별 달력 → 날짜별 프로그램','휴장·운영 취소 확인'],['매출 · 정산','결제·정산 원장 → 거래 상세','지역·부서·상품 요약 · 엑셀'],['계정 · 권한 [통합 관리자 전용]','계정 목록·발급·수정 · 비밀번호 재발급','이용 범위 안내 · 계정 삭제·제한']]}
+];
+let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1190" viewBox="0 0 1720 1190" role="img" aria-labelledby="title desc"><title id="title">렛츠런파크 통합 예약·결제 시스템 전체 IA</title><desc id="desc">이용자 예약과 예약 조회, 고객사 운영 관리자와 그 하위 계정·권한 메뉴별 메뉴 및 하위 화면 구조. 현재 프로토타입 기준이며 준비 중 지역과 외부 연동 필요 항목을 구분한다.</desc><style>text{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;fill:#17332f}.title{font-size:32px;font-weight:700}.sub{font-size:17px;fill:#536761}.head{font-size:23px;font-weight:700}.node{font-size:20px;font-weight:700}.detail{font-size:17px;fill:#435c55}.line{stroke:#aec4bc;stroke-width:2;fill:none}</style><rect width="1720" height="1190" fill="#ffffff"/><text x="48" y="60" class="title">렛츠런파크 통합 예약·결제 시스템</text><text x="48" y="94" class="sub">고객 검토용 IA · 현재 폴더의 화면 구조 기준 · v1.0 · 2026.09.16</text><rect x="610" y="122" width="500" height="56" rx="8" fill="#173f36"/><text x="860" y="158" text-anchor="middle" style="fill:white;font-size:23px;font-weight:700">통합 예약·결제 서비스</text><path class="line" d="M860 178V200M312 200H1408"/>`;
+lanes.forEach((l,i)=>{
+ const x=48+i*548;
+ svg+=`<path class="line" d="M${x+264} 200V220"/><rect x="${x}" y="220" width="528" height="88" rx="8" fill="#e9f3ee"/><text x="${x+18}" y="255" class="head">${esc(l.title)}</text><text x="${x+18}" y="286" class="sub">${esc(l.sub)}</text>`;
+ l.items.forEach((a,j)=>{const y=336+j*113; svg+=`<path class="line" d="M${x+10} ${j?y-62:308}V${y+28}H${x+25}"/><rect x="${x+25}" y="${y}" width="503" height="94" rx="6" fill="#f7faf8" stroke="#d7e3dd"/><text x="${x+40}" y="${y+29}" class="node">${esc(a[0])}</text>`;a.slice(1).forEach((s,k)=>{svg+=`<text x="${x+40}" y="${y+55+k*24}" class="detail">${esc(s)}</text>`;});});
+});
+svg+=`<line x1="48" y1="1042" x2="1672" y2="1042" stroke="#d7e3dd"/><text x="48" y="1080" class="detail">읽는 법  ─  연결선은 정보의 소속 관계이며, 카드 내부의 →는 주요 화면 이동을 나타냅니다.</text><text x="48" y="1114" class="detail">현재 화면은 프론트엔드 프로토타입입니다. 실제 로그인·결제·환불·서버 권한·알림은 운영 연동이 필요합니다.</text><text x="48" y="1148" class="detail">할인 관리는 독립 상위 메뉴가 아닌 프로그램 하위 기능이며, 계정·권한은 통합 관리자에게만 노출됩니다.</text></svg>`;
+
+const notes = [
+ '이 문서는 화면·메뉴 구조를 정의하는 고객 검토용 IA다. 현재 화면의 존재는 실서비스 개발 완료 또는 정책 승인을 의미하지 않는다.',
+ '화면 ID는 이 문서에서 새로 부여했다. 동일 파일 안의 화면 전환·팝업·패널·버튼을 구분하며, 행 수를 독립 페이지 수나 개발 공수로 해석하지 않는다.',
+ '메뉴 계층은 영역 → 1Depth → 2Depth로 정리했다. 탭·서브 플로우 및 동작은 설명 열에 기재했다. 이용자 예약과 예약 조회는 같은 서비스의 두 흐름이다.',
+ '프로그램 선택·날짜·회차·인원·할인은 현재 하나의 예약 화면 안에 있다. 별도 상품 목록 페이지를 새 화면으로 산정하지 않았다.',
+ 'docs/는 공개 배포용 복제본이므로 중복 화면으로 산정하지 않았다. 테스트, 디자인 목록, 빈 상태 샘플, Alt+P 개발 정책 보기는 고객용 메뉴에서 제외했다.',
+ '서울·부산경남·제주는 통합 회원 기반 확장 범위다. 부산경남·제주 파일은 준비 중 안내이며 공개 배포 목록에 포함된다.',
+ '계정·권한은 고객사 운영 관리자 안에 포함된 메뉴이며 통합 관리자 권한에서만 노출된다.'
+];
+const decisions = [
+ ['프로그램 관리 입력 범위','요구사항은 대표 이미지·안내문을 MVP 입력에서 제외하지만 현재 화면에는 입력 항목이 있다. 최종 관리 범위를 확인한다.'],
+ ['기능별 권한 설정','요구사항은 프로그램·조회·환불·정산 권한의 개별 부여·해제를 정의하지만 현재 계정 화면은 유형별 고정 범위를 안내한다. 최종 권한 모델을 확인한다.'],
+ ['예약 가능 기간','요구사항은 향후 14일을 기준으로 하며 현재 프로그램 화면은 예약 가능 일수를 설정한다. 프로그램별 예외 허용 여부를 확인한다.'],
+ ['입장 확인 방식','현재 티켓에는 시간에 따른 입장 상태와 증빙 안내가 있다. QR 스캔·직원 검표·사용 처리의 최종 방식은 별도 확정하며 신규 검표 메뉴를 기정사실로 추가하지 않았다.'],
+ ['회원·환불·알림 정책','회원탈퇴 시 보관·삭제, 할인 증빙 실패, 구매·할인 한도 복원, 운영 취소 알림 채널을 확정한다.'],
+ ['지역별 오픈','부산경남·제주 프로그램 공개 시점을 확인한다.'],
+ ['동시간대 예약','온라인 잔여 수량과 이용일 구매 한도 안에서 동시간대 예약을 허용한다. 시간 중복만으로 차단하지 않는다.']
+];
+const headers=['화면 ID','영역','1Depth','2Depth / 화면','표현 형태','상태','근거 파일 / 위치','화면 정의·세부 사항'];
+const table = `<table><thead><tr>${headers.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((v,i)=>`<td${i===0?' class="code"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>렛츠런파크 전체 IA 구조도 v1</title><style>*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#17332f;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;line-height:1.65}main{max-width:1760px;margin:24px auto;background:white;padding:32px}h1{font-size:30px;margin:0 0 8px}h2{margin:36px 0 12px;font-size:23px}h3{margin:18px 0 6px}.meta{color:#52685f}.diagram svg{display:block;width:100%;height:auto}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}th,td{padding:10px 8px;border-bottom:1px solid #d6e1da;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#e9f3ee}th:nth-child(1){width:7%}th:nth-child(2){width:9%}th:nth-child(3){width:10%}th:nth-child(4){width:13%}th:nth-child(5){width:10%}th:nth-child(6){width:11%}th:nth-child(7){width:17%}.code{font-weight:bold;white-space:nowrap}.flow{padding:18px 20px;background:#f2f7f4;font-size:17px}.note{border-left:3px solid #3c7660;padding-left:16px}a{color:#225f4a}li{margin:6px 0}footer{margin-top:32px;color:#52685f;font-size:13px}@page{size:A3 landscape;margin:12mm}@media print{body{background:white}main{margin:0;padding:0;max-width:none}.cover{break-after:page}.diagram svg{width:100%;max-height:244mm}.intro{break-after:page}h2{break-after:avoid}tr{break-inside:avoid}thead{display:table-header-group}table{font-size:10px}th,td{padding:6px}a{color:inherit;text-decoration:none}.review{break-before:page}}@media(max-width:800px){main{margin:0;padding:16px}.diagram{overflow-x:auto}.diagram svg{min-width:1100px}table{min-width:1150px}}</style></head><body><main><section class="cover diagram">${svg}</section><section class="intro"><h1>IA 작성 기준과 주요 동선</h1><p class="meta">고객 검토용 · v1.0 · 작성일 2026.09.16 · 현행 화면 기반</p><ul>${notes.map(s=>`<li>${esc(s)}</li>`).join('')}</ul><h2>이용자 예약 동선</h2><div class="flow">체험·날짜·회차·인원·할인 선택 → 로그인 → 장바구니 또는 바로 예약 → 예약 내용 확인 → 결제 → 예약 완료 → 티켓 확인</div><p>로그인은 미인증 상태에서 예약 진행·장바구니·예약 조회 진입 시 제공한다. 이미 로그인한 회원은 인증 단계를 생략한다. 장바구니에 담긴 티켓이 있으면 함께 확인 후 결제한다.</p><h2>예약 후 이용·취소 동선</h2><div class="flow">예약 조회 → 티켓 목록 → 티켓 상세 → 입장 상태·증빙 확인 / 취소 인원 선택 → 환불 내역</div><h2>운영 관리자 동선</h2><div class="flow">관리자 로그인 → 프로그램 등록 → 회차 등록 → 운영일 확인 → 예약·티켓 처리 → 매출·정산 조회</div><p class="note">프로그램·회차·운영일·정산은 병렬 메뉴다. 위 화살표는 대표 업무 순서를 설명하며 모든 메뉴를 순서대로 거쳐야 한다는 뜻은 아니다.</p><h2>상태 표기</h2><p>현재: 화면 또는 동작이 존재함 / 연동 필요: 외부 서비스·서버 연결 필요 / 정책 확인: 화면과 요구사항의 조정 필요 / 준비 중: 안내 화면만 존재</p></section><section><h2>상세 IA 목록</h2><p class="meta">${rows.length}개 화면·기능 항목 · 동일 화면 안의 하위 영역과 공용 팝업 포함</p><div class="scroll">${table}</div></section><section class="review"><h2>고객 확인이 필요한 범위</h2>${decisions.map(([a,b])=>`<h3>${esc(a)}</h3><p>${esc(b)}</p>`).join('')}<h2>외부 연계와 관리 범위</h2><ul><li>카카오·네이버 인증, PG 결제·취소·환불·영수증, 고객 알림은 외부 연계 영역이다.</li><li>인증·예약·재고·권한·정산은 실제 서버 및 DB와 연결해야 한다.</li><li>현장 키오스크는 API 연동 범위에서 제외하며 온라인 판매 수량을 별도로 관리한다.</li><li>새 FAQ·공지사항·고객센터·회원관리 메뉴는 근거가 없어 이번 현행 IA에 추가하지 않았다.</li></ul><h2>검토 근거</h2><p>화면: index.html, app.js, admin.html, admin.js, account-admin.html, account-admin.js, busan.html, jeju.html, payment-failed.html, error.html.<br>정책: KRA_RESERVATION_REQUIREMENTS.md, README.md, FRONTEND_HANDOFF.md 및 기존 기능명세서. 정책과 화면이 다르면 현재 구조를 기록하고 확인 항목에 차이를 남겼다.</p><p>구성 참고: <a href="https://plavement.tistory.com/27">웹, 모바일을 위한 I.A(Information Architecture, 정보구조도)</a> — 트리 구조와 Depth·Code·화면 정의·세부 사항·진척 구분 방식을 참고했다.</p></section><footer>렛츠런파크 통합 예약·결제 시스템 · IA v1.0 · 검토용 / 별도 배포·게시되지 않음</footer></main></body></html>`;
+const md=`# 렛츠런파크 통합 예약·결제 시스템 전체 IA\n\n고객 검토용 · v1.0 · 2026-09-16\n\n![전체 IA 구조도](letsrunpark-ia-v1.svg)\n\n## 작성 기준\n\n${notes.map(s=>'- '+s).join('\n')}\n\n## 주요 이용 흐름\n\n- 예약: 체험·날짜·회차·인원·할인 선택 → 로그인 → 장바구니 또는 바로 예약 → 예약 내용 확인 → 결제 → 예약 완료 → 티켓 확인\n- 조회·취소: 예약 조회 → 티켓 목록 → 티켓 상세 → 입장 상태 확인 또는 인원 선택 취소 → 환불 내역\n- 운영: 관리자 로그인 → 프로그램 등록 → 회차 등록 → 운영일 확인 → 예약·티켓 처리 → 매출·정산\n\n로그인은 미인증 회원에게 필요한 시점에 제공한다. 운영 화살표는 대표 업무 순서이며 각 메뉴는 병렬이다.\n\n## 상세 IA\n\n현재는 프로토타입 화면 존재를 뜻한다. 연동 필요·정책 확인·준비 중은 운영 완료를 뜻하지 않는다. 화면 ID는 본 문서에서 부여했다.\n\n| ${headers.join(' | ')} |\n| ${headers.map(()=>'---').join(' | ')} |\n${rows.map(r=>'| '+r.join(' | ')+' |').join('\n')}\n\n## 고객 확인 항목\n\n${decisions.map(([a,b])=>'- **'+a+'**: '+b).join('\n')}\n\n## 범위와 근거\n\n- 실제 인증·PG·서버 DB·권한·알림·정산 배치는 별도 연동 영역이다.\n- 현장 키오스크 API 연동과 신규 FAQ·공지·고객센터 메뉴는 포함하지 않았다.\n- 코드: index.html/app.js, admin.html/admin.js, account-admin.html/account-admin.js, 각 지역·오류 페이지.\n- 문서: KRA_RESERVATION_REQUIREMENTS.md, README.md, FRONTEND_HANDOFF.md, 기존 기능명세서.\n- 형식 참고: [웹, 모바일을 위한 I.A](https://plavement.tistory.com/27). 트리와 Depth·Code·화면 정의·상태 구분을 참고했다.\n`;
+writeFileSync(join(out,'letsrunpark-ia-v1.svg'),svg);
+writeFileSync(join(out,'렛츠런파크_전체_IA_v1.html'),html);
+writeFileSync(join(out,'렛츠런파크_전체_IA_v1.md'),md);
+console.log(`Generated IA: ${rows.length} entries, ${lanes.length} diagram lanes.`);
+
+

@@ -80,6 +80,6 @@ test('reservation program filter includes current catalog and historical ticket 
   assert.match(script, /function syncReservationProgramFilter\(\)/);
   assert.match(script, /programCatalog\(\)\.map/);
   assert.match(script, /names = names\.concat\(item\.programNames \|\| \[item\.program\]\)/);
-  assert.match(script, /syncReservationProgramFilter\(\);\n    var items = filteredReservations/);
+  assert.match(script, /syncReservationProgramFilter\(\);\r?\n    var items = filteredReservations/);
   assert.match(script, /programKey: item\.programKey \|\| "ride"/);
 });

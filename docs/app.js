@@ -178,7 +178,6 @@
       tag: "가이드 투어",
       tagClass: "tag--fac",
       image: "assets/tour/cover.jpg",
-      detail: "tour.html",
       slots: [
         { time: "11:00~12:20", stock: "12자리 · 80분" },
         { time: "14:00~15:20", stock: "5자리 · 80분" },
