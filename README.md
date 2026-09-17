@@ -9,7 +9,7 @@
 | 영역 | 메뉴·동선 | 파일 |
 | --- | --- | --- |
 | 이용자 예약 | 체험·날짜·회차·인원·할인 선택 → 장바구니 또는 바로 예약 → 결제 → 예약 완료 | `index.html`, `app.js` |
-| 예약 조회 | 로그인 → 티켓 목록 → 상세·입장 상태 → 인원 선택 취소·환불 내역 | `index.html`, `app.js` |
+| 예약 조회 | 로그인 → 티켓 목록 → 상세·입장 상태 → 인원 선택 취소·환불 내역 | `reservations.html`, `ticket.html`, `app.js` |
 | 운영 관리자 | 예약·티켓 / 프로그램·회차 / 운영일 관리 / 매출·정산 | `admin.html`, `admin.js` |
 | 운영 관리자의 계정·권한 | 부서 계정 발급·수정·비밀번호 재발급·삭제 | `account-admin.html`, `account-admin.js` |
 | 지역 안내 | 부산경남·제주 준비 중 안내 | `busan.html`, `jeju.html` |
@@ -25,8 +25,8 @@
 로컬 변경은 배포 반영 전까지 공개 사이트와 다를 수 있습니다.
 
 - [예약 화면](https://olabeann.github.io/letsrunpark-reser/)
-- [포니 타기](https://olabeann.github.io/letsrunpark-reser/?product=ride) / [포니랑 놀기](https://olabeann.github.io/letsrunpark-reser/?product=play)
-- [장바구니](https://olabeann.github.io/letsrunpark-reser/?view=cart)
+- [포니 타기](https://olabeann.github.io/letsrunpark-reser/booking.html?product=ride) / [포니랑 놀기](https://olabeann.github.io/letsrunpark-reser/booking.html?product=play)
+- [장바구니](https://olabeann.github.io/letsrunpark-reser/cart.html)
 - [운영 관리자](https://olabeann.github.io/letsrunpark-reser/admin.html) — 계정·권한은 로그인 후 해당 메뉴에서 진입
 
 ## 고객 전달 자료와 개발 문서
@@ -115,3 +115,12 @@ node scripts/build-pages.mjs
 `docs/`는 원본의 공개 배포용 복사본이므로 중복 파일이라는 이유로 삭제하지 않습니다. 배포 스크립트는 허용 목록 밖 파일을 발견하면 중단합니다. 공개 파일을 제거할 때는 원본·허용 목록·해당 배포 복사본을 함께 정리해야 합니다.
 
 생성된 `docs/`를 포함해 `master`에 커밋·푸시하면 GitHub Pages 배포에 반영됩니다. 요구사항·견적서·IA 등 내부 문서는 자동 공개하지 않습니다.
+
+## 화면별 HTML 이동
+
+`scripts/build-pages.mjs`는 `index.html`·`admin.html`의 공통 마크업으로 화면별 HTML 진입점을 생성합니다. 공통 UI 변경은 `index.html`에서 하고 생성된 화면 파일은 직접 수정하지 않습니다. 로그인·확인·할인 선택 등 대화상자는 해당 페이지 안에서 열립니다. 관리자 이전 해시 주소도 새 파일로 연결됩니다. 화면 이동은 실제 문서 이동이며 로그인은 sessionStorage, 예약·장바구니는 기존 localStorage로 유지합니다. 이전 `?product=`·`?view=` 링크도 새 파일로 연결됩니다.
+
+
+화면별 HTML의 DOM 초기화·로그인·결제 후 저장·티켓 이동 검증은 `scripts/check-pages-dom.cjs`로 재현할 수 있습니다. 이 추가 검증은 `jsdom`이 필요하며 기본 `node --test`에는 외부 의존성이 없습니다. `jsdom`을 설치한 환경에서 `TZ=Asia/Seoul node scripts/check-pages-dom.cjs`를 실행합니다. 실제 브라우저의 렌더링 검증과는 별도입니다.
+
+고객 예약 흐름: `booking.html` → `cart.html` → `checkout.html` → `complete.html` → `reservations.html` → `ticket.html`. 관리자 메뉴: `admin.html`, `admin-reservations.html`, `admin-operations.html`, `admin-settlement.html`, `admin-program-edit.html`, `admin-program-sessions.html`.

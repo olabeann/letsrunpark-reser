@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>렛츠런파크 체험 예약</title>
+  <title>예약 조회 | 렛츠런파크</title>
   <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260916-ticket-proof22"><link rel="stylesheet" href="styles.css?v=20260916-footer3">
 </head>
-<body data-page="booking" class="shop-page">
+<body data-page="booking" data-screen="reservations" class="shop-page">
   <header class="reservation-header shop-header">
     <a class="reservation-brand" href="index.html" aria-label="렛츠런파크 서울 홈"><img src="assets/logo/logo_color.svg" alt=""><span class="reservation-brand__context"><b>렛츠런파크 서울</b></span></a>
     <div class="demo-only-controls" aria-label="지역 및 관리자 메뉴">
@@ -32,7 +32,7 @@
   </dialog>
   <main>
     <div class="reservation-steps shop-steps" hidden><span data-step-label="1"><i>1</i>예약 선택</span><b></b><span data-step-label="2"><i>2</i>내용 확인</span><b></b><span data-step-label="3"><i>3</i>예약 완료</span></div>
-    <section class="booking-stage is-visible" data-booking-step="1" aria-labelledby="booking-page-title">
+    <section class="booking-stage" data-booking-step="1" hidden aria-labelledby="booking-page-title">
       <div class="shop-container booking-flow">
         <header class="booking-program-head"><div><small id="booking-program-tag">렛츠런파크 체험</small><h1 id="booking-page-title">체험 예약</h1><p id="booking-page-description">원하는 체험과 이용 일정을 선택해 예약해보세요.</p></div></header>
         <div class="booking-flow__layout">

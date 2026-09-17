@@ -571,32 +571,41 @@ test('explains when existing cart tickets leave room for only one more person', 
   );
 });
 
-test('shop routes restore independent programs and send stale checkout links back to the cart', () => {
+test('HTML routes restore screens and redirect legacy query links', () => {
   const visited = [];
-  const products = [];
+  const redirects = [];
   const runtime = vm.createContext({
-    URLSearchParams, programs, state: { programKey: 'ride' }, completedOrder: null,
-    window: { location: { search: '?product=play' } },
-    applyBookingWindowOverrides() {},
-    selectProgram: (key, reset) => products.push({ key, reset }),
-    goToStep: (step, options) => visited.push({ step, options }), renderCart() {},
+    URLSearchParams, programs, state: { programKey: 'play' }, completedOrder: null,
+    window: { location: { pathname: '/booking.html', search: '?product=play' } },
+    currentMember: null,
+    applyBookingWindowOverrides() {}, selectProgram() {},
+    navigatePage: (file, params, replace) => redirects.push({ file, params, replace }),
+    showMyTickets: () => visited.push('lookup'),
+    goToStep: (step) => visited.push(step), renderCart() {},
   });
   vm.runInContext(appFunction('restoreShopRoute'), runtime);
   runtime.restoreShopRoute();
-  assert.deepEqual(products, [{ key: 'play', reset: true }]);
-  assert.equal(visited.at(-1).step, 1);
-  assert.equal(visited.at(-1).options.history, false);
-  for (const route of ['?view=cart', '?view=checkout', '?view=complete']) {
+  assert.equal(visited.at(-1), 1);
+  runtime.window.location.pathname = '/cart.html';
+  runtime.restoreShopRoute();
+  assert.equal(visited.at(-1), 4);
+  runtime.window.location.pathname = '/reservations.html';
+  runtime.restoreShopRoute();
+  assert.equal(visited.at(-1), 'lookup');
+  runtime.window.location.pathname = '/checkout.html';
+  runtime.restoreShopRoute();
+  assert.equal(redirects.at(-1).file, 'cart.html');
+  runtime.window.location.pathname = '/index.html';
+  for (const route of ['?view=cart', '?view=checkout', '?view=complete', '?view=tickets']) {
     runtime.window.location.search = route;
     runtime.restoreShopRoute();
-    assert.equal(visited.at(-1).step, 4);
-    assert.equal(visited.at(-1).options.replace, true);
+    assert.equal(redirects.at(-1).file, ['?view=complete', '?view=tickets'].includes(route) ? 'reservations.html' : 'cart.html');
+    assert.equal(redirects.at(-1).replace, true);
   }
-  for (const route of ['', '?program=tour', '?product=unknown', '?product=__proto__']) {
-    runtime.window.location.search = route;
-    runtime.restoreShopRoute();
-    assert.equal(visited.at(-1).step, 1);
-  }
+  runtime.window.location.search = '?product=play';
+  runtime.restoreShopRoute();
+  assert.equal(redirects.at(-1).file, 'booking.html');
+  assert.equal(redirects.at(-1).params.product, 'play');
 });
 
 test('customer catalog consumes administrator programs, sessions, closures and discounts', () => {

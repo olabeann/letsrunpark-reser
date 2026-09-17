@@ -40,7 +40,7 @@
 
   if (loginDialog && reservationLogin) {
     reservationLogin.addEventListener("click", function () {
-      if (currentMember) showMyTickets(); else openLoginDialog("lookup");
+      showMyTickets();
     });
     loginDialogClose.addEventListener("click", function () { loginDialog.close(); });
     loginDialog.addEventListener("click", function (event) {
@@ -1214,13 +1214,16 @@
     });
   }
 
-  function showMyTickets() {
-    if (!currentMember) { openLoginDialog("lookup"); return; }
+  function showMyTickets(options) {
+    var page = window.location.pathname.split("/").pop();
+    if (page !== "reservations.html" && !(options && options.history === false && page === "ticket.html")) { navigatePage("reservations.html"); return; }
+    document.title = "예약 조회 | 렛츠런파크";
     document.querySelector(".reservation-steps").hidden = true;
     document.querySelectorAll("[data-booking-step]").forEach(function (section) { section.hidden = true; });
     byId("my-tickets-screen").hidden = false;
     byId("my-tickets-list-view").hidden = false;
     byId("ticket-detail-view").hidden = true;
+    if (!currentMember) { byId("ticket-list").replaceChildren(); openLoginDialog("lookup"); return; }
     renderTicketList();
     if (window.DeveloperPolicy) window.DeveloperPolicy.refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1229,7 +1232,9 @@
   function showTicketDetail(reservationId) {
     var selectedReservation = ticketReservations.find(function (reservation) { return reservation.id === reservationId; });
     if (!selectedReservation && ticketReservation && ticketReservation.id === reservationId) selectedReservation = ticketReservation;
-    if (!selectedReservation) return;
+    if (!selectedReservation) { navigatePage("reservations.html", {}, true); return; }
+    if (navigatePage("ticket.html", { ticket: reservationId })) return;
+    document.title = "티켓 상세 | 렛츠런파크";
     ticketReservation = selectedReservation;
     byId("my-tickets-list-view").hidden = true;
     byId("ticket-detail-view").hidden = false;
@@ -1486,6 +1491,14 @@
     });
   }
 
+  function navigatePage(file, params, replace) {
+    var url = new URL(file, window.location.href);
+    Object.keys(params || {}).forEach(function (key) { if (params[key]) url.searchParams.set(key, params[key]); });
+    if (url.href === window.location.href) return false;
+    window.location[replace ? "replace" : "assign"](url.href);
+    return true;
+  }
+
   function goToStep(step, options) {
     options = options || {};
     state.step = step;
@@ -1505,13 +1518,8 @@
     });
     document.title = (step === 1 ? "체험 예약" : step === 4 ? "장바구니" : step === 2 ? "예약 내용 확인" : "예약 완료") + " | 렛츠런파크";
     if (options.history !== false) {
-      var url = new URL(window.location.href);
-      url.searchParams.delete("program"); url.searchParams.delete("product"); url.searchParams.delete("view");
-      if (step === 1) url.searchParams.set("product", program.key);
-      else if (step === 4) url.searchParams.set("view", "cart");
-      else if (step === 2) url.searchParams.set("view", "checkout");
-      else if (step === 3) url.searchParams.set("view", "complete");
-      if (url.href !== window.location.href) window.history[options.replace ? "replaceState" : "pushState"](null, "", url);
+      var file = step === 1 ? "booking.html" : step === 4 ? "cart.html" : step === 2 ? "checkout.html" : "complete.html";
+      if (navigatePage(file, step === 1 ? { product: program.key } : step === 3 ? { order: completedOrder && completedOrder.reservationId } : {}, options.replace)) return;
     }
     if (window.DeveloperPolicy) window.DeveloperPolicy.refresh();
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -1519,23 +1527,39 @@
 
   function restoreShopRoute() {
     var route = new URLSearchParams(window.location.search);
+    var page = window.location.pathname.split("/").pop();
     applyBookingWindowOverrides();
-    if (programs[route.get("product")] && programs[route.get("product")].userBookable) {
-      selectProgram(route.get("product"), state.programKey !== route.get("product"));
-      goToStep(1, { history: false });
-    } else if (route.get("view") === "tickets") {
-      selectProgram(state.programKey, false);
-      goToStep(1, { history: false });
-      showMyTickets();
-    } else if (route.get("view") === "complete" && completedOrder) goToStep(3, { history: false });
-    else if (route.get("view") === "complete") {
-      // Completed reservation receipts are not persisted; return to the cart for a fresh review.
-      renderCart(); goToStep(4, { replace: true });
-    } else if (["cart", "checkout"].includes(route.get("view"))) {
-      // Returning to checkout always requires a fresh review from the cart.
-      renderCart(); goToStep(4, { replace: true });
+    if (page === "reservations.html" || page === "ticket.html") {
+      showMyTickets({ history: false });
+      if (currentMember && page === "ticket.html") showTicketDetail(route.get("ticket"));
+    } else if (page === "complete.html") {
+      var store = readStore();
+      var reservation = store && store.reservations.find(function (item) { return item.id === route.get("order") && currentMember && item.memberId === currentMember.id; });
+      if (!reservation) { navigatePage("reservations.html", {}, true); return; }
+      completedOrder = { reservationId: reservation.id, tickets: reservation.tickets, total: reservation.total };
+      renderBookingItems(byId("complete-items"), completedOrder.tickets, false);
+      byId("complete-order-id").textContent = completedOrder.reservationId;
+      byId("complete-total").textContent = money(completedOrder.total);
+      byId("complete-count").textContent = "예약 1건에 " + completedOrder.tickets.length + "개 티켓이 발급되었어요.";
+      goToStep(3, { history: false });
+    } else if (page === "checkout.html") {
+      if (!currentMember) { navigatePage("cart.html", {}, true); return; }
+      var checkoutStore = readStore();
+      var cart = ownCart(checkoutStore);
+      var error = checkoutStore && BookingRules.validationError(cart, checkoutStore.reservations, currentMember.id, programs, new Date());
+      if (!checkoutStore || error) { navigatePage("cart.html", {}, true); return; }
+      checkoutSnapshot = JSON.stringify(cart);
+      byId("terms").checked = false;
+      renderCart(); goToStep(2, { history: false });
+    } else if (page === "cart.html") {
+      renderCart(); goToStep(4, { history: false });
+    } else if (route.get("view")) {
+      navigatePage(["complete", "tickets"].includes(route.get("view")) ? "reservations.html" : "cart.html", {}, true);
+    } else if (page !== "booking.html" && route.get("product")) {
+      navigatePage("booking.html", { product: route.get("product") }, true);
     } else {
-      selectProgram(state.programKey, false);
+      var requestedProduct = route.get("product");
+      selectProgram(requestedProduct && Object.prototype.hasOwnProperty.call(programs, requestedProduct) && programs[requestedProduct].userBookable ? requestedProduct : state.programKey, false);
       goToStep(1, { history: false });
     }
   }
@@ -1574,13 +1598,13 @@
     var cartLinks = byId("cart-program-links");
     Object.keys(programs).filter(function (key) { return programs[key].userBookable; }).forEach(function (key) {
       if (cartLinks.querySelector('[data-program-key="' + key + '"]')) return;
-      var link = document.createElement("a"); link.href = "index.html?product=" + encodeURIComponent(key);
+      var link = document.createElement("a"); link.href = "booking.html?product=" + encodeURIComponent(key);
       link.setAttribute("data-program-key", key); link.textContent = programs[key].name; cartLinks.append(link);
     });
   }
 
   document.querySelectorAll("[data-shop-home]").forEach(function (button) {
-    button.addEventListener("click", function () { goToStep(1); });
+    button.addEventListener("click", function () { navigatePage("index.html"); });
   });
   function openDeveloperPolicy() {
     if (window.DeveloperPolicy) { window.DeveloperPolicy.toggle(); return; }
@@ -1644,9 +1668,7 @@
   byId("new-booking").addEventListener("click", function () { selectProgram(program.key); goToStep(1); syncProgramExtras(); });
   byId("back-from-tickets").addEventListener("click", function () { goToStep(1); });
   byId("back-to-ticket-list").addEventListener("click", function () {
-    byId("ticket-detail-view").hidden = true;
-    byId("my-tickets-list-view").hidden = false;
-    renderTicketList();
+    navigatePage("reservations.html");
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
   byId("open-ticket-cancel").addEventListener("click", function () {
@@ -1707,6 +1729,11 @@
   restoreShopRoute();
   syncProgramExtras();
   window.addEventListener("popstate", function () { restoreShopRoute(); syncProgramExtras(); });
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    currentMember = readMember(); checkoutSnapshot = ""; completedOrder = null; ticketReservation = null;
+    selectProgram(state.programKey, false); renderCart(); restoreShopRoute(); syncProgramExtras();
+  });
   setInterval(function () { updateTicketAccess(); updateTicketListStatuses(); }, 1000);
   setInterval(function () { renderSlots(); update(); renderCart(); }, 30000);
 })();

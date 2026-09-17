@@ -25,7 +25,7 @@
 
 예약 화면에서 체험 → 날짜 → 회차 → 인원·할인을 선택합니다. 로그인 후 장바구니 또는 바로 예약으로 진행하고, 예약 내용 확인 → 결제 → 예약 완료 → 티켓 조회로 이어집니다. 인원 선택형 부분취소와 환불 내역을 제공합니다.
 
-현재 판매 대상은 포니 타기와 포니랑 놀기입니다. `?product=ride`, `?product=play`로 선택하며 장바구니는 `?view=cart`로 연결합니다. 투어 소개 페이지는 제거했으며 기존 예약 기록 표시용 데이터와 대표 이미지는 유지합니다.
+현재 판매 대상은 포니 타기와 포니랑 놀기입니다. `?product=ride`, `?product=play`로 선택하며 장바구니는 `cart.html`로 연결합니다. 투어 소개 페이지는 제거했으며 기존 예약 기록 표시용 데이터와 대표 이미지는 유지합니다.
 
 시간이 겹쳐도 온라인 잔여 수량과 이용일 구매 한도 안에서 예약할 수 있습니다. 한 번의 결제는 예약번호 하나를 공유하며 프로그램·회차·인원은 하위 티켓으로 구분합니다.
 
@@ -42,3 +42,13 @@
 997px 이하에서 태블릿, 640px 이하에서 모바일 레이아웃으로 전환합니다. `Alt + P`로 현재 화면의 정책을 확인합니다.
 
 `node --test tests/*.test.cjs`로 검사하고, 원본 변경 후 `node scripts/build-pages.mjs`로 공개용 `docs/`를 갱신합니다. 고객 전달용 구조는 `outputs/렛츠런파크_전체_IA_v1.html`에 정리되어 있습니다.
+
+## 화면별 HTML 이동
+
+결제 확인은 `checkout.html`, 예약 완료는 `complete.html?order=예약번호`, 예약 조회는 `reservations.html`, 티켓 상세는 `ticket.html?ticket=티켓ID`입니다. 실제 문서 이동을 사용하며 완료·티켓 링크는 로그인한 회원의 저장된 예약에서 복원합니다. 결제 확인 페이지는 진입할 때 장바구니를 재검증하고 약관 동의를 초기화합니다. 이전 쿼리 링크는 새 HTML로 연결됩니다.
+
+화면 파일은 `scripts/build-pages.mjs`에서 `index.html`의 공통 마크업으로 생성하므로 공통 UI는 원본에서 수정한 뒤 빌드를 실행합니다.
+
+관리자 프로그램 목록은 `admin.html`, 예약·티켓은 `admin-reservations.html`, 운영일은 `admin-operations.html`, 매출·정산은 `admin-settlement.html`입니다. 프로그램 등록·수정은 `admin-program-edit.html?program=프로그램키`(신규 등록은 쿼리 없음), 회차 관리는 `admin-program-sessions.html?program=프로그램키`입니다. 기존 관리자 해시 주소는 새 HTML로 이동합니다. 로그인·예약 상세·취소 확인 등 대화상자는 페이지 내부에서 유지합니다. 뒤로가기로 복원된 페이지는 저장소와 로그인 상태를 다시 확인합니다. 부산·제주 HTML도 공개 파일에 포함됩니다.
+
+고객 예약 흐름: `booking.html` → `cart.html` → `checkout.html` → `complete.html` → `reservations.html` → `ticket.html`. 관리자 메뉴: `admin.html`, `admin-reservations.html`, `admin-operations.html`, `admin-settlement.html`, `admin-program-edit.html`, `admin-program-sessions.html`.

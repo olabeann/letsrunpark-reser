@@ -712,7 +712,23 @@
     }, "운영 재개", "운영을 재개할까요?", true);
   }
 
-  function showView(viewName) {
+  var adminPageFiles = {
+    programs: "admin.html", reservations: "admin-reservations.html", operations: "admin-operations.html", settlement: "admin-settlement.html",
+    "program-edit": "admin-program-edit.html", "program-sessions": "admin-program-sessions.html"
+  };
+
+  function adminViewUrl(viewName) {
+    var url = new URL(adminPageFiles[viewName] || "admin.html", window.location.href);
+    if (viewName === "program-edit" && activeProgramKey) url.searchParams.set("program", activeProgramKey);
+    if (viewName === "program-sessions" && sessionProgramKey) url.searchParams.set("program", sessionProgramKey);
+    return url;
+  }
+
+  function showView(viewName, options) {
+    var target = adminViewUrl(viewName);
+    if ((!options || options.navigate !== false) && target.href !== window.location.href) {
+      window.location.assign(target.href); return;
+    }
     var navView = (viewName === "program-edit" || viewName === "program-sessions") ? "programs" : viewName;
     document.querySelectorAll(".admin-view").forEach(function (view) { var visible = view.dataset.view === viewName; view.hidden = !visible; view.classList.toggle("is-visible", visible); });
     document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.adminView === navView); });
@@ -720,7 +736,8 @@
     if (viewName === "reservations") renderReservations();
     if (viewName === "operations") { lockOperationRegionSelect(); renderOperationCalendar(); renderOperationExceptions(); }
     if (viewName === "settlement") { refreshSettlementScopeFilter(); renderSettlementSummary(); }
-    history.replaceState(null, "", "#" + viewName);
+    var titles = { programs: "프로그램 · 회차", reservations: "예약 · 티켓", operations: "운영일 관리", settlement: "매출 · 정산", "program-edit": "프로그램 등록 · 수정", "program-sessions": "회차 관리" };
+    document.title = (titles[viewName] || "관리자") + " | 렛츠런파크 관리자";
     if (window.DeveloperPolicy) window.DeveloperPolicy.refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -1803,6 +1820,7 @@
     lockAccountFilterSelects();
     renderKioskProducts(); renderReservations(); lockOperationRegionSelect();
     refreshSettlementScopeFilter(); renderSettlementSummary();
+    restoreAdminRoute();
     notify("로그인했습니다.");
   });
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
@@ -1924,7 +1942,33 @@
     });
   });
 
-  var requestedView = location.hash.replace("#", "");
-  if (["reservations", "programs", "operations", "settlement"].includes(requestedView)) showView(requestedView);
-  else showView("programs");
+  function restoreAdminRoute() {
+    var page = window.location.pathname.split("/").pop();
+    var legacyView = window.location.hash.replace("#", "");
+    if (page === "admin.html" && adminPageFiles[legacyView]) {
+      window.location.replace(adminViewUrl(legacyView).href); return;
+    }
+    var view = Object.keys(adminPageFiles).find(function (key) { return adminPageFiles[key] === page; }) || "programs";
+    var programKey = new URLSearchParams(window.location.search).get("program");
+    if (view === "program-edit") {
+      var item = programKey && programCatalog().find(function (program) { return program.key === programKey; });
+      if (programKey && !item) { window.location.replace(adminViewUrl("programs").href); return; }
+      if (item) openProductDialog(item);
+      else {
+        var ownLocation = currentAccount && currentAccount.scope === "department" ? currentAccount.region : "서울";
+        var ownDepartment = currentAccount && currentAccount.scope === "department" ? currentAccount.department : "공원화사업추진TF";
+        openProductDialog({ location: ownLocation, department: ownDepartment, saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", saleDays: [6, 0], discountIds: [], active: true });
+      }
+    } else if (view === "program-sessions") {
+      if (!programCatalog().some(function (item) { return item.key === programKey; })) { window.location.replace(adminViewUrl("programs").href); return; }
+      openSessionManager(programKey);
+    } else showView(view, { navigate: false });
+  }
+  restoreAdminRoute();
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    loadSavedDemoState(); currentAccount = restoreAdminSession();
+    setAdminLoginState(!!currentAccount); renderAdminNavigation(); lockAccountFilterSelects();
+    renderKioskProducts(); renderReservations(); restoreAdminRoute();
+  });
 })();
