@@ -52,3 +52,7 @@
 관리자 프로그램 목록은 `admin.html`, 예약·티켓은 `admin-reservations.html`, 운영일은 `admin-operations.html`, 매출·정산은 `admin-settlement.html`입니다. 프로그램 등록·수정은 `admin-program-edit.html?program=프로그램키`(신규 등록은 쿼리 없음), 회차 관리는 `admin-program-sessions.html?program=프로그램키`입니다. 기존 관리자 해시 주소는 새 HTML로 이동합니다. 로그인·예약 상세·취소 확인 등 대화상자는 페이지 내부에서 유지합니다. 뒤로가기로 복원된 페이지는 저장소와 로그인 상태를 다시 확인합니다. 부산·제주 HTML도 공개 파일에 포함됩니다.
 
 고객 예약 흐름: `booking.html` → `cart.html` → `checkout.html` → `complete.html` → `reservations.html` → `ticket.html`. 관리자 메뉴: `admin.html`, `admin-reservations.html`, `admin-operations.html`, `admin-settlement.html`, `admin-program-edit.html`, `admin-program-sessions.html`.
+
+### 예약 티켓 목록 정렬 정책
+
+예약번호별 묶음과 기존 묶음 순서를 유지합니다. 각 묶음 안의 티켓은 **입장 가능 → 입장 대기 → 입장 종료** 순으로 표시합니다. 같은 상태끼리는 기존 순서를 유지하며 이용 날짜나 회차 시간으로 추가 정렬하지 않습니다. 목록 진입·재조회 시 정렬을 적용하고, 화면을 보고 있는 동안에는 상태 배지만 자동 갱신하며 티켓 위치는 유지합니다. 개발자 정책 화면의 **RSV-07 예약 티켓 → 예약 티켓 목록 정렬**에 반영했습니다.

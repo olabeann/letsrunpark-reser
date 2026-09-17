@@ -145,9 +145,9 @@ test('uses a saved ended ticket when one exists', () => {
 test('shows the same date and total group header for single and multi-ticket payments', () => {
   const { context } = runtime(now);
   const groups = context.ticketListGroups([
-    { id: 'order-1-G01', reservationId: 'order-1', date: '2026.09.19 (토)', createdAt: '2026-09-15T03:00:00.000Z', price: 12000 },
-    { id: 'order-1-G02', reservationId: 'order-1', date: '2026.09.19 (토)', createdAt: '2026-09-15T03:00:00.000Z', price: 5000 },
-    { id: 'order-2-G01', reservationId: 'order-2', date: '2026.09.13 (일)', createdAt: '2026-09-12T03:00:00.000Z', price: 10000 },
+    { id: 'order-1-G01', reservationId: 'order-1', date: '2026.09.19 (토)', dateKey: '2026-09-19', time: '10:00~10:20', createdAt: '2026-09-15T03:00:00.000Z', price: 12000 },
+    { id: 'order-1-G02', reservationId: 'order-1', date: '2026.09.19 (토)', dateKey: '2026-09-19', time: '10:00~10:20', createdAt: '2026-09-15T03:00:00.000Z', price: 5000 },
+    { id: 'order-2-G01', reservationId: 'order-2', date: '2026.09.13 (일)', dateKey: '2026-09-13', time: '10:00~10:20', createdAt: '2026-09-12T03:00:00.000Z', price: 10000 },
   ]);
   assert.equal(groups.length, 2);
   assert.equal(groups[0].tickets.length, 2);
@@ -159,6 +159,23 @@ test('shows the same date and total group header for single and multi-ticket pay
   assert.match(source, /group\.date \+ " 예약 티켓 " \+ group\.tickets\.length \+ "개"/);
   assert.match(source, /ticket-list-group__date/);
   assert.match(source, /ticket-list-group__total/);
+});
+
+test('sorts tickets within each reservation by active, upcoming, ended without moving groups', () => {
+  const { context } = runtime(new Date(2026, 8, 19, 10, 0));
+  const saved = [
+    { id: 'a-ended', reservationId: 'a', dateKey: '2026-09-18', time: '10:00~10:20', price: 1000 },
+    { id: 'b-upcoming', reservationId: 'b', dateKey: '2026-09-20', time: '10:00~10:20', price: 2000 },
+    { id: 'a-upcoming-1', reservationId: 'a', dateKey: '2026-09-19', time: '13:20~13:45', price: 3000 },
+    { id: 'a-active', reservationId: 'a', dateKey: '2026-09-19', time: '10:00~10:20', price: 4000 },
+    { id: 'a-upcoming-2', reservationId: 'a', dateKey: '2026-09-19', time: '12:00~12:20', price: 5000 },
+  ];
+  const before = JSON.stringify(saved);
+  const groups = context.ticketListGroups(saved);
+  assert.deepEqual(Array.from(groups, group => group.id), ['a', 'b']);
+  assert.deepEqual(Array.from(groups[0].tickets, ticket => ticket.id), ['a-active', 'a-upcoming-1', 'a-upcoming-2', 'a-ended']);
+  assert.equal(groups[0].total, 13000);
+  assert.equal(JSON.stringify(saved), before);
 });
 
 test('example states remain distinct across a full week and month boundary', () => {

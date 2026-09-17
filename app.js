@@ -1122,6 +1122,8 @@
   }
 
   function ticketListGroups(reservations) {
+    var now = new Date();
+    var stateOrder = { active: 0, upcoming: 1, ended: 2 };
     var groups = [];
     var byReservationId = new Map();
     reservations.forEach(function (reservation) {
@@ -1135,6 +1137,11 @@
       group.tickets.push(reservation);
       group.total += Number(reservation.price) || 0;
       if ((!group.date || group.date === "결제일 확인 중") && reservation.date) group.date = reservation.date;
+    });
+    groups.forEach(function (group) {
+      group.tickets.sort(function (first, second) {
+        return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
+      });
     });
     return groups;
   }
