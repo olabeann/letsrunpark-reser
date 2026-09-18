@@ -31,6 +31,28 @@
   ].forEach(function (c,i) {
     events.push({ paymentId:'demo-pay-'+c[0], key:'demo-tx-cancel-'+i, at:c[1], type:'취소', amount:-c[2], feeAmount:-Math.round(c[2]*PG_FEE_RATE), soldDate:c[1].slice(0,10), paidOutDate:'', reason:i===2?'운영 취소':'고객 요청', cancelId:'demo-cancel-'+i, ticketIds:c[3], status:'성공' });
   });
+  // Independent products remain separate in the existing settlement grouping and export.
+  // These fictional September records become eligible only after their simulated completion date.
+  [{ name: '포니 타기', count: 25, refund: 25000, prefix: 'regular' },
+   { name: '포니타기 추석 연휴', count: 10, refund: 10000, prefix: 'chuseok' }].forEach(function (sample) {
+    for (var i = 0; i < sample.count; i++) {
+      var id = 'holiday-example-' + sample.prefix + '-' + i;
+      var day = 24 + (sample.prefix === 'chuseok' ? Math.floor(i / 4) : i % 3), date = '2026-09-' + day;
+      var p = { id: id, reservation: 'LRP-260917-' + String((sample.prefix === 'regular' ? 80001 : 90001) + i),
+        impUid: 'imp_demo_' + id, orderId: id, paymentKey: id, pgTxId: id,
+        paidAt: '2026-09-17 09:' + String(i).padStart(2, '0') + ':00', card: '국민카드', method: '카드',
+        amount: 20000, program: sample.name, feeAmount: 400, region: '서울', department: '공원화사업추진TF',
+        currency: 'KRW', approval: 'DEMO', cardNumber: '****-****-****-0000', easyPay: '',
+        serviceDate: date, completedAt: date + 'T16:00:00+09:00', installment: 0 };
+      payments.push(p);
+      events.push({ paymentId: id, key: id + '-approve', at: p.paidAt, type: '승인', amount: 20000, feeAmount: 400,
+        soldDate: '2026-09-17', paidOutDate: monthlyPayoutDate(date), reason: '', cancelId: '', status: '성공' });
+      var refund = sample.prefix === 'regular' ? (i < 5 ? 5000 : 0) : (i === 0 ? sample.refund : 0);
+      if (refund) events.push({ paymentId: id, key: id + '-cancel', at: '2026-09-17 10:00:00', type: '취소',
+        amount: -refund, feeAmount: -Math.round(refund * PG_FEE_RATE), soldDate: '2026-09-17', paidOutDate: '',
+        reason: '고객 요청', cancelId: id + '-refund', ticketIds: Array.from({ length: refund / 5000 }, function (_, n) { return p.reservation + '-T' + String(n + 1).padStart(2, '0'); }), status: '성공' });
+    }
+  });
   events.forEach(function(e){ e.payOutAmount = e.amount-e.feeAmount; });
   function balance(e) { var p=payment(e); return p.amount+events.filter(function(c){return c.paymentId===p.id && c.type==='취소' && c.at<=e.at;}).reduce(function(n,c){return n+c.amount;},0); }
   function state(e) { return e.type==='승인'?'결제 완료':balance(e)===0?'전체 취소':'부분 취소'; }

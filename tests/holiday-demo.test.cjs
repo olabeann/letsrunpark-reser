@@ -1,0 +1,26 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const script=fs.readFileSync(require('node:path').join(__dirname,'../holiday-demo.js'),'utf8');
+test('holiday seed preserves existing catalog, is idempotent and does not restore edited/deleted samples',()=>{
+ const values=new Map([['letsrunPlayAdminDemoV4',JSON.stringify({catalog:{addedPrograms:[{key:'existing',programName:'기존 상품'}],addedSessions:[],programOverrides:{ride:{price:6000}}},operationExceptions:[{id:'closed'}]})]]);
+ const context=vm.createContext({localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)}});
+ vm.runInContext(script,context);
+ let state=JSON.parse(values.get('letsrunPlayAdminDemoV4'));
+ assert.equal(state.catalog.addedPrograms.length,2);
+ assert.equal(state.catalog.addedSessions.length,4);
+ assert.equal(state.catalog.programOverrides.ride.price,6000);
+ assert.equal(state.operationExceptions[0].id,'closed');
+ state.catalog.addedPrograms[1].deleted=true;
+ values.set('letsrunPlayAdminDemoV4',JSON.stringify(state));
+ vm.runInContext(script,context);
+ state=JSON.parse(values.get('letsrunPlayAdminDemoV4'));
+ assert.equal(state.catalog.addedPrograms.length,2);
+ assert.equal(state.catalog.addedPrograms[1].deleted,true);
+ const demo=context.HolidayDemo;
+ assert.equal(demo.reservations.reduce((n,r)=>n+r.qty,0),40);
+ assert.equal(demo.reservations.reduce((n,r)=>n+r.price,0),200000);
+ assert.equal(demo.reservations.reduce((n,r)=>n+r.cancellationEvents.reduce((s,e)=>s+e.amount,0),0),10000);
+ assert.ok(demo.reservations.every(r=>r.dateKey>=demo.program.saleStartDate&&r.dateKey<=demo.program.saleEndDate));
+});

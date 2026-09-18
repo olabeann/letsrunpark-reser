@@ -103,6 +103,8 @@
     { id: "LRP-260901-00001-G01", reservationId: "LRP-260901-00001", legacyId: "LRP-260901-00001-1", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"], cancellationEvents: [{ source: "admin", qty: 1, amount: 4000, reason: "운영사 사정", createdAt: "2026-09-02 09:10" }] }
   ];
 
+  if (window.HolidayDemo) demoReservations = demoReservations.concat(window.HolidayDemo.reservations);
+
   var settlementDetails = {
     ride: { program: "포니 타기", scope: "서울 · 공원화사업추진TF", completed: 982, paid: 5210000, refunded: 210000, fee: 150000, payout: 4850000, daily: [["2026.09.05", 324, 1720000, 60000, 1610000], ["2026.09.12", 346, 1830000, 90000, 1686000], ["2026.09.19", 312, 1660000, 60000, 1554000]], transactions: [["2026.09.05", "LRP-260902-00005", "PAY-260902-3018", 3, 15000, 0, 450, 14550, "결제 완료"], ["2026.09.06", "LRP-260902-00003", "PAY-260902-2998", 1, 2500, 2500, 0, 0, "전체 환불"], ["2026.09.12", "LRP-260902-00001", "PAY-260902-2944", 2, 5000, 0, 150, 4850, "결제 완료"], ["2026.09.12", "LRP-260912-00003", "PAY-260912-3811", 4, 20000, 5000, 450, 14550, "부분 환불"], ["2026.09.19", "LRP-260919-00001", "PAY-260919-4172", 2, 10000, 0, 300, 9700, "결제 완료"]], refunds: [["2026.09.05 · 전체 환불 8건", "고객 요청 외 2개 사유", 60000], ["2026.09.12 · 부분 환불 14건", "인원별 부분취소", 90000], ["2026.09.19 · 전체·부분 환불 9건", "운영 취소 포함", 60000]] },
     play: { program: "포니랑 놀기", scope: "서울 · 공원화사업추진TF", completed: 604, paid: 3210000, refunded: 116000, fee: 92820, payout: 3001180, daily: [["2026.09.05", 204, 1080000, 36000, 1012000], ["2026.09.12", 216, 1120000, 40000, 1047000], ["2026.09.19", 184, 1010000, 40000, 942180]], transactions: [["2026.09.05", "LRP-260902-00004", "PAY-260902-3012", 2, 8000, 4000, 120, 3880, "부분 환불"], ["2026.09.06", "LRP-260902-00002", "PAY-260902-2971", 4, 16000, 0, 480, 15520, "결제 완료"], ["2026.09.12", "LRP-260912-00001", "PAY-260912-3758", 2, 8000, 0, 240, 7760, "결제 완료"], ["2026.09.12", "LRP-260912-00002", "PAY-260912-3884", 3, 12000, 4000, 240, 7760, "부분 환불"], ["2026.09.19", "LRP-260919-00002", "PAY-260919-4263", 1, 4000, 4000, 0, 0, "전체 환불"]], refunds: [["2026.09.05 · 부분 환불 6건", "인원별 부분취소", 36000], ["2026.09.12 · 전체 환불 5건", "고객 요청", 40000], ["2026.09.19 · 전체·부분 환불 7건", "운영 취소 포함", 40000]] }
@@ -820,6 +822,7 @@
     byId("detail-sale-end").value = item.saleEndDate || "";
     byId("detail-visible-start").value = item.visibleStartAt || (item.saleStartDate ? item.saleStartDate + "T00:00" : "");
     byId("detail-visible-end").value = item.visibleEndAt || (item.saleEndDate ? item.saleEndDate + "T23:59" : "");
+    byId("detail-purchase-max-qty").value = item.purchaseMaxQty != null ? item.purchaseMaxQty : 4;
     byId("detail-booking-window").value = item.bookingWindow != null ? item.bookingWindow : defaultBookingWindow;
     byId("detail-arrival-lead-minutes").value = item.arrivalLeadMinutes != null ? item.arrivalLeadMinutes : defaultArrivalLeadMinutes;
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
@@ -978,7 +981,7 @@
   }
 
   function persistProgram(program) {
-    if (program.key.indexOf("custom-program-") === 0) {
+    if (catalogState.addedPrograms.some(function (item) { return item.key === program.key; }) || program.key.indexOf("custom-program-") === 0) {
       var addedIndex = catalogState.addedPrograms.findIndex(function (item) { return item.key === program.key; });
       if (addedIndex === -1) catalogState.addedPrograms.push(program); else catalogState.addedPrograms[addedIndex] = program;
     } else catalogState.programOverrides[program.key] = program;
@@ -1036,6 +1039,8 @@
     var saleEndDate = byId("detail-sale-end").value;
     var visibleStartAt = byId("detail-visible-start").value;
     var visibleEndAt = byId("detail-visible-end").value;
+    var purchaseMaxQty = Number(byId("detail-purchase-max-qty").value);
+    if (!Number.isInteger(purchaseMaxQty) || purchaseMaxQty < 1) { event.preventDefault(); notify("최대 구매 수량은 1 이상의 정수로 입력해주세요."); return; }
     var bookingWindow = Number(byId("detail-booking-window").value);
     var arrivalLeadMinutes = Number(byId("detail-arrival-lead-minutes").value);
     var guidanceText = byId("program-guidance-text").value.trim();
@@ -1058,6 +1063,7 @@
       location: location, department: department, programType: (existing && existing.programType) || "기타",
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
+      purchaseMaxQty: purchaseMaxQty,
       bookingWindow: bookingWindow,
       arrivalLeadMinutes: arrivalLeadMinutes,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
@@ -1532,7 +1538,8 @@
   }
 
   function settlementFilters() {
-    return { basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, region: byId("settlement-region-filter").value, department: byId("settlement-department-filter").value, search: byId("settlement-detail-search").value.trim() };
+    var holidayPreview = typeof window !== "undefined" && window.location && /(?:[?&])example=chuseok(?:&|$)/.test(window.location.search);
+    return { asOf: holidayPreview ? "2026-10-01T00:00:00+09:00" : undefined, basis: "service", start: byId("settlement-start-date").value, end: byId("settlement-end-date").value, card: byId("settlement-card-filter").value, region: byId("settlement-region-filter").value, department: byId("settlement-department-filter").value, search: byId("settlement-detail-search").value.trim() };
   }
 
   function settlementEventTimelineItem(event) {
@@ -1796,6 +1803,14 @@
 
   prepareDiscountFormFields();
   prepareProgramGuidanceFields();
+  if (new URLSearchParams(window.location.search).get("example") === "chuseok") {
+    byId("settlement-start-date").value = "2026-09-01";
+    byId("settlement-end-date").value = "2026-09-30";
+    byId("holiday-settlement-note").hidden = false;
+    var breakdown = document.querySelector(".settlement-card-breakdown");
+    breakdown.open = true;
+    byId("settlement-metrics").after(breakdown);
+  }
   loadSavedDemoState();
   currentAccount = restoreAdminSession();
   setAdminLoginState(!!currentAccount);

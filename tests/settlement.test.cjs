@@ -62,7 +62,7 @@ test('completed services are scheduled for the eighth of the following month',()
  assert.equal(L.monthlyPayoutDate('2026-06-01'),'2026-07-08');
  assert.equal(L.monthlyPayoutDate('2026-06-30'),'2026-07-08');
  assert.equal(L.monthlyPayoutDate('2026-12-31'),'2027-01-08');
- assert.ok(L.events.filter(e=>e.type==='승인').every(e=>e.paidOutDate==='2026-07-08'));
+ assert.ok(L.events.filter(e=>e.type==='승인').every(e=>e.paidOutDate===L.monthlyPayoutDate(L.payment(e).serviceDate)));
  assert.ok(L.events.filter(e=>e.type==='취소').every(e=>e.paidOutDate===''));
  const cancelled=L.events.find(e=>e.type==='취소');
  assert.equal(L.historyDetail(cancelled)[11],'');
@@ -170,4 +170,20 @@ test('date basis changes both filtered records and Excel period description',()=
  assert.equal(L.filter(service,()=>true).length,6);
  assert.match(L.sheets(L.filter(transaction,()=>true),transaction)[0].rows[1][1],/거래일 기준/);
  assert.match(L.sheets(L.filter(service,()=>true),service)[0].rows[1][1],/서비스 완료일 기준/);
+});
+
+test('holiday preview groups independent products and excludes future completed services until eligible',()=>{
+ const range={basis:'service',start:'2026-09-01',end:'2026-09-30'};
+ assert.equal(L.filter({...range,asOf:'2026-09-17T00:00:00+09:00'},()=>true).length,0);
+ const rows=L.filter({...range,asOf:'2026-10-01T00:00:00+09:00'},()=>true);
+ const holiday=rows.filter(e=>L.payment(e).program==='포니타기 추석 연휴');
+ const regular=rows.filter(e=>L.payment(e).program==='포니 타기');
+ assert.equal(L.totals(holiday).approved,200000);
+ assert.equal(L.totals(holiday).cancelled,10000);
+ assert.equal(L.totals(holiday).net,190000);
+ assert.equal(L.totals(holiday).fee,3800);
+ assert.equal(L.totals(holiday).payout,186200);
+ assert.equal(L.totals(regular).net,475000);
+ assert.equal(L.totals(rows).net,665000);
+ assert.ok(L.groups(holiday).every(g=>g.programs.includes('포니타기 추석 연휴')));
 });

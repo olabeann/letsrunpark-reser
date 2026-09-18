@@ -70,7 +70,7 @@
     });
     if (!slot || slot.disabled || program.active === false || !itemDate || !saleDays.includes(itemDate.getDay()) || (program.saleStartDate && item.dateKey < program.saleStartDate) || (program.saleEndDate && item.dateKey > program.saleEndDate) || closed) throw new Error("예약 가능한 날짜와 회차를 다시 선택해주세요.");
     if (typeof item.discount !== "boolean" || (item.discount && !discountPolicy)) throw new Error("할인 정보를 다시 확인해주세요.");
-    var maxQty = Math.min(4, Number.isInteger(slot.capacity) ? slot.capacity : 4);
+    var maxQty = Math.min(program.purchasePolicy ? program.purchasePolicy.maxQty : 4, Number.isInteger(slot.capacity) ? slot.capacity : 4);
     var discountQty = item.discount ? (Number.isInteger(item.discountQty) ? item.discountQty : item.qty) : 0;
     var discountRate = item.discount && discountPolicy.type !== "fixed" ? Number(discountPolicy.rate || 0) : 0;
     var discountPerUnit = item.discount ? (discountPolicy.type === "fixed" ? Number(discountPolicy.value || 0) : Math.round(product.price * discountRate)) : 0;
@@ -125,8 +125,8 @@
       list.forEach(function (entry) {
         if (!entry || entry.memberId !== memberId || !isActive(entry)) return;
         var program = programFor(entry, programs), policy = program && program.purchasePolicy;
-        if (!policy || !policy.group || !policy.maxQty) return;
-        var key = policy.group + "|" + entry.dateKey;
+        if (!policy || !policy.maxQty) return;
+        var key = entry.programKey + "|" + entry.dateKey;
         totals[key] = (totals[key] || 0) + (Number.isInteger(entry.qty) ? entry.qty : 0);
       });
     }
@@ -134,9 +134,9 @@
     tally(items);
     for (var i = 0; i < items.length; i += 1) {
       var program = programFor(items[i], programs), policy = program && program.purchasePolicy;
-      if (!policy || !policy.group || !policy.maxQty) continue;
-      if (totals[policy.group + "|" + items[i].dateKey] > policy.maxQty) {
-        return "같은 구매 한도 그룹은 이용일 기준 계정당 최대 " + policy.maxQty + "매까지 예약할 수 있습니다.";
+      if (!policy || !policy.maxQty) continue;
+      if (totals[items[i].programKey + "|" + items[i].dateKey] > policy.maxQty) {
+        return "같은 프로그램은 이용일 기준 계정당 최대 " + policy.maxQty + "매까지 예약할 수 있습니다.";
       }
     }
     return "";
@@ -180,6 +180,15 @@
     if (scopeError) return scopeError;
     var purchaseError = purchaseLimitError(items, reservations, memberId, programs);
     if (purchaseError) return purchaseError;
+    var existing = ticketRecords(reservations).filter(function (entry) { return entry.memberId === memberId && isActive(entry); });
+    for (var n = 0; n < items.length; n += 1) {
+      var candidate = items[n];
+      if (!candidate || candidate.memberId !== memberId || !isActive(candidate)) continue;
+      var conflicts = existing.concat(items.slice(0, n)).some(function (entry) {
+        return entry && entry.memberId === memberId && isActive(entry) && entry.programKey !== candidate.programKey && overlaps(entry, candidate);
+      });
+      if (conflicts) return "다른 프로그램의 이용 시간이 겹칩니다. 기존 예약과 장바구니의 회차 시간을 확인해주세요.";
+    }
     var discountError = discountLimitError(items, reservations, memberId, programs);
     if (discountError) return discountError;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

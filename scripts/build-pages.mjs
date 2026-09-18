@@ -7,7 +7,7 @@ const output = join(root, 'docs');
 // Publish only these browser assets, never repository metadata or internal notes.
 const files = [
   'busan.html', 'jeju.html', 'admin-reservations.html', 'admin-operations.html', 'admin-settlement.html', 'admin-program-edit.html', 'admin-program-sessions.html',
-  'booking.html', 'cart.html', 'checkout.html', 'complete.html', 'reservations.html', 'ticket.html', 'demo-controls.js',
+  'booking.html', 'cart.html', 'checkout.html', 'complete.html', 'reservations.html', 'ticket.html', 'demo-controls.js', 'holiday-demo.js',
   'index.html', 'admin.html', 'account-admin.html', 'error.html', 'payment-failed.html', 'app.js', 'admin.js', 'settlement.js', 'xlsx-export.js', 'account-admin.js', 'booking-rules.js', 'developer-policy.js',
   'tokens.css', 'components.css', 'styles.css', 'admin.css', 'admin-reference.css', 'empty-states.css', 'empty-states.html', 'empty-states.js', 'error.css', '.nojekyll',
   'assets/logo/cowboy-malma.png', 'assets/logo/logo_color.svg',

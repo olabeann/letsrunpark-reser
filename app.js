@@ -119,7 +119,7 @@
         { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
         { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
       ],
-      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
+      purchasePolicy: { maxQty: 4 },
       bookingWindow: 14,
       arrivalLeadMinutes: 20,
       cancelMinutes: 10,
@@ -148,7 +148,7 @@
         { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
         { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
       ],
-      purchasePolicy: { group: "SEOUL-PONY", maxQty: 4 },
+      purchasePolicy: { maxQty: 4 },
       bookingWindow: 14,
       arrivalLeadMinutes: 20,
       cancelMinutes: 10,
@@ -221,7 +221,7 @@
         baseCancelMinutes[key] = programs[key].cancelMinutes;
         baseProgramSettings[key] = {
           name: item.programName, price: item.price, image: programs[key].image, noticeText: programs[key].noticeText, guidanceText: programs[key].guidanceText, requiresGuidanceConfirmation: programs[key].requiresGuidanceConfirmation, arrivalLeadMinutes: programs[key].arrivalLeadMinutes,
-          purchaseGroup: item.purchaseGroup || "", saleStartDate: item.saleStartDate || "", saleEndDate: item.saleEndDate || "",
+          purchaseGroup: item.purchaseGroup || "", purchaseMaxQty: item.purchaseMaxQty, saleStartDate: item.saleStartDate || "", saleEndDate: item.saleEndDate || "",
           visibleStartAt: item.visibleStartAt || "", visibleEndAt: item.visibleEndAt || "", saleDays: Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0],
           active: item.active !== false, slots: [], discountPolicy: null
         };
@@ -247,7 +247,7 @@
         programs[key].saleDays = Array.isArray(source.saleDays) ? source.saleDays.map(Number) : base.saleDays.slice();
         programs[key].active = source.active !== undefined ? source.active : base.active;
         var purchaseGroup = source.purchaseGroup !== undefined ? source.purchaseGroup : base.purchaseGroup;
-        programs[key].purchasePolicy = purchaseGroup ? { group: purchaseGroup, maxQty: 4 } : null;
+        programs[key].purchasePolicy = { maxQty: Number.isInteger(source.purchaseMaxQty) && source.purchaseMaxQty > 0 ? source.purchaseMaxQty : 4 };
         var sessionOverrides = catalog && catalog.sessionOverrides || {};
         var configuredSlots = base.slots.map(function (slot, index) {
           var configured = sessionOverrides[key + "-session-" + index] || {};
@@ -301,6 +301,13 @@
   }
 
   refreshBookingWindow(initialProgramKey);
+  // Administrator-created programs must also survive direct links and page reloads.
+  var requestedProgramKey = query.get("product");
+  if (requestedProgramKey && programs[requestedProgramKey] && programs[requestedProgramKey].userBookable) {
+    initialProgramKey = requestedProgramKey;
+    program = programs[initialProgramKey];
+    refreshBookingWindow(initialProgramKey);
+  }
   var calendarMonth = new Date(calendarFirstMonth);
 
   function dateKey(date) {
@@ -308,7 +315,7 @@
   }
 
   function operationExceptionFor(dateKeyValue) {
-    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === state.programKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
+    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || itemProgram === program) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
   }
 
   function slotOperationException(slot) {
@@ -1421,13 +1428,13 @@
 
   function purchaseLimitUsage() {
     var purchasePolicy = program.purchasePolicy;
-    if (!purchasePolicy || !purchasePolicy.group || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return null;
+    if (!purchasePolicy || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return null;
     var store = readStore();
     if (!store) return null;
     function matchingQty(items) {
       return BookingRules.ticketRecords(items).filter(function (item) {
         var itemProgram = item && programs[item.programKey];
-        return item && item.memberId === currentMember.id && BookingRules.isActive(item) && item.dateKey === state.dateKey && itemProgram && itemProgram.purchasePolicy && itemProgram.purchasePolicy.group === purchasePolicy.group;
+        return item && item.memberId === currentMember.id && BookingRules.isActive(item) && item.dateKey === state.dateKey && itemProgram === program;
       }).reduce(function (sum, item) { return sum + (Number.isInteger(item.qty) ? item.qty : 0); }, 0);
     }
     var cartQty = matchingQty(ownCart(store));
@@ -1445,7 +1452,7 @@
     }
     var slot = program.slots.find(function (entry) { return entry.time === state.time; });
     var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
-    if (remainingCapacity < 4) return "선택한 회차에는 " + remainingCapacity + "자리만 남아 최대 " + remainingCapacity + "매까지 담을 수 있어요.";
+    if (remainingCapacity < (program.purchasePolicy ? program.purchasePolicy.maxQty : 4)) return "선택한 회차에는 " + remainingCapacity + "자리만 남아 최대 " + remainingCapacity + "매까지 담을 수 있어요.";
     if (selectedPolicy) return "할인은 최대 " + remainingDiscountQty(selectedPolicy) + "매 적용 가능합니다.";
     var purchaseLimit = program.purchasePolicy && Number(program.purchasePolicy.maxQty) > 0 ? Number(program.purchasePolicy.maxQty) : 4;
     return "이용일 기준 최대 " + purchaseLimit + "매 구매 가능합니다.";
@@ -1456,14 +1463,14 @@
     var remainingCapacity = slot ? slotRemainingCapacity(slot) : 4;
     var policy = selectedDiscountPolicy();
     var discountLimit = policy ? remainingDiscountQty(policy) : Infinity;
-    var selectableMax = Math.min(4, remainingCapacity, discountLimit);
+    var selectableMax = Math.min(program.purchasePolicy ? program.purchasePolicy.maxQty : 4, remainingCapacity, discountLimit);
     var purchasePolicy = program.purchasePolicy;
-    if (!purchasePolicy || !purchasePolicy.group || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return Math.max(1, selectableMax);
+    if (!purchasePolicy || !purchasePolicy.maxQty || !currentMember || !state.dateKey) return Math.max(1, selectableMax);
     var store = readStore();
     if (!store) return 1;
     var used = BookingRules.ticketRecords(store.reservations).concat(ownCart(store)).filter(function (item) {
       var itemProgram = item && programs[item.programKey];
-      return item && item.memberId === currentMember.id && BookingRules.isActive(item) && item.dateKey === state.dateKey && itemProgram && itemProgram.purchasePolicy && itemProgram.purchasePolicy.group === purchasePolicy.group;
+      return item && item.memberId === currentMember.id && BookingRules.isActive(item) && item.dateKey === state.dateKey && itemProgram === program;
     }).reduce(function (sum, item) { return sum + (Number.isInteger(item.qty) ? item.qty : 0); }, 0);
     // Keep one selectable so a full existing cart can still route the user to checkout;
     // addToCart performs the final validation and does not add a fifth ticket.
@@ -1596,7 +1603,7 @@
     }
     var notice = program.noticeText || "";
     var noticeEl = byId("product-notice");
-    if (noticeEl) { noticeEl.textContent = notice; noticeEl.hidden = !notice; }
+    if (noticeEl) { noticeEl.textContent = notice; noticeEl.hidden = !notice || notice === program.subtitle; }
     document.querySelectorAll("#cart-program-links [data-program-key]").forEach(function (link) {
       var key = link.getAttribute("data-program-key");
       if (!programs[key] || !programs[key].userBookable) { link.remove(); return; }

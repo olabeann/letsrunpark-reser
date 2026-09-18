@@ -34,11 +34,13 @@ test('detects identical, contained and partially overlapping intervals in either
   }
 });
 
-test('allows overlapping product sessions when capacity and purchase limits remain', () => {
+test('rejects overlapping different programs in cart and reservations', () => {
   const ride = item({ qty: 1 });
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', qty: 1 });
-  assert.equal(error([ride, play]), '');
-  assert.equal(error([ride], [play]), '');
+  assert.match(error([ride, play]), /시간이 겹/);
+  assert.match(error([ride], [play]), /시간이 겹/);
+  assert.equal(error([ride], [{ ...play, status: 'cancelled' }]), '');
+  assert.equal(error([ride], [{ ...play, memberId: 'other' }]), '');
 });
 
 test('allows adjacent intervals and the same time on another date', () => {
@@ -53,13 +55,13 @@ test('legacy tour start-only values reserve all 80 minutes and overnight interva
   assert.equal(rules.overlaps(item({ time: '23:50~00:20' }), item({ dateKey: '2026-08-30', time: '00:00~00:30' })), true);
 });
 
-test('does not block overlapping times in the cart or persisted reservations', () => {
-  assert.equal(error([tour(), item({ time: '14:20~14:45' })]), '');
+test('blocks different-program overlaps while allowing same-session tickets', () => {
+  assert.match(error([tour(), item({ time: '14:20~14:45' })]), /시간이 겹/);
   const saved = Array.from({ length: 12 }, (_, i) => item({ id: String(i), dateKey: '2026-09-20' }));
   saved.push(tour());
-  assert.equal(error([item({ time: '15:00~15:20' })], saved), '');
+  assert.match(error([item({ time: '15:00~15:20' })], saved), /시간이 겹/);
   assert.equal(error([item(), item({ id: 'duplicate' })]), '');
-  assert.equal(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), '');
+  assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), /시간이 겹/);
 });
 
 test('rejects logged-out, empty or foreign-member carts', () => {
@@ -88,10 +90,10 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(discountedCard.price + regularCard.price, 15000);
 });
 
-test('caps combined ride/play purchases at 4 and enforces per-usage-date citizen discount limits', () => {
+test('caps each program independently and enforces per-usage-date citizen discount limits', () => {
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
   assert.equal(error([item({ qty: 2 }), play]), '');
-  assert.match(error([item({ qty: 3 }), play]), /최대 4매/);
+  assert.equal(error([item({ qty: 3 }), play]), '');
   assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
   const discountedRide = item({ qty: 1, discount: true });
   const discountedPlay = { ...play, qty: 1, discount: true };
@@ -150,14 +152,15 @@ test('blocks mixed regions or departments', () => {
   assert.match(rules.validationError([item(), otherRegion], [], memberId, busanPrograms, now), /같은 지역과 담당부서/);
 });
 
-test('caps combined ride and play purchases at 4 per usage date across cart and reservations', () => {
+test('caps each program at 4 per usage date across cart and reservations', () => {
   const ride = item({ qty: 2 });
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2, price: 8000 });
   assert.equal(error([ride, play]), '');
   assert.equal(error([item({ qty: 2 })], [item({ id: 'saved-same-session', qty: 1 })]), '');
   const savedRide = item({ id: 'saved-ride', qty: 3 });
-  assert.match(error([play], [savedRide]), /최대 4매/);
-  assert.match(error([ride, play, item({ id: 'extra', time: '11:00~11:20', qty: 1 })]), /최대 4매/);
+  assert.equal(error([play], [savedRide]), '');
+  assert.equal(error([ride, play, item({ id: 'extra', time: '11:00~11:20', qty: 1 })]), '');
+  assert.match(error([ride], [savedRide]), /최대 4매/);
 });
 
 test('fails payment when another member already paid for the same session', () => {
@@ -616,3 +619,9 @@ test('customer catalog consumes administrator programs, sessions, closures and d
   assert.match(source, /savedDiscounts\.filter/);
   assert.match(source, /Object\.keys\(programs\)\.filter\(function \(programKey\) \{ return programs\[programKey\]\.userBookable/);
 });
+
+ test('supports configured program limits above four and counts all sessions', () => {
+ const configured = { ...programs, ride: { ...programs.ride, purchasePolicy: { maxQty: 6 } } };
+ assert.equal(rules.validationError([item({ qty: 6, time: '15:00~15:20' })], [], memberId, configured, now), '');
+ assert.match(rules.validationError([item({ qty: 4, time: '15:00~15:20' })], [item({ qty: 3 })], memberId, configured, now), /최대 6매/);
+ });
