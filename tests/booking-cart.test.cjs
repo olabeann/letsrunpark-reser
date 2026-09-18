@@ -262,7 +262,7 @@ test('booking summary shows the discount note only after a discount is selected'
   assert.match(pageSource, /id="product-discount-note" hidden/);
 });
 
-test('reserve redirects to a valid existing cart when a new item exceeds the purchase group limit', async () => {
+test('reserve redirects to a valid existing cart when a new item exceeds the program limit', async () => {
   const existing = item({ qty: 4 });
   const savedStore = store([existing]);
   const messages = [];
@@ -277,7 +277,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pur
     readStore: () => savedStore,
     ownCart: () => savedStore.carts[memberId],
     BookingRules: {
-      validationError: () => '같은 구매 한도 그룹은 이용일 기준 계정당 최대 4매까지 예약할 수 있습니다.',
+      validationError: () => '같은 프로그램은 이용일 기준 계정당 최대 4매까지 예약할 수 있습니다.',
       quoteItem: entry => entry,
     },
     programs,

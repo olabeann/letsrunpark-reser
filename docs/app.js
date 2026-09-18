@@ -809,7 +809,7 @@
       var nextCart = cart.concat(unitItems);
       var error = BookingRules.validationError(nextCart, store.reservations, currentMember.id, programs, new Date());
       if (error) {
-        if (continueToCheckout && cart.length && error.indexOf("구매 한도 그룹") !== -1) {
+        if (continueToCheckout && cart.length && error.indexOf("같은 프로그램은 이용일 기준 계정당 최대") !== -1) {
           continueInCart = true;
           cartLimitMessage = "선택한 " + item.name + " " + item.qty + "명은 구매 한도를 초과해 장바구니에 담기지 않았습니다. 기존 상품 확인 후 결제해주세요.";
           return;
