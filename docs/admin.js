@@ -166,15 +166,15 @@
   function prepareDiscountFormFields() {
     var form = document.querySelector(".discount-form-grid");
     if (!form) return;
-    form.innerHTML = '<label><span>할인명</span><input id="discount-name" placeholder="예: 어린이 무료 할인"></label>' +
-      '<label><span>할인 방식</span><select id="discount-type"><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
-      '<label class="field-wide"><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
+    form.innerHTML = '<label><span>할인명 *</span><input id="discount-name" placeholder="예: 어린이 무료 할인" required></label>' +
+      '<label><span>할인 방식 *</span><select id="discount-type" required><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
+      '<label class="field-wide"><span id="discount-value-label">할인율 *</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50" required><em id="discount-value-unit">%</em></span></label>' +
       '<label class="field-wide"><span>할인 안내 문구</span><input id="discount-notice" type="text" maxlength="120" placeholder="예: 체험 전 증빙서류를 반드시 지참해주세요."><small class="field-help">사용자 예약 화면의 할인 항목 아래에 표시됩니다. 비워두면 노출하지 않습니다.</small></label>' +
       '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>수량 한도는 계정당 이용일마다 합산하며, 증빙은 현장에서 확인합니다.</small></div>' +
-      '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
+      '<label><span>최대 적용 수량 *</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1" required><em>매</em></span></label>' +
       '<label style="grid-column:1"><span>할인 적용 시작일</span><input id="discount-start-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 시작일 제한이 없습니다.</small></label>' +
       '<label><span>할인 적용 종료일</span><input id="discount-end-date" type="date"><small class="field-help">이용일 기준입니다. 비워두면 종료일 제한이 없습니다.</small></label>' +
-      '<fieldset class="field-wide"><legend>적용 프로그램</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
+      '<fieldset class="field-wide" aria-required="true"><legend>적용 프로그램 *</legend><label class="policy-toggle"><input id="discount-all-programs" type="checkbox"><span><strong>모든 프로그램에 적용</strong><small>체크하지 않으면 아래에서 적용할 프로그램을 선택합니다.</small></span></label><div id="discount-program-options" class="discount-program-options"></div></fieldset>' +
       '<label class="policy-toggle field-wide"><input id="discount-active" type="checkbox" checked><span><strong>할인 활성화</strong><small>활성화한 할인만 신규 예약에 적용됩니다. 기존 예약의 할인 금액은 변경되지 않습니다.</small></span></label>';
   }
   function prepareProgramGuidanceFields() {
@@ -1350,7 +1350,7 @@
 
   function updateDiscountConstraintFields() {
     var isPercent = byId("discount-type").value === "percent";
-    byId("discount-value-label").textContent = isPercent ? "할인율" : "할인 금액";
+    byId("discount-value-label").textContent = isPercent ? "할인율 *" : "할인 금액 *";
     byId("discount-value-unit").textContent = isPercent ? "%" : "원";
     byId("discount-value").max = isPercent ? "100" : "";
     if (Number(byId("discount-max-qty").value) < 1) {

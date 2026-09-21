@@ -534,8 +534,11 @@ test('opening another program resets date, session, headcount and discount optio
   assert.equal(state.qty, 1);
   assert.equal(state.discount, false);
   assert.equal(elements.get('product-title').textContent, '포니랑 놀기');
+  assert.equal(elements.get('product-subtitle').textContent, programs.play.noticeText, 'The summary shows only the latest administrator notice');
   assert.equal(elements.get('product-unit-price').textContent, '4000원');
   assert.equal(elements.get('date-picker').open, false);
+  runtime.selectProgram('ride');
+  assert.equal(elements.get('product-subtitle').textContent, '', 'Removing the administrator notice removes the summary copy');
 });
 
 test('slot refresh requires explicit selection and keeps it while capacity remains', () => {

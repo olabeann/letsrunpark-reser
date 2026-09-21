@@ -1326,7 +1326,7 @@
     byId("booking-page-title").textContent = "체험 예약";
     byId("booking-page-description").textContent = "원하는 체험과 이용 일정을 선택해 예약해보세요.";
     byId("product-title").textContent = program.name;
-    byId("product-subtitle").textContent = program.subtitle;
+    byId("product-subtitle").textContent = program.noticeText || "";
     byId("product-unit-price").textContent = money(program.price);
     byId("booking-review-image").src = program.image;
     byId("booking-review-image").alt = program.name + " 체험 현장";
@@ -1622,9 +1622,8 @@
         button.setAttribute("aria-pressed", String(selected));
       });
     }
-    var notice = program.noticeText || "";
     var noticeEl = byId("product-notice");
-    if (noticeEl) { noticeEl.textContent = notice; noticeEl.hidden = !notice || notice === program.subtitle; }
+    if (noticeEl) { noticeEl.textContent = ""; noticeEl.hidden = true; }
     document.querySelectorAll("#cart-program-links [data-program-key]").forEach(function (link) {
       var key = link.getAttribute("data-program-key");
       if (!programs[key] || !programs[key].userBookable) { link.remove(); return; }
