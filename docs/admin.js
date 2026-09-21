@@ -207,6 +207,8 @@
     toast.textContent = message; toast.classList.add("is-on"); clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.classList.remove("is-on"); }, 3200);
   }
+  var programCreatedToastKey = "letsrunProgramCreatedToast";
+  var programCreatedToastMessage = "프로그램이 등록되었습니다. 예약 가능한 회차를 등록해 주세요.";
 
   function loadSavedDemoState() {
     try {
@@ -1081,7 +1083,8 @@
     var isNewProgram = !existing;
     persistProgram(program); activeProgramKey = program.key;
     if (isNewProgram) {
-      notify(programName + " 프로그램을 저장했습니다. 회차를 등록해주세요.");
+      try { sessionStorage.setItem(programCreatedToastKey, program.key); }
+      catch (error) { notify(programCreatedToastMessage); }
       openSessionManager(program.key);
     } else {
       notify(programName + " 프로그램을 저장했습니다.");
@@ -1965,6 +1968,12 @@
     } else if (view === "program-sessions") {
       if (!programCatalog().some(function (item) { return item.key === programKey; })) { window.location.replace(adminViewUrl("programs").href); return; }
       openSessionManager(programKey);
+      try {
+        if (sessionStorage.getItem(programCreatedToastKey) === programKey) {
+          sessionStorage.removeItem(programCreatedToastKey);
+          notify(programCreatedToastMessage);
+        }
+      } catch (error) { /* Storage may be unavailable in private browsing. */ }
     } else showView(view, { navigate: false });
   }
   restoreAdminRoute();

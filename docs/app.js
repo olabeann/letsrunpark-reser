@@ -334,7 +334,7 @@
     now = now || new Date();
     var start = programData.visibleStartAt ? new Date(programData.visibleStartAt) : null;
     var end = programData.visibleEndAt ? new Date(programData.visibleEndAt) : null;
-    return programData.active !== false && (!start || Number.isNaN(start.getTime()) || now >= start) && (!end || Number.isNaN(end.getTime()) || now <= end);
+    return programData.active !== false && Array.isArray(programData.slots) && programData.slots.some(function (slot) { return !slot.disabled; }) && (!start || Number.isNaN(start.getTime()) || now >= start) && (!end || Number.isNaN(end.getTime()) || now <= end);
   }
 
   function programOperatesOn(programData, key, weekday) {
