@@ -381,6 +381,7 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .session-editor {margin-top:18px;padding:18px;border:1px solid #c8d9fa;border-radius:10px;background:#f7faff}
 .session-list>.session-editor {margin:0 0 4px}
 .session-editor-head {display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.session-editor-head h3 {margin:0;font-size:15px}
+.session-editor-actions {display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 .session-form-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .session-form-grid>label>span {display:block;margin-bottom:6px;color:#70777f;font-size:11px;font-weight:700}
 .session-form-grid input {width:100%;height:40px;border:1px solid #dbe0e5;border-radius:7px;background:#fff;padding:0 10px;font-size:13px}
