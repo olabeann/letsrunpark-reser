@@ -560,6 +560,17 @@ test('slot refresh requires explicit selection and keeps it while capacity remai
   state.time = '10:00~10:20';
   runtime.renderSlots();
   assert.equal(state.time, '10:00~10:20', 'An overlapping choice remains available when seats remain');
+  runtime.program = {
+    ...programs.ride,
+    slots: [
+      { time: '10:00~10:20', capacity: 8, disabled: true, hidden: true },
+      { time: '10:20~10:45', capacity: 8 },
+    ],
+  };
+  runtime.renderSlots();
+  assert.equal(state.time, '', 'A session hidden by an administrator cannot remain selected');
+  assert.doesNotMatch(elements['booking-slots'].innerHTML, /10:00~10:20/, 'Hidden sessions are absent from booking choices');
+  assert.match(elements['booking-slots'].innerHTML, /10:20~10:45/, 'Visible sessions remain available');
 });
 
 test('same-session selection limits the added headcount to the remaining daily allowance', () => {

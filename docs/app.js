@@ -251,15 +251,17 @@
         var sessionOverrides = catalog && catalog.sessionOverrides || {};
         var configuredSlots = base.slots.map(function (slot, index) {
           var configured = sessionOverrides[key + "-session-" + index] || {};
+          var hasActiveOverride = configured.active !== undefined;
           return Object.assign({}, slot, {
             key: key + "-session-" + index,
             time: configured.start && configured.end ? configured.start + "~" + configured.end : slot.time,
             capacity: Number.isFinite(configured.capacity) ? configured.capacity : slot.capacity,
-            disabled: configured.deleted || (configured.active === undefined ? !!slot.disabled : configured.active === false)
+            disabled: configured.deleted || (hasActiveOverride ? configured.active === false : !!slot.disabled),
+            hidden: !configured.deleted && hasActiveOverride && configured.active === false
           });
         }).filter(function (slot, index) { return !(sessionOverrides[key + "-session-" + index] || {}).deleted; });
         (catalog && catalog.addedSessions || []).filter(function (session) { return session.programKey === key && !session.deleted; }).forEach(function (session) {
-          configuredSlots.push({ key: session.key, time: session.start + "~" + session.end, capacity: session.capacity, disabled: session.active === false });
+          configuredSlots.push({ key: session.key, time: session.start + "~" + session.end, capacity: session.capacity, disabled: session.active === false, hidden: session.active === false });
         });
         configuredSlots.sort(function (a, b) { return a.time.localeCompare(b.time); });
         programs[key].slots = configuredSlots.map(function (slot, index) {
@@ -1270,6 +1272,7 @@
       state.time = "";
     }
     byId("booking-slots").innerHTML = program.slots.map(function (slot, index) {
+      if (slot.hidden) return "";
       var remaining = slotRemainingCapacity(slot);
       var soldOut = remaining < 1;
       var operationClosed = !!slotOperationException(slot);
