@@ -1275,10 +1275,15 @@
 
   function renderSessionList() {
     var list = byId("session-list"); if (!list || !sessionProgramKey) return;
+    setEmptySessionRegistrationMode(false);
     var editor = byId("session-editor");
     if (editor.parentElement === list) list.after(editor);
     var sessions = sessionsForProgram(sessionProgramKey); list.replaceChildren();
-    if (!sessions.length) { list.innerHTML = '<div class="session-empty"><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 시작·종료 시간과 판매 수량을 추가하세요.</small></div>'; return; }
+    if (!sessions.length) {
+      list.innerHTML = '<div class="session-empty"><span class="session-empty__icon" aria-hidden="true">＋</span><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 운영 시간과 판매 수량을 추가해 주세요.</small><button class="admin-button admin-button--primary session-empty__action" type="button">회차 등록</button></div>';
+      list.querySelector(".session-empty__action").addEventListener("click", function () { editSession(null); });
+      return;
+    }
     sessions.forEach(function (session, index) {
       var row = document.createElement("article");
       row.className = "session-row";
@@ -1304,6 +1309,14 @@
     });
   }
 
+  function setEmptySessionRegistrationMode(enabled) {
+    var list = byId("session-list");
+    var manager = list && list.closest(".session-manager");
+    var head = manager && manager.querySelector(".session-list-head");
+    if (list) list.hidden = enabled;
+    if (head) head.hidden = enabled;
+  }
+
   function editSession(session, row) {
     activeSessionKey = session ? session.key : null;
     var sessionIndex = session ? sessionsForProgram(sessionProgramKey).findIndex(function (item) { return item.key === session.key; }) + 1 : 0;
@@ -1314,6 +1327,7 @@
     byId("session-active").checked = session ? session.active : true;
     var editor = byId("session-editor");
     editor.hidden = false;
+    setEmptySessionRegistrationMode(!session && !sessionsForProgram(sessionProgramKey).length);
     if (row) row.after(editor); else byId("session-list").after(editor);
     byId("session-start").focus();
   }
@@ -1884,7 +1898,7 @@
   byId("program-edit-back").addEventListener("click", function () { pendingDiscountAdditions = []; pendingDiscountRemovals = []; showView("programs"); });
   byId("program-sessions-back").addEventListener("click", function () { showView("programs"); });
   byId("add-session").addEventListener("click", function () { editSession(null); });
-  byId("cancel-session-edit").addEventListener("click", function () { byId("session-editor").hidden = true; activeSessionKey = null; });
+  byId("cancel-session-edit").addEventListener("click", function () { byId("session-editor").hidden = true; activeSessionKey = null; renderSessionList(); });
   byId("save-session").addEventListener("click", saveSession);
   document.querySelectorAll('input[name="operation-closure-mode"]').forEach(function (input) { input.addEventListener("change", updateOperationClosureMessage); });
   byId("confirm-operation-closure").addEventListener("click", confirmOperationClosure);
