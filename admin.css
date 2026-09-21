@@ -47,6 +47,7 @@
 @media(max-width:997px){.developer-policy-body{padding:14px}.developer-policy-tabs{padding:10px 14px}.policy-flow-list{grid-template-columns:1fr}.developer-policy-dialog>form>header,.developer-policy-dialog footer{padding:16px}.developer-policy-dialog footer>span{display:none}}
 @media(max-width:560px){.developer-policy-tabs button{grid-template-columns:34px 1fr;padding:0 10px}.developer-policy-tabs button small{display:none}.developer-policy-tabs span{font-size:10px}.developer-policy-dialog>form>header h2{font-size:20px}.developer-policy-dialog>form>header p{display:none}.policy-rule{grid-template-columns:1fr;gap:4px}.policy-rule dd{font-size:10px}}
 #detail-image-preview{width:100%;max-width:220px;height:120px;object-fit:cover;border-radius:9px;margin-top:10px;border:1px solid var(--admin-line)}
+#detail-image-preview{object-fit:contain;background:#fff}
 .detail-image-field input[type="file"]{display:flex;align-items:center;padding-block:0;line-height:40px}
 .detail-discount-options>article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--admin-line);border-radius:8px;background:#fff}
 .detail-discount-options>article strong,.detail-discount-options>article small{display:block}
@@ -63,3 +64,5 @@
 .program-guidance-editor{grid-column:1/-1;margin:0;padding:18px;border:1px solid var(--admin-line);border-radius:10px;background:#fafbfa}.program-guidance-title{margin:0 0 4px;font-size:14px;font-weight:800;line-height:1.2;color:var(--admin-ink)}.program-guidance-intro{margin:0 0 16px;color:var(--admin-muted);font-size:10px;line-height:1.5}.program-guidance-content{display:block}.program-guidance-content textarea{display:block;width:100%;min-height:164px;padding:13px 14px;border:1px solid var(--admin-line);border-radius:9px;background:#fff;color:var(--admin-ink);font:inherit;font-size:10px;line-height:1.65;resize:vertical}.program-guidance-content textarea:focus{outline:2px solid rgba(37,99,235,.16);border-color:#3b82f6}
 
 .holiday-settlement-example{margin:-8px 0 20px;font-size:12px;line-height:1.6}.holiday-settlement-example a{color:var(--admin-green);text-decoration:underline}.holiday-settlement-example p{margin:6px 0 0;color:var(--admin-muted)}
+
+.table-program img{object-fit:contain;background:#fff}
