@@ -499,11 +499,13 @@ td small {font-size:11px}
 .admin-view[data-view="program-edit"] .availability-grid,
 .admin-view[data-view="program-edit"] .booking-rule-grid,
 .admin-view[data-view="program-edit"] .booking-date-grid {grid-template-columns:repeat(2,minmax(260px,400px));justify-content:start;gap:16px 20px}
-.admin-view[data-view="program-edit"] .field-wide>.input-suffix {max-width:320px}
+.admin-view[data-view="program-edit"] .field-wide>.input-suffix {position:relative;display:block;max-width:320px}
 .admin-view[data-view="program-edit"] .purchase-limit-setting>label,.admin-view[data-view="program-edit"] .booking-sale-setting>label,.admin-view[data-view="program-edit"] .arrival-setting>label {display:block}
 .admin-view[data-view="program-edit"] .purchase-limit-setting .input-suffix,.admin-view[data-view="program-edit"] .booking-sale-setting .input-suffix,.admin-view[data-view="program-edit"] .arrival-setting .input-suffix {position:relative;display:block;width:min(100%,320px)}
 .admin-view[data-view="program-edit"] .purchase-limit-setting .input-suffix>input,.admin-view[data-view="program-edit"] .booking-sale-setting .input-suffix>input,.admin-view[data-view="program-edit"] .arrival-setting .input-suffix>input {padding-right:42px}
 .admin-view[data-view="program-edit"] .purchase-limit-setting .input-suffix>span,.admin-view[data-view="program-edit"] .booking-sale-setting .input-suffix>span,.admin-view[data-view="program-edit"] .arrival-setting .input-suffix>span {position:absolute;top:50%;right:14px;z-index:1;margin:0;transform:translateY(-50%);color:#747a81;font-size:11px;font-weight:700;line-height:1;pointer-events:none}
+.admin-view[data-view="program-edit"] .field-wide>.input-suffix>input[type="number"] {padding-right:24px}
+.admin-view[data-view="program-edit"] .field-wide>.input-suffix>span {position:absolute;top:50%;right:10px;z-index:1;margin:0;transform:translateY(-50%);color:#747a81;font-size:11px;font-weight:700;line-height:1;pointer-events:none}
 .admin-view[data-view="program-edit"] .cancel-offset-control {width:max-content;max-width:100%;grid-template-columns:max-content 92px 112px max-content;gap:8px}
 .admin-view[data-view="program-edit"] .detail-discount-options {max-width:820px}
 .admin-view[data-view="program-edit"] .detail-discount-options>label {padding:11px 0;border:0;border-bottom:1px solid #e3e8ed;border-radius:0;background:transparent}
