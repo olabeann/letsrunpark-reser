@@ -248,6 +248,9 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .row-actions {display:flex;align-items:center;gap:6px;white-space:nowrap}
 .reservation-table td.empty-table{display:table-cell!important;width:auto!important;height:132px;padding:42px!important;text-align:center!important;vertical-align:middle;color:#78847e}
 .empty-table strong,.empty-table small{display:block}.empty-table strong{color:var(--admin-ink);font-size:14px}.empty-table small{margin-top:7px;font-size:12px}
+.discount-empty-steps{counter-reset:discount-step;display:grid;gap:8px;width:100%;margin:16px 0 0;padding:0;list-style:none;text-align:left;color:#3f4852;font-size:12px;line-height:1.45}
+.discount-empty-steps li{counter-increment:discount-step;display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:9px;font-weight:600}
+.discount-empty-steps li::before{content:counter(discount-step);display:grid;width:24px;height:24px;place-items:center;border-radius:50%;background:#e8f0ff;color:var(--admin-blue);font-size:11px;font-weight:800}
 .kiosk-dialog {width:min(760px,calc(100vw - 32px));padding:0;border:1px solid #dfe3e7;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
 .kiosk-dialog::backdrop {background:rgba(24,28,33,.42)}
 .kiosk-dialog header {display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e7e9ec}
@@ -348,6 +351,9 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 #discount-picker-dialog .field-help {margin:0 0 12px}
 #discount-picker-dialog .detail-discount-options {gap:6px}
 #discount-picker-dialog .detail-discount-options>label {padding:10px 12px;margin-top:0}
+#discount-picker-dialog .empty-table{width:100%;padding:20px;border-radius:10px;background:#f5f7fa;text-align:left;color:#737b84}
+#discount-picker-dialog .empty-table strong{font-size:15px;line-height:1.4}
+#discount-picker-dialog .empty-table small{margin-top:5px;font-size:11px;line-height:1.5}
 .detail-discount-options>label {display:flex;align-items:flex-start;gap:8px;padding:11px;border:1px solid #dfe3e7;border-radius:8px}
 .detail-discount-options input {width:15px;height:15px;accent-color:#1769ff}
 .detail-discount-options strong,.detail-discount-options small {display:block}

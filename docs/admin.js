@@ -86,11 +86,7 @@
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
   var defaultArrivalLeadMinutes = 20;
-  var additionalSampleDiscount = { id: "multi-child", name: "다자녀 가족 할인", type: "percent", value: 20, maxQty: 1, noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true };
-  var discountPolicies = [
-    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true },
-    Object.assign({}, additionalSampleDiscount)
-  ];
+  var discountPolicies = [];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
 
   var demoReservations = [
@@ -128,8 +124,8 @@
   };
 
   var programs = {
-    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.", requiresGuidanceConfirmation: false, discountIds: ["gwacheon", "multi-child"], active: true },
-    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 연령 제한 없이 누구나 이용할 수 있습니다.\n[체험 방법] 포니 빗질하기, 꾸며주기, 산책하기 순서로 진행됩니다.\n[준비 사항] 어린이는 보호자와 함께 방문해주세요.", requiresGuidanceConfirmation: false, discountIds: ["gwacheon", "multi-child"], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
+    ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.", requiresGuidanceConfirmation: false, discountIds: [], active: true },
+    play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg", location: "서울", department: "공원화사업추진TF", programType: "승마체험", settlementTag: "SEOUL-PARK-TF", purchaseGroup: "SEOUL-PONY", conflictGroup: "SEOUL-PONY", bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: "minutes", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], guidanceText: "[이용 대상] 연령 제한 없이 누구나 이용할 수 있습니다.\n[체험 방법] 포니 빗질하기, 꾸며주기, 산책하기 순서로 진행됩니다.\n[준비 사항] 어린이는 보호자와 함께 방문해주세요.", requiresGuidanceConfirmation: false, discountIds: [], noticeText: "포니의 건강을 위해 먹이주기는 진행하지 않습니다.", active: true }
   };
 
   function byId(id) { return document.getElementById(id); }
@@ -220,8 +216,7 @@
           if (target && Array.isArray(saved.tickets)) { target.tickets = saved.tickets.map(function (ticket) { return ticket === "review" ? "cancelled" : ticket; }); target.status = saved.status === "환불 확인" || saved.status === "취소 처리 중" ? "취소 완료" : saved.status; target.paymentStatus = saved.status === "환불 확인" || saved.status === "취소 처리 중" ? "전액 환불 완료" : saved.paymentStatus || target.paymentStatus; if (Array.isArray(saved.cancellationEvents)) target.cancellationEvents = saved.cancellationEvents; }
         });
       }
-      if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
-      if (!discountPolicies.some(function (discount) { return discount.id === additionalSampleDiscount.id; })) discountPolicies.push(Object.assign({}, additionalSampleDiscount));
+      if (Array.isArray(state.discountsV2)) discountPolicies = state.discountsV2;
       discountPolicies = discountPolicies.map(function (discount) {
         var policy = Object.assign({ maxQty: 1, noticeText: "", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
         delete policy.maxAmount;
@@ -238,7 +233,7 @@
   }
 
   function saveDemoState() {
-    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, paymentStatus: item.paymentStatus || "결제 완료", tickets: item.tickets, cancellationEvents: item.cancellationEvents || [] }; }), discounts: discountPolicies, catalog: catalogState, operationExceptions: operationExceptions })); }
+    try { localStorage.setItem(adminStateKey, JSON.stringify({ reservations: demoReservations.map(function (item) { return { id: item.id, status: item.status, paymentStatus: item.paymentStatus || "결제 완료", tickets: item.tickets, cancellationEvents: item.cancellationEvents || [] }; }), discountsV2: discountPolicies, catalog: catalogState, operationExceptions: operationExceptions })); }
     catch (error) { notify("변경사항을 이 브라우저에 저장하지 못했습니다."); }
   }
 
@@ -936,8 +931,18 @@
     var connectedIds = effectiveConnectedDiscounts(program).map(function (discount) { return discount.id; });
     var candidates = visibleDiscountPolicies().filter(function (discount) { return discount.active && !connectedIds.includes(discount.id); });
     var list = byId("discount-picker-list"); list.replaceChildren();
+    var applyButton = byId("apply-discount-picker");
+    var pickerIntro = document.querySelector("#discount-picker-dialog .field-help");
+    applyButton.textContent = "선택한 할인 추가";
+    pickerIntro.hidden = !candidates.length;
     if (!candidates.length) {
-      list.innerHTML = '<p class="empty-table"><strong>추가할 수 있는 할인이 없습니다.</strong><small>할인 관리에서 새 할인을 먼저 등록해주세요.</small></p>';
+      if (!activeProgramKey) {
+        list.innerHTML = '<div class="empty-table"><strong>현재 등록된 할인이 없습니다.</strong><small>아래 순서로 진행해 주세요.</small><ol class="discount-empty-steps"><li>현재 프로그램 등록을 완료합니다.</li><li>할인 관리에서 새 할인을 등록합니다.</li><li>프로그램 수정 화면에서 등록한 할인을 연결합니다.</li></ol></div>';
+        applyButton.textContent = "프로그램 등록 계속하기";
+      } else {
+        list.innerHTML = '<p class="empty-table"><strong>추가할 수 있는 할인이 없습니다.</strong><small>할인 관리에서 새 할인을 등록한 뒤, 프로그램 수정 화면에서 연결할 수 있습니다.</small></p>';
+        applyButton.textContent = "확인";
+      }
     } else {
       candidates.forEach(function (discount) {
         var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
