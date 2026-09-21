@@ -136,5 +136,8 @@
 @media(max-width:600px){.site-footer{padding:0 0 28px;font-size:12px}.site-footer__inner{padding-top:28px}.site-footer__info{grid-template-columns:1fr;gap:24px}.site-footer__bottom{margin-top:28px;align-items:flex-start;gap:20px}.site-footer__copyright{font-size:11px}}
 
 /* Keep the full program image visible at every card size. */
+.shop-product-photo{aspect-ratio:2;background:#fff}
+.shop-product-photo img{object-fit:contain;background:#fff}
+.shop-product-card:hover .shop-product-photo img{transform:none}
 .booking-review__media{background:#fff}
 .booking-review__media img,.cart-item__image{object-fit:contain;background:#fff}
