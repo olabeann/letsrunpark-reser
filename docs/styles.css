@@ -135,9 +135,9 @@
 @media(max-width:1100px){.site-footer__info{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}.site-footer .site-footer__copyright{margin-left:0}}
 @media(max-width:600px){.site-footer{padding:0 0 28px;font-size:12px}.site-footer__inner{padding-top:28px}.site-footer__info{grid-template-columns:1fr;gap:24px}.site-footer__bottom{margin-top:28px;align-items:flex-start;gap:20px}.site-footer__copyright{font-size:11px}}
 
-/* Keep the full program image visible at every card size. */
-.shop-product-photo{aspect-ratio:2;background:#fff}
-.shop-product-photo img{object-fit:contain;background:#fff}
-.shop-product-card:hover .shop-product-photo img{transform:none}
-.booking-review__media{background:#fff}
-.booking-review__media img,.cart-item__image{object-fit:contain;background:#fff}
+/* Use the recommended 2:1 crop consistently for program thumbnails and summaries. */
+.shop-product-photo{aspect-ratio:2}
+.shop-product-photo img{object-fit:cover}
+.booking-review__media{height:auto;aspect-ratio:2}
+.booking-review__media img{object-fit:cover}
+.cart-item__image{height:auto;aspect-ratio:2;object-fit:cover}
