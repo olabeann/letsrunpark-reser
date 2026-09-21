@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>티켓 상세 | 렛츠런파크</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260916-ticket-proof22"><link rel="stylesheet" href="styles.css?v=20260921-image2x1">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260916-ticket-proof22"><link rel="stylesheet" href="styles.css?v=20260921-image2x1"><link rel="stylesheet" href="empty-state-icons.css?v=20260922-1">
 </head>
 <body data-page="booking" data-screen="ticket" class="shop-page">
   <header class="reservation-header shop-header">
@@ -48,7 +48,7 @@
     </section>
     <section class="booking-stage" data-booking-step="4" aria-labelledby="cart-title">
       <div class="shop-container shop-cart-wrap"><div class="shop-page-heading"><h1 id="cart-title">장바구니 <span id="cart-count">0</span></h1><button class="text-button" type="button" data-shop-home>예약 옵션으로 →</button></div>
-        <div class="shop-cart-layout"><div class="shop-cart-content"><div class="shop-cart-empty" id="cart-empty"><span aria-hidden="true">＋</span><h2>장바구니가 비어 있어요</h2><p id="cart-empty-message">마음에 드는 체험을 담아보세요.</p></div><div id="cart-items" class="shop-cart-items"></div><nav class="cart-program-links" id="cart-program-links" aria-label="다른 체험 추가"><span>다른 체험 추가</span><a href="booking.html?product=ride" id="cart-add-ride" data-program-key="ride">포니 타기</a><a href="booking.html?product=play" id="cart-add-play" data-program-key="play">포니랑 놀기</a></nav><p id="cart-page-error" class="cart-error" role="alert" hidden></p><div class="cart-notice"><b>예약 전 확인해주세요</b><p>같은 이용일·지역·담당부서의 프로그램을 함께 담을 수 있습니다. 프로그램별 구매 한도는 기존 유효 예약과 장바구니 수량을 합산합니다. 다른 프로그램의 시간이 겹치면 함께 예약할 수 없습니다.</p><p>장바구니에 담는 것만으로 예약이 확정되지는 않습니다.</p></div></div>
+        <div class="shop-cart-layout"><div class="shop-cart-content"><div class="shop-cart-empty" id="cart-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-cart.svg" alt=""></span><h2>장바구니가 비어 있어요</h2><p id="cart-empty-message">마음에 드는 체험을 담아보세요.</p></div><div id="cart-items" class="shop-cart-items"></div><nav class="cart-program-links" id="cart-program-links" aria-label="다른 체험 추가"><span>다른 체험 추가</span><a href="booking.html?product=ride" id="cart-add-ride" data-program-key="ride">포니 타기</a><a href="booking.html?product=play" id="cart-add-play" data-program-key="play">포니랑 놀기</a></nav><p id="cart-page-error" class="cart-error" role="alert" hidden></p><div class="cart-notice"><b>예약 전 확인해주세요</b><p>같은 이용일·지역·담당부서의 프로그램을 함께 담을 수 있습니다. 프로그램별 구매 한도는 기존 유효 예약과 장바구니 수량을 합산합니다. 다른 프로그램의 시간이 겹치면 함께 예약할 수 없습니다.</p><p>장바구니에 담는 것만으로 예약이 확정되지는 않습니다.</p></div></div>
         <aside class="cart-order-summary" aria-label="결제 예정 금액"><h2>결제 금액</h2><dl><div><dt>상품 금액</dt><dd id="cart-subtotal">0원</dd></div><div><dt>할인 금액</dt><dd id="cart-discount">0원</dd></div></dl><div class="summary-price"><span>총 결제 예정 금액</span><strong id="cart-total">0원</strong></div><button class="btn btn--cta btn--full" id="to-checkout" type="button" disabled><span id="cart-checkout-count">0</span>개 티켓 주문하기</button><small>장바구니 카드 1개당 1명의 티켓이 발급됩니다.</small></aside></div>
       </div>
     </section>

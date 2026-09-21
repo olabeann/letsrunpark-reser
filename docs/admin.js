@@ -427,7 +427,7 @@
       var row = document.createElement("tr");
       var emptyTitle = hasReservationFilters() ? "검색 결과가 없습니다." : "예약내역이 없습니다.";
       var emptyHelp = hasReservationFilters() ? "검색어나 필터 조건을 변경해 다시 확인해주세요." : "예약이 접수되면 이곳에 표시됩니다.";
-      row.innerHTML = '<td colspan="10" class="empty-table"><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
+      row.innerHTML = '<td colspan="10" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/' + (hasReservationFilters() ? 'empty-search.svg' : 'empty-reservation.svg') + '" alt=""></span><strong>' + emptyTitle + '</strong><small>' + emptyHelp + '</small></td>';
       body.append(row);
     }
     byId("reservation-count").textContent = items.length;
@@ -795,7 +795,7 @@
       }
       body.append(row);
     });
-    if (!visiblePrograms.length) body.innerHTML = '<tr><td colspan="8" class="empty-table"><strong>검색 결과가 없습니다.</strong><small>프로그램명이나 지역·부서 조건을 변경해 다시 확인해주세요.</small></td></tr>';
+    if (!visiblePrograms.length) body.innerHTML = '<tr><td colspan="8" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-search.svg" alt=""></span><strong>검색 결과가 없습니다.</strong><small>프로그램명이나 지역·부서 조건을 변경해 다시 확인해주세요.</small></td></tr>';
   }
 
   function openProductDialog(item) {
@@ -1280,7 +1280,7 @@
     if (editor.parentElement === list) list.after(editor);
     var sessions = sessionsForProgram(sessionProgramKey); list.replaceChildren();
     if (!sessions.length) {
-      list.innerHTML = '<div class="session-empty"><span class="session-empty__icon" aria-hidden="true">＋</span><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 운영 시간과 판매 수량을 추가해 주세요.</small><button class="admin-button admin-button--primary session-empty__action" type="button">회차 등록</button></div>';
+      list.innerHTML = '<div class="session-empty"><span class="session-empty__icon" aria-hidden="true"><img src="assets/icons/empty-session.svg" alt=""></span><strong>등록된 회차가 없습니다.</strong><small>회차 등록을 눌러 운영 시간과 판매 수량을 추가해 주세요.</small><button class="admin-button admin-button--primary session-empty__action" type="button">회차 등록</button></div>';
       list.querySelector(".session-empty__action").addEventListener("click", function () { editSession(null); });
       return;
     }
@@ -1578,14 +1578,14 @@
     function cells(group, v) { return '<tr><td>'+escapeHtml(group)+'</td><td>'+money(v.approved)+'<small class="settlement-summary-count">승인 '+v.approvals+'건</small></td><td>'+money(v.cancelled)+'<small class="settlement-summary-count">취소 '+v.cancels+'건</small></td><td>'+money(v.net)+'</td><td>'+money(v.fee)+'</td><td>'+money(v.payout)+'</td></tr>'; }
     var reservationGroups = SettlementLedger.groups(rows);
     byId("settlement-card-count").textContent = reservationGroups.length + "건 결제 · " + rows.length + "개 거래";
-    byId("settlement-summary-body").innerHTML = groups.length ? groups.map(function(group){return cells(group,SettlementLedger.totals(rows.filter(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program===group;})));}).join("") : '<tr><td colspan="6" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
+    byId("settlement-summary-body").innerHTML = groups.length ? groups.map(function(group){return cells(group,SettlementLedger.totals(rows.filter(function(e){var p=SettlementLedger.payment(e);return p.region+' · '+p.department+' · '+p.program===group;})));}).join("") : '<tr><td colspan="6" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-settlement.svg" alt=""></span><strong>조건에 맞는 거래가 없습니다.</strong></td></tr>';
     byId("settlement-summary-foot").innerHTML = groups.length ? cells("합계",t) : "";
     byId("settlement-detail-body").innerHTML = reservationGroups.length ? reservationGroups.map(function(group, index) {
       var totals = SettlementLedger.totals(group.events);
       var detailId = 'settlement-ledger-' + index;
       return '<tr class="settlement-ledger-row"><td><strong>' + escapeHtml(group.reservation) + '</strong><small>' + escapeHtml(group.programs.join(' · ')) + '</small></td><td>' + escapeHtml(group.serviceDates.join(' · ')) + '</td><td class="money-cell">' + money(totals.approved) + '</td><td class="money-cell' + (totals.cancelled ? ' is-negative' : '') + '">' + (totals.cancelled ? '−' + money(totals.cancelled) : '0원') + '</td><td class="money-cell settlement-net' + (totals.net < 0 ? ' is-negative' : '') + '">' + money(totals.net) + '</td><td class="money-cell">' + money(totals.fee) + '</td><td class="money-cell settlement-payout' + (totals.payout < 0 ? ' is-negative' : '') + '">' + money(totals.payout) + '</td><td>' + escapeHtml(group.payoutDates.join(' · ') || '—') + '</td><td><button type="button" class="settlement-expand" aria-expanded="false" aria-controls="' + detailId + '" aria-label="거래 ' + group.events.length + '건 펼치기"><span>거래 ' + group.events.length + '건</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></td></tr>' +
         '<tr id="' + detailId + '" class="settlement-event-detail" hidden><td colspan="9"><div class="settlement-timeline-head"><strong>승인 · 취소 거래 이력</strong><small>최신 거래순</small></div><ol class="settlement-timeline">' + group.events.map(settlementEventTimelineItem).join('') + '</ol></td></tr>';
-    }).join('') : '<tr><td colspan="9" class="empty-table">조건에 맞는 거래가 없습니다.</td></tr>';
+    }).join('') : '<tr><td colspan="9" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-settlement.svg" alt=""></span><strong>조건에 맞는 거래가 없습니다.</strong></td></tr>';
     return !invalid;
   }
 
@@ -1613,7 +1613,7 @@
     byId("settlement-transaction-body").innerHTML = rows.length ? rows.map(function (row) {
       var statusClassName = row[5] > 0 ? " is-refund" : "";
       return '<tr><td><strong>' + escapeHtml(row[0]) + '</strong></td><td><strong>' + escapeHtml(row[1]) + '</strong><small>' + escapeHtml(row[2]) + '</small></td><td>' + row[3] + '명</td><td>' + money(row[4]) + '</td><td class="negative">' + (row[5] ? '−' + money(row[5]) : '0원') + '</td><td>−' + money(row[6]) + '</td><td><strong>' + money(row[7]) + '</strong></td><td><span class="ledger-status' + statusClassName + '">' + escapeHtml(row[8]) + '</span></td></tr>';
-    }).join("") : '<tr><td colspan="8" class="empty-table">조건에 맞는 거래 내역이 없습니다.</td></tr>';
+    }).join("") : '<tr><td colspan="8" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-settlement.svg" alt=""></span><strong>조건에 맞는 거래 내역이 없습니다.</strong></td></tr>';
   }
 
   function openSettlementDrawer(programKey) {

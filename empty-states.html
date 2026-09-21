@@ -6,6 +6,7 @@
   <title>빈 화면 확인 · 렛츠런파크</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="empty-states.css?v=20260908-4">
+  <link rel="stylesheet" href="empty-state-icons.css?v=20260922-1">
 </head>
 <body>
   <header class="empty-gallery-header">
@@ -24,11 +25,12 @@
 
     <section class="empty-gallery-panel is-active" data-panel="customer">
       <header><h2>사용자 예약 화면</h2><p>장바구니에 담긴 체험이 없을 때</p></header>
+      <aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>사용자 예약 › 장바구니</dd></div><div><dt>경로</dt><dd><code>cart.html</code></dd></div><div><dt>노출 조건</dt><dd>로그인 계정의 장바구니 상품이 0개일 때</dd></div></dl></aside>
       <article class="customer-empty-screen">
         <div class="customer-empty-title"><h3>장바구니 <span>0</span></h3><span>예약 옵션으로 →</span></div>
         <div class="customer-empty-layout">
           <div class="customer-empty-main">
-            <div class="customer-empty-content"><i>＋</i><strong>장바구니가 비어 있어요</strong><p>마음에 드는 체험을 담아보세요.</p></div>
+            <div class="customer-empty-content"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-cart.svg" alt=""></span><strong>장바구니가 비어 있어요</strong><p>마음에 드는 체험을 담아보세요.</p></div>
             <nav class="customer-empty-programs" aria-label="체험 둘러보기"><span>체험 둘러보기</span><button type="button">포니 타기</button><button type="button">포니랑 놀기</button></nav>
           </div>
           <aside class="customer-empty-summary"><h3>결제 금액</h3><dl><div><dt>상품 금액</dt><dd>0원</dd></div><div><dt>할인 금액</dt><dd>0원</dd></div></dl><div class="customer-empty-total"><span>총 결제 예정 금액</span><strong>0원</strong></div><button type="button" disabled>0개 상품 주문하기</button><small>프로그램·날짜·회차별로 티켓이 발급됩니다.</small></aside>
@@ -38,10 +40,11 @@
 
     <section class="empty-gallery-panel" data-panel="customer-tickets">
       <header><h2>사용자 · 예약 티켓</h2><p>예약한 티켓이 아직 없을 때</p></header>
+      <aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>사용자 예약 › 예약 티켓</dd></div><div><dt>경로</dt><dd><code>reservations.html</code></dd></div><div><dt>노출 조건</dt><dd>로그인 계정에 표시할 유효 예약 티켓이 0개일 때</dd></div></dl></aside>
       <article class="customer-ticket-empty-screen">
         <div class="customer-ticket-empty-wrap">
           <header class="customer-ticket-empty-head"><h3>예약 티켓</h3><p>예약한 티켓을 선택하면 실시간 입장 상태를 확인할 수 있어요.</p></header>
-          <div class="customer-ticket-empty-content"><i aria-hidden="true">□</i><strong>아직 예약한 티켓이 없어요.</strong><p>예약을 완료하면 이곳에서 입장권을 확인할 수 있습니다.</p><button type="button">예약하러 가기</button></div>
+          <div class="customer-ticket-empty-content"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-ticket.svg" alt=""></span><strong>아직 예약한 티켓이 없어요.</strong><p>예약을 완료하면 이곳에서 입장권을 확인할 수 있습니다.</p><button type="button">예약하러 가기</button></div>
         </div>
       </article>
     </section>
@@ -49,32 +52,32 @@
     <section class="empty-gallery-panel" data-panel="reservation">
       <header><h2>예약·티켓 화면</h2><p>데이터 없음과 검색 결과 없음을 구분합니다.</p></header>
       <div class="empty-gallery-grid">
-        <article class="screen-card"><div class="mock-filters"><span>예약번호 검색</span><span>전체 지역</span><span>전체 상태</span></div><div class="screen-empty"><i>⌕</i><strong>검색 결과가 없습니다.</strong><p>검색어나 필터 조건을 변경해 다시 확인해주세요.</p><button class="is-secondary">검색 조건 초기화</button></div></article>
-        <article class="screen-card"><div class="screen-card__bar"><b>예약 목록</b><span>0</span></div><div class="screen-empty"><i>□</i><strong>예약내역이 없습니다.</strong><p>예약이 접수되면 이곳에 표시됩니다.</p></div></article>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 예약·티켓 › 검색 결과</dd></div><div><dt>경로</dt><dd><code>admin-reservations.html</code></dd></div><div><dt>노출 조건</dt><dd>검색어나 필터가 적용된 상태에서 조회 결과가 0건일 때</dd></div></dl></aside><article class="screen-card"><div class="mock-filters"><span>예약번호 검색</span><span>전체 지역</span><span>전체 상태</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-search.svg" alt=""></span><strong>검색 결과가 없습니다.</strong><p>검색어나 필터 조건을 변경해 다시 확인해주세요.</p><button class="is-secondary">검색 조건 초기화</button></div></article></div>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 예약·티켓 › 예약 목록</dd></div><div><dt>경로</dt><dd><code>admin-reservations.html</code></dd></div><div><dt>노출 조건</dt><dd>검색 조건 없이 전체 예약 데이터가 0건일 때</dd></div></dl></aside><article class="screen-card"><div class="screen-card__bar"><b>예약 목록</b><span>0</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-reservation.svg" alt=""></span><strong>예약내역이 없습니다.</strong><p>예약이 접수되면 이곳에 표시됩니다.</p></div></article></div>
       </div>
     </section>
 
     <section class="empty-gallery-panel" data-panel="program">
       <header><h2>프로그램·회차 화면</h2><p>최초 등록 전과 검색 결과 없음 상태</p></header>
       <div class="empty-gallery-grid">
-        <article class="screen-card"><div class="mock-filters"><span>전체 지역</span><span>프로그램명</span><span>검색</span></div><div class="screen-empty"><i>⌕</i><strong>검색 결과가 없습니다.</strong><p>프로그램명이나 지역·부서 조건을 변경해 다시 확인해주세요.</p><button class="is-secondary">검색 조건 초기화</button></div></article>
-        <article class="screen-card"><div class="screen-card__bar"><b>등록 프로그램</b><span>0</span></div><div class="screen-empty"><i>＋</i><strong>등록된 프로그램이 없습니다.</strong><p>프로그램 등록을 눌러 첫 프로그램을 추가해주세요.</p><button>프로그램 등록</button></div></article>
-        <article class="screen-card"><div class="screen-card__bar"><b>등록된 회차</b><span>0</span></div><div class="screen-empty"><i>＋</i><strong>등록된 회차가 없습니다.</strong><p>회차 등록을 눌러 운영 시간과 판매 수량을 추가해주세요.</p><button>회차 등록</button></div></article>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 프로그램·회차 › 검색 결과</dd></div><div><dt>경로</dt><dd><code>admin.html</code></dd></div><div><dt>노출 조건</dt><dd>프로그램명·지역·부서 검색 결과가 0건일 때</dd></div></dl></aside><article class="screen-card"><div class="mock-filters"><span>전체 지역</span><span>프로그램명</span><span>검색</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-search.svg" alt=""></span><strong>검색 결과가 없습니다.</strong><p>프로그램명이나 지역·부서 조건을 변경해 다시 확인해주세요.</p><button class="is-secondary">검색 조건 초기화</button></div></article></div>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 프로그램·회차 › 프로그램 목록</dd></div><div><dt>경로</dt><dd><code>admin.html</code></dd></div><div><dt>노출 조건</dt><dd>현재 계정 범위에 등록된 프로그램이 0개일 때</dd></div></dl></aside><article class="screen-card"><div class="screen-card__bar"><b>등록 프로그램</b><span>0</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-program.svg" alt=""></span><strong>등록된 프로그램이 없습니다.</strong><p>프로그램 등록을 눌러 첫 프로그램을 추가해주세요.</p><button>프로그램 등록</button></div></article></div>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 프로그램·회차 › 회차 관리</dd></div><div><dt>경로</dt><dd><code>admin-program-sessions.html?program={programKey}</code></dd></div><div><dt>노출 조건</dt><dd>선택한 프로그램에 등록된 회차가 0개일 때</dd></div></dl></aside><article class="screen-card"><div class="screen-card__bar"><b>등록된 회차</b><span>0</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-session.svg" alt=""></span><strong>등록된 회차가 없습니다.</strong><p>회차 등록을 눌러 운영 시간과 판매 수량을 추가해주세요.</p><button>회차 등록</button></div></article></div>
       </div>
     </section>
 
     <section class="empty-gallery-panel" data-panel="operation">
       <header><h2>운영·정산 화면</h2><p>정산 거래 검색 결과가 없는 경우</p></header>
       <div class="empty-gallery-grid">
-        <article class="screen-card"><div class="mock-filters"><span>예약번호·결제번호</span><span>전체 거래</span></div><div class="screen-empty"><i>⌕</i><strong>검색 결과가 없습니다.</strong><p>예약번호·결제번호 또는 거래 유형을 변경해주세요.</p></div></article>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 매출·정산 › 예약별 거래 내역</dd></div><div><dt>경로</dt><dd><code>admin-settlement.html</code></dd></div><div><dt>노출 조건</dt><dd>조회 기간·검색어·거래 유형 조건에 맞는 거래가 0건일 때</dd></div></dl></aside><article class="screen-card"><div class="mock-filters"><span>예약번호·결제번호</span><span>전체 거래</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-settlement.svg" alt=""></span><strong>검색 결과가 없습니다.</strong><p>예약번호·결제번호 또는 거래 유형을 변경해주세요.</p></div></article></div>
       </div>
     </section>
 
     <section class="empty-gallery-panel" data-panel="account">
       <header><h2>관리자 계정 화면</h2><p>부서 계정 검색 및 최초 발급 전 상태</p></header>
       <div class="empty-gallery-grid">
-        <article class="screen-card"><div class="mock-filters"><span>전체 지역</span><span>계정 검색</span></div><div class="screen-empty"><i>⌕</i><strong>검색 결과가 없습니다.</strong><p>지역이나 계정 검색어를 변경해 다시 확인해주세요.</p></div></article>
-        <article class="screen-card"><div class="screen-card__bar"><b>부서 계정</b><span>0</span></div><div class="screen-empty"><i>＋</i><strong>등록된 부서 계정이 없습니다.</strong><p>부서 계정 발급을 눌러 계정을 추가해주세요.</p><button>부서 계정 발급</button></div></article>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 계정·권한 › 계정 검색</dd></div><div><dt>경로</dt><dd><code>account-admin.html</code></dd></div><div><dt>노출 조건</dt><dd>지역 또는 계정 검색 조건에 맞는 관리자 계정이 0개일 때</dd></div></dl></aside><article class="screen-card"><div class="mock-filters"><span>전체 지역</span><span>계정 검색</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-search.svg" alt=""></span><strong>검색 결과가 없습니다.</strong><p>지역이나 계정 검색어를 변경해 다시 확인해주세요.</p></div></article></div>
+        <div class="empty-example"><aside class="implementation-location" aria-label="개발 적용 위치"><b>적용 위치</b><dl><div><dt>화면</dt><dd>관리자 › 계정·권한 › 부서 계정 목록</dd></div><div><dt>경로</dt><dd><code>account-admin.html</code></dd></div><div><dt>노출 조건</dt><dd>통합 관리자 외에 발급된 부서 관리자 계정이 0개일 때</dd></div></dl></aside><article class="screen-card"><div class="screen-card__bar"><b>부서 계정</b><span>0</span></div><div class="screen-empty"><span class="empty-state-icon" aria-hidden="true"><img src="assets/icons/empty-account.svg" alt=""></span><strong>등록된 부서 계정이 없습니다.</strong><p>부서 계정 발급을 눌러 계정을 추가해주세요.</p><button>부서 계정 발급</button></div></article></div>
       </div>
     </section>
   </main>

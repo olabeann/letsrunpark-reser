@@ -55,7 +55,7 @@
       row.querySelector(".account-edit").addEventListener("click", function () { openDialog(account); });
       body.append(row);
     });
-    if (!visible.length) body.innerHTML = '<tr><td colspan="4" class="empty-table">조건에 맞는 관리자 계정이 없습니다.</td></tr>';
+    if (!visible.length) body.innerHTML = '<tr><td colspan="4" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-account.svg" alt=""></span><strong>조건에 맞는 관리자 계정이 없습니다.</strong><small>지역이나 계정 검색어를 변경해 다시 확인해주세요.</small></td></tr>';
   }
   function refreshDepartments(location, selected) {
     var departments = location === "전체" ? ["통합 운영"] : organization[location] || [];

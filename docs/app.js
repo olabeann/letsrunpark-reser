@@ -1195,6 +1195,14 @@
     if (!ticketReservations.length) {
       var empty = document.createElement("div");
       empty.className = "ticket-list-empty";
+      var emptyIcon = document.createElement("span");
+      emptyIcon.className = "empty-state-icon";
+      emptyIcon.setAttribute("aria-hidden", "true");
+      var emptyIconImage = document.createElement("img");
+      emptyIconImage.src = "assets/icons/empty-ticket.svg";
+      emptyIconImage.alt = "";
+      emptyIcon.append(emptyIconImage);
+      empty.append(emptyIcon);
       empty.append(createTextElement("strong", "", "아직 예약한 티켓이 없어요."));
       empty.append(createTextElement("p", "", "예약을 완료하면 이곳에서 입장권을 확인할 수 있습니다."));
       var reserveButton = createTextElement("button", "btn btn--cta", "예약하러 가기");

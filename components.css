@@ -165,6 +165,8 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 .ticket-list-card__meta{margin-top:12px;font-size:var(--fs-caption);font-weight:var(--fw-bold)}
 .ticket-list-card__arrow{padding-right:8px;color:var(--ink);font-size:var(--fs-label);font-weight:var(--fw-bold);transition:transform .18s}
 .ticket-list-empty{padding:70px 24px;border:1px dashed var(--line);border-radius:var(--r-hero);background:var(--white);text-align:center}
+.ticket-list-empty .empty-state-icon{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 20px;border-radius:var(--r-full);background:var(--ground-100);color:var(--ink)}
+.ticket-list-empty .empty-state-icon img{width:30px;height:30px}
 .ticket-list-empty strong{font-size:var(--fs-body-lg)}
 .ticket-list-empty p{margin:8px 0 24px;color:var(--grey);font-size:var(--fs-label)}
 .ticket-detail-view>.back-link{margin-left:max(0px,calc((100% - 680px)/2))}
