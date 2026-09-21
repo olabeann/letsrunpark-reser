@@ -339,6 +339,8 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 .month-title button:hover:not(:disabled){border-color:var(--ink);background:var(--bg)}
 .month-title button:disabled{opacity:.28;cursor:not-allowed}
 .calendar-head span:first-child{color:var(--ink)}
+.calendar-head[hidden]{display:none}
+.calendar-no-dates{grid-column:1/-1;margin:0;padding:32px 12px;text-align:center;color:var(--grey);font-size:var(--fs-body-sm)}
 .calendar-grid .calendar-empty{height:58px}
 .calendar-grid button{border:1px solid transparent;transition:background-color .18s,border-color .18s,box-shadow .18s,transform .18s}
 .calendar-grid button:hover:not(:disabled){border-color:var(--green-400)}

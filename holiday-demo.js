@@ -25,21 +25,44 @@
       tickets: i === 0 ? ['cancelled', 'cancelled', 'confirmed', 'confirmed'] : ['confirmed', 'confirmed', 'confirmed', 'confirmed'],
       cancellationEvents: i === 0 ? [{ source: 'customer', qty: 2, amount: 10000, reason: '고객 직접 취소', createdAt: '2026-09-17 10:00' }] : [] };
   });
+  var calendarKey = 'calendar-empty-2026';
+  var calendarProgram = {
+    key: calendarKey, programKey: calendarKey, programName: '달력 빈 상태 확인', price: 5000,
+    image: 'assets/pony/cover.jpg', location: '서울', department: '공원화사업추진TF', programType: '승마체험',
+    settlementTag: 'SEOUL-PARK-TF', purchaseGroup: 'SEOUL-PONY', conflictGroup: 'SEOUL-PONY',
+    bookingWindow: 14, arrivalLeadMinutes: 20, cancelMinutes: 10, cancelOffsetValue: 10, cancelOffsetUnit: 'minutes',
+    saleStartDate: '2026-09-26', saleEndDate: '2026-10-04', saleDays: [6, 0],
+    visibleStartAt: '2026-09-21T00:00', visibleEndAt: '2026-10-04T23:59',
+    noticeText: '달력 안내 문구 검증용 · 9월은 휴장, 10월 3~4일 운영',
+    guidanceText: '', requiresGuidanceConfirmation: false, discountIds: [], active: true
+  };
+  var calendarSessions = [{ key: calendarKey + '-session-0', programKey: calendarKey, start: '10:00', end: '10:20', capacity: 8, active: true }];
+  var calendarClosure = { id: 'calendar-empty-2026-september-closure', region: '서울', programKey: calendarKey,
+    startDate: '2026-09-26', endDate: '2026-09-27', status: 'closed', reason: '달력 빈 상태 검증용 휴장' };
   root.HolidayDemo = { program: program, sessions: sessions, reservations: reservations };
   // Seed once per browser without replacing the operator's existing configuration.
   try {
-    if (localStorage.getItem('ponyChuseokSampleV1')) return;
+    var seedHoliday = !localStorage.getItem('ponyChuseokSampleV1');
+    var seedCalendar = !localStorage.getItem('ponyEmptyCalendarSampleV1');
+    if (!seedHoliday && !seedCalendar) return;
     var state = JSON.parse(localStorage.getItem('letsrunPlayAdminDemoV4') || '{}');
     var catalog = state.catalog || (state.catalog = {});
     catalog.programOverrides = catalog.programOverrides || {};
     catalog.sessionOverrides = catalog.sessionOverrides || {};
     catalog.addedPrograms = catalog.addedPrograms || [];
     catalog.addedSessions = catalog.addedSessions || [];
-    if (!catalog.addedPrograms.some(function (p) { return p.key === key; })) {
+    if (seedHoliday && !catalog.addedPrograms.some(function (p) { return p.key === key; })) {
       catalog.addedPrograms.push(program);
       sessions.forEach(function (s) { catalog.addedSessions.push(s); });
     }
+    if (seedCalendar && !catalog.addedPrograms.some(function (p) { return p.key === calendarKey; })) {
+      catalog.addedPrograms.push(calendarProgram);
+      calendarSessions.forEach(function (s) { catalog.addedSessions.push(s); });
+      state.operationExceptions = Array.isArray(state.operationExceptions) ? state.operationExceptions : [];
+      state.operationExceptions.push(calendarClosure);
+    }
     localStorage.setItem('letsrunPlayAdminDemoV4', JSON.stringify(state));
-    localStorage.setItem('ponyChuseokSampleV1', '1');
+    if (seedHoliday) localStorage.setItem('ponyChuseokSampleV1', '1');
+    if (seedCalendar) localStorage.setItem('ponyEmptyCalendarSampleV1', '1');
   } catch (error) { /* Storage availability follows the prototype's existing behavior. */ }
 })(typeof window !== 'undefined' ? window : globalThis);

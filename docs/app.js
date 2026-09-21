@@ -198,7 +198,7 @@
     play: { name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", guidanceText: programs.play.guidanceText, requiresGuidanceConfirmation: programs.play.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy), discountPolicies: programs.play.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) }
   };
   var operationExceptions = [];
-  var bookingStart, bookingEnd, calendarFirstMonth;
+  var bookingStart, bookingEnd, calendarFirstMonth, calendarMonths = [];
 
   function applyBookingWindowOverrides() {
     try {
@@ -273,7 +273,7 @@
             return discount.active !== false && included;
           }).map(function (discount) {
             var discountName = String(discount.name || "할인").replace(/\s*할인$/, "");
-            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxAmount: discount.maxAmount || 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", noticeText: discount.noticeText || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
+            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", noticeText: discount.noticeText || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
           });
           (base.discountPolicies || []).forEach(function (samplePolicy) {
             if (!programs[key].discountPolicies.some(function (policy) { return policy.id === samplePolicy.id; })) programs[key].discountPolicies.push(Object.assign({}, samplePolicy));
@@ -295,9 +295,14 @@
     bookingStart.setHours(0, 0, 0, 0);
     bookingEnd = new Date(bookingStart);
     bookingEnd.setDate(bookingEnd.getDate() + days);
-    var firstBookableDate = new Date(bookingStart);
-    while (firstBookableDate <= bookingEnd && !programOperatesOn(programs[programKey], dateKey(firstBookableDate), firstBookableDate.getDay())) firstBookableDate.setDate(firstBookableDate.getDate() + 1);
-    calendarFirstMonth = new Date(firstBookableDate.getFullYear(), firstBookableDate.getMonth(), 1);
+    calendarMonths = [];
+    for (var date = new Date(bookingStart); date <= bookingEnd; date.setDate(date.getDate() + 1)) {
+      var key = dateKey(date);
+      if (!programOperatesOn(programs[programKey], key, date.getDay()) || operationExceptionFor(key, programKey)) continue;
+      var month = new Date(date.getFullYear(), date.getMonth(), 1);
+      if (!calendarMonths.some(function (availableMonth) { return availableMonth.getTime() === month.getTime(); })) calendarMonths.push(month);
+    }
+    calendarFirstMonth = calendarMonths[0] || new Date(bookingStart.getFullYear(), bookingStart.getMonth(), 1);
   }
 
   refreshBookingWindow(initialProgramKey);
@@ -314,8 +319,9 @@
     return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
   }
 
-  function operationExceptionFor(dateKeyValue) {
-    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || itemProgram === program) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
+  function operationExceptionFor(dateKeyValue, programKey) {
+    var selectedProgramKey = programKey || program.key;
+    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === selectedProgramKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
   }
 
   function slotOperationException(slot) {
@@ -547,7 +553,6 @@
     var policy = selectedDiscountPolicy();
     if (!policy) return currentPrice() * state.qty;
     var perPersonDiscount = policy.type === "fixed" ? Number(policy.value || 0) : Math.round(currentPrice() * Number(policy.rate || 0));
-    if (policy.maxAmount) perPersonDiscount = Math.min(perPersonDiscount, policy.maxAmount);
     return Math.max(0, currentPrice() * state.qty - perPersonDiscount * selectedDiscountQty());
   };
 
@@ -1353,15 +1358,18 @@
     var grid = byId("calendar-grid");
     var windowNote = byId("booking-window-note");
     if (windowNote) windowNote.textContent = "오늘부터 " + (program.bookingWindow || 14) + "일 이내 운영일 예약 가능 · 휴장일 제외";
+    if (calendarMonths.length && !calendarMonths.some(function (availableMonth) { return availableMonth.getTime() === calendarMonth.getTime(); })) calendarMonth = new Date(calendarFirstMonth);
+    var monthIndex = calendarMonths.findIndex(function (availableMonth) { return availableMonth.getTime() === calendarMonth.getTime(); });
     var year = calendarMonth.getFullYear();
     var month = calendarMonth.getMonth();
     var firstWeekday = new Date(year, month, 1).getDay();
     var lastDate = new Date(year, month + 1, 0).getDate();
     var cells = [];
+    var hasAvailableDate = false;
 
     byId("calendar-title").textContent = year + "년 " + (month + 1) + "월";
-    byId("calendar-prev").disabled = year === calendarFirstMonth.getFullYear() && month === calendarFirstMonth.getMonth();
-    byId("calendar-next").disabled = year === bookingEnd.getFullYear() && month === bookingEnd.getMonth();
+    byId("calendar-prev").disabled = monthIndex <= 0;
+    byId("calendar-next").disabled = monthIndex < 0 || monthIndex === calendarMonths.length - 1;
 
     for (var empty = 0; empty < firstWeekday; empty += 1) {
       cells.push('<span class="calendar-empty" aria-hidden="true"></span>');
@@ -1372,6 +1380,7 @@
       var key = dateKey(date);
       var operationException = operationExceptionFor(key);
       var available = date >= bookingStart && date <= bookingEnd && programOperatesOn(program, key, date.getDay()) && !operationException;
+      if (available) hasAvailableDate = true;
       var selected = key === state.dateKey;
       var today = key === dateKey(bookingStart);
       var classNames = [];
@@ -1385,7 +1394,8 @@
       cells.push('<span class="calendar-empty" aria-hidden="true"></span>');
     }
 
-    grid.innerHTML = cells.join("");
+    grid.previousElementSibling.hidden = !hasAvailableDate;
+    grid.innerHTML = hasAvailableDate ? cells.join("") : '<p class="calendar-no-dates" role="status">이용 가능한 날짜가 없습니다.</p>';
     grid.querySelectorAll("button:not([disabled])").forEach(function (button) {
       button.addEventListener("click", function () {
         var parts = button.getAttribute("data-date-key").split("-");
@@ -1402,6 +1412,14 @@
         update();
       });
     });
+  }
+
+  function changeCalendarMonth(direction) {
+    var monthIndex = calendarMonths.findIndex(function (availableMonth) { return availableMonth.getTime() === calendarMonth.getTime(); });
+    var nextMonth = calendarMonths[monthIndex + direction];
+    if (!nextMonth) return;
+    calendarMonth = new Date(nextMonth);
+    renderCalendar();
   }
 
   function update() {
@@ -1643,12 +1661,10 @@
     syncProgramExtras();
   });
   byId("calendar-prev").addEventListener("click", function () {
-    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
-    renderCalendar();
+    changeCalendarMonth(-1);
   });
   byId("calendar-next").addEventListener("click", function () {
-    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
-    renderCalendar();
+    changeCalendarMonth(1);
   });
 
   byId("booking-quantity-discount").addEventListener("click", function (event) {

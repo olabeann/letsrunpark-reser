@@ -86,9 +86,9 @@
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
   var defaultArrivalLeadMinutes = 20;
-  var additionalSampleDiscount = { id: "multi-child", name: "다자녀 가족 할인", type: "percent", value: 20, maxAmount: 0, maxQty: 1, noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true };
+  var additionalSampleDiscount = { id: "multi-child", name: "다자녀 가족 할인", type: "percent", value: 20, maxQty: 1, noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true };
   var discountPolicies = [
-    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxAmount: 0, maxQty: 2, noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true },
+    { id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50, maxQty: 2, noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요.", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"], active: true },
     Object.assign({}, additionalSampleDiscount)
   ];
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
@@ -172,8 +172,7 @@
     if (!form) return;
     form.innerHTML = '<label><span>할인명</span><input id="discount-name" placeholder="예: 어린이 무료 할인"></label>' +
       '<label><span>할인 방식</span><select id="discount-type"><option value="percent">정률 할인 (%)</option><option value="fixed">정액 할인 (원)</option></select></label>' +
-      '<label><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
-      '<label><span>1매당 최대 할인 금액</span><span class="discount-input-suffix"><input id="discount-max-amount" type="number" min="0" step="100" value="0"><em>원</em></span><small class="field-help">정률 할인에만 적용됩니다. 0원은 상한 없음입니다.</small></label>' +
+      '<label class="field-wide"><span id="discount-value-label">할인율</span><span class="discount-input-suffix"><input id="discount-value" type="number" min="0" value="50"><em id="discount-value-unit">%</em></span></label>' +
       '<label class="field-wide"><span>할인 안내 문구</span><input id="discount-notice" type="text" maxlength="120" placeholder="예: 체험 전 증빙서류를 반드시 지참해주세요."><small class="field-help">사용자 예약 화면의 할인 항목 아래에 표시됩니다. 비워두면 노출하지 않습니다.</small></label>' +
       '<div class="discount-section-title field-wide"><strong>사용 제한</strong><small>수량 한도는 계정당 이용일마다 합산하며, 증빙은 현장에서 확인합니다.</small></div>' +
       '<label><span>최대 적용 수량</span><span class="discount-input-suffix"><input id="discount-max-qty" type="number" min="1" step="1" value="1"><em>매</em></span></label>' +
@@ -222,7 +221,9 @@
       if (Array.isArray(state.discounts) && state.discounts.length) discountPolicies = state.discounts;
       if (!discountPolicies.some(function (discount) { return discount.id === additionalSampleDiscount.id; })) discountPolicies.push(Object.assign({}, additionalSampleDiscount));
       discountPolicies = discountPolicies.map(function (discount) {
-        return Object.assign({ maxAmount: 0, maxQty: 1, noticeText: "", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
+        var policy = Object.assign({ maxQty: 1, noticeText: "", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
+        delete policy.maxAmount;
+        return policy;
       });
       if (state.catalog && typeof state.catalog === "object") {
         catalogState.programOverrides = state.catalog.programOverrides || {};
@@ -1330,13 +1331,6 @@
     byId("discount-value-label").textContent = isPercent ? "할인율" : "할인 금액";
     byId("discount-value-unit").textContent = isPercent ? "%" : "원";
     byId("discount-value").max = isPercent ? "100" : "";
-    byId("discount-max-amount").disabled = !isPercent;
-    if (!isPercent) {
-      if (Number(byId("discount-max-amount").value) > 0) byId("discount-max-amount").dataset.lastValue = byId("discount-max-amount").value;
-      byId("discount-max-amount").value = 0;
-    } else if (Number(byId("discount-max-amount").value) < 1 && byId("discount-max-amount").dataset.lastValue) {
-      byId("discount-max-amount").value = byId("discount-max-amount").dataset.lastValue;
-    }
     if (Number(byId("discount-max-qty").value) < 1) {
       byId("discount-max-qty").value = byId("discount-max-qty").dataset.lastValue || 1;
     }
@@ -1360,12 +1354,10 @@
   function editDiscountPolicy(discount) {
     var isEditable = !discount || discountEditableByAccount(discount);
     byId("discount-id").value = discount ? discount.id : "";
-    delete byId("discount-max-amount").dataset.lastValue;
     delete byId("discount-max-qty").dataset.lastValue;
     byId("discount-name").value = discount ? discount.name : "";
     byId("discount-type").value = discount ? discount.type : "percent";
     byId("discount-value").value = discount ? discount.value : 10;
-    byId("discount-max-amount").value = discount ? discount.maxAmount || 0 : 0;
     byId("discount-notice").value = discount ? discount.noticeText || "" : "";
     byId("discount-max-qty").value = discount ? discount.maxQty || 0 : 1;
     byId("discount-start-date").value = discount ? discount.startDate || "" : "";
@@ -1373,7 +1365,6 @@
     byId("discount-name").disabled = !isEditable;
     byId("discount-type").disabled = !isEditable;
     byId("discount-value").disabled = !isEditable;
-    byId("discount-max-amount").disabled = !isEditable;
     byId("discount-notice").disabled = !isEditable;
     byId("discount-max-qty").disabled = !isEditable;
     byId("discount-start-date").disabled = !isEditable;
@@ -1394,7 +1385,6 @@
     visibleDiscountPolicies().forEach(function (discount) {
       var button = document.createElement("button"); button.type = "button";
       var valueText = discount.type === "percent" ? discount.value + "%" : money(discount.value);
-      if (discount.type === "percent" && discount.maxAmount > 0) valueText += " · 1매당 최대 " + money(discount.maxAmount);
       var isEditable = discountEditableByAccount(discount);
       button.className = (byId("discount-id").value === discount.id ? "is-selected" : "") + (isEditable ? "" : " is-readonly");
       var quantityText = discount.scope === "unlimited" ? discountScopeText(discount.scope) : discountScopeText(discount.scope) + " " + discount.maxQty + "매";
@@ -1436,14 +1426,12 @@
     var id = byId("discount-id").value || "discount-" + Date.now();
     var type = byId("discount-type").value;
     var value = Number(byId("discount-value").value);
-    var maxAmount = type === "fixed" ? 0 : Number(byId("discount-max-amount").value) || 0;
     var noticeText = byId("discount-notice").value.trim();
     var scope = "day";
     var maxQty = Number(byId("discount-max-qty").value);
     var startDate = byId("discount-start-date").value;
     var endDate = byId("discount-end-date").value;
     if (!Number.isFinite(value) || value <= 0 || (type === "percent" && value > 100)) { notify(type === "percent" ? "할인율은 1~100%로 입력해주세요." : "할인 금액은 1원 이상 입력해주세요."); return; }
-    if (maxAmount < 0) { notify("최대 할인 금액은 0원 이상으로 입력해주세요."); return; }
     if (!Number.isInteger(maxQty) || maxQty < 1) { notify("최대 적용 수량은 1매 이상으로 입력해주세요."); return; }
     if (startDate && endDate && startDate > endDate) { notify("적용 종료일은 시작일보다 빠를 수 없습니다."); return; }
     var allPrograms = byId("discount-all-programs").checked;
@@ -1451,7 +1439,7 @@
     if (!allPrograms && !selectedPrograms.length) { notify("할인을 적용할 프로그램을 하나 이상 선택해주세요."); return; }
     var existing = discountPolicies.find(function (discount) { return discount.id === id; });
     var saved = {
-      id: id, name: name, type: type, value: value, maxAmount: maxAmount, maxQty: maxQty, noticeText: noticeText,
+      id: id, name: name, type: type, value: value, maxQty: maxQty, noticeText: noticeText,
       scope: scope, proof: "onsite",
       startDate: startDate, endDate: endDate, stackable: false, restoreOnCancel: existing ? existing.restoreOnCancel : true,
       allPrograms: allPrograms, programs: selectedPrograms,

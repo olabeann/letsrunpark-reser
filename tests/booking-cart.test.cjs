@@ -90,6 +90,16 @@ test('validates headcount, configured remaining places, program and discount eli
   assert.equal(discountedCard.price + regularCard.price, 15000);
 });
 
+test('percent discounts use the full rate even when an old policy stored an amount cap', () => {
+  const legacyPolicy = { ...programs.ride.discountPolicy, maxAmount: 100 };
+  const legacyPrograms = {
+    ...programs,
+    ride: { ...programs.ride, discountPolicy: legacyPolicy, discountPolicies: [legacyPolicy] },
+  };
+  const quoted = rules.quoteItem(item({ qty: 1, discount: true, discountQty: 1 }), legacyPrograms);
+  assert.equal(quoted.price, 2500);
+});
+
 test('caps each program independently and enforces per-usage-date citizen discount limits', () => {
   const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
   assert.equal(error([item({ qty: 2 }), play]), '');
@@ -229,6 +239,77 @@ function appFunction(name) {
   assert.notEqual(offset, -1, name);
   return source.slice(offset, source.indexOf('\n  }', offset) + 4);
 }
+
+test('calendar opens the first available month and explains only a fully empty booking window', () => {
+  const weekdayHead = { hidden: false };
+  const grid = { previousElementSibling: weekdayHead, innerHTML: '', querySelectorAll: () => [] };
+  const elements = {
+    'calendar-grid': grid, 'booking-window-note': {}, 'calendar-title': {},
+    'calendar-prev': {}, 'calendar-next': {},
+  };
+  const runtime = vm.createContext({
+    calendarMonth: new Date(2026, 8, 1), calendarFirstMonth: new Date(2026, 9, 1), calendarMonths: [new Date(2026, 9, 1)],
+    bookingStart: new Date(2026, 8, 21), bookingEnd: new Date(2026, 9, 5),
+    program: { bookingWindow: 14, saleDays: [0, 6] }, state: { dateKey: '' },
+    byId: id => elements[id], dateKey: date => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'),
+    operationExceptionFor: key => key.startsWith('2026-09') ? {} : null,
+    programOperatesOn: (program, key, weekday) => program.saleDays.includes(weekday),
+    formatBookingDate: date => date.toDateString(),
+  });
+  vm.runInContext(appFunction('renderCalendar'), runtime);
+  runtime.renderCalendar();
+  assert.equal(runtime.calendarMonth.getMonth(), 9);
+  assert.equal(weekdayHead.hidden, false);
+  assert.match(grid.innerHTML, /data-date-key="2026-10-03"[^>]*예약 가능/);
+  assert.doesNotMatch(grid.innerHTML, /calendar-no-dates/);
+  assert.equal(elements['calendar-prev'].disabled, true);
+  assert.equal(elements['calendar-next'].disabled, true);
+
+  runtime.calendarMonths = [];
+  runtime.calendarMonth = new Date(2026, 8, 1);
+  runtime.renderCalendar();
+  assert.equal(weekdayHead.hidden, true);
+  assert.match(grid.innerHTML, /이용 가능한 날짜가 없습니다\./);
+  assert.doesNotMatch(grid.innerHTML, /data-date-key/);
+  assert.equal(elements['calendar-prev'].disabled, true);
+  assert.equal(elements['calendar-next'].disabled, true);
+});
+
+test('booking window skips a closed month and month navigation skips gaps', () => {
+  class FixedDate extends Date {
+    constructor(...args) { super(...(args.length ? args : [2026, 8, 21])); }
+  }
+  const runtime = vm.createContext({
+    Date: FixedDate,
+    programs: { sample: { bookingWindow: 45, saleDays: [0, 6] } },
+    applyBookingWindowOverrides() {},
+    dateKey: date => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'),
+    programOperatesOn: (program, key, weekday) => program.saleDays.includes(weekday),
+    operationExceptionFor: key => key < '2026-11-01' ? {} : null,
+    renderCalendar() {},
+  });
+  vm.runInContext(appFunction('refreshBookingWindow'), runtime);
+  vm.runInContext(appFunction('changeCalendarMonth'), runtime);
+  runtime.refreshBookingWindow('sample');
+  assert.deepEqual(Array.from(runtime.calendarMonths, date => date.getMonth()), [10]);
+  assert.equal(runtime.calendarFirstMonth.getMonth(), 10);
+
+  runtime.calendarMonths = [new Date(2026, 8, 1), new Date(2026, 10, 1)];
+  runtime.calendarMonth = new Date(2026, 8, 1);
+  runtime.changeCalendarMonth(1);
+  assert.equal(runtime.calendarMonth.getMonth(), 10);
+  runtime.changeCalendarMonth(-1);
+  assert.equal(runtime.calendarMonth.getMonth(), 8);
+});
+
+test('calendar closures apply only to their own program', () => {
+  const closure = { status: 'closed', region: '서울', programKey: 'calendar-empty-2026', startDate: '2026-09-26', endDate: '2026-09-27' };
+  const runtime = vm.createContext({ operationExceptions: [closure], program: { key: 'calendar-empty-2026' } });
+  vm.runInContext(appFunction('operationExceptionFor'), runtime);
+  assert.equal(runtime.operationExceptionFor('2026-09-26'), closure);
+  runtime.program = { key: 'ride' };
+  assert.equal(runtime.operationExceptionFor('2026-09-26'), null);
+});
 
 test('booking summary shows the discount note only after a discount is selected', () => {
   const elements = {};

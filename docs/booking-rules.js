@@ -74,7 +74,6 @@
     var discountQty = item.discount ? (Number.isInteger(item.discountQty) ? item.discountQty : item.qty) : 0;
     var discountRate = item.discount && discountPolicy.type !== "fixed" ? Number(discountPolicy.rate || 0) : 0;
     var discountPerUnit = item.discount ? (discountPolicy.type === "fixed" ? Number(discountPolicy.value || 0) : Math.round(product.price * discountRate)) : 0;
-    if (discountPolicy && discountPolicy.maxAmount) discountPerUnit = Math.min(discountPerUnit, discountPolicy.maxAmount);
     if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > maxQty) throw new Error("회차별 인원과 할인 적용 수량을 확인해주세요.");
     if (!Number.isInteger(discountQty) || discountQty < 0 || discountQty > item.qty || (item.discount && discountQty !== item.qty) || (!item.discount && discountQty !== 0) || (discountPolicy && discountQty > discountPolicy.maxQty)) throw new Error("할인 카드와 할인 미적용 카드의 인원을 나누어 담아주세요.");
     return Object.assign({}, item, {
