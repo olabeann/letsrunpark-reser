@@ -58,11 +58,14 @@
   function state(e) { return e.type==='승인'?'결제 완료':balance(e)===0?'전체 취소':'부분 취소'; }
   function payment(e) { return payments.find(function(p){return p.id===e.paymentId;}); }
   function fee(e) { return e.feeAmount; }
+  function eventTime(e) { return Date.parse(e.at.replace(' ','T')+'+09:00'); }
+  function balanceAt(p, cutoff) { return p.amount+events.filter(function(e){return e.paymentId===p.id&&e.type==='취소'&&eventTime(e)<=cutoff;}).reduce(function(n,e){return n+e.amount;},0); }
   function filter(f, allowed) {
     return events.filter(function(e){
-      var p=payment(e), serviceBasis=f.basis==='service';
-      var date=serviceBasis ? (p.completedAt || '').slice(0,10) : e.at.slice(0,10);
-      if(serviceBasis && (!p.completedAt || Date.parse(p.completedAt)>Date.parse(f.asOf || new Date().toISOString()) || Date.parse(e.at.replace(' ','T')+'+09:00')>Date.parse(p.completedAt)))return false;
+      var p=payment(e), serviceBasis=f.basis==='service', cutoff=Date.parse(f.asOf || new Date().toISOString()), completedAt=p.completedAt?Date.parse(p.completedAt):NaN;
+      var completed=Number.isFinite(completedAt)&&completedAt<=cutoff, fullyCancelled=eventTime(e)<=cutoff&&balanceAt(p,cutoff)===0;
+      var date=serviceBasis ? (completed?p.completedAt.slice(0,10):p.serviceDate) : e.at.slice(0,10);
+      if(serviceBasis && ((!completed&&!fullyCancelled) || (completed&&eventTime(e)>completedAt) || (!completed&&eventTime(e)>cutoff)))return false;
       return allowed(p.region,p.department) && (!f.region || p.region===f.region) && (!f.department || p.department===f.department) && (!f.scope || p.region+' · '+p.department===f.scope) && (!f.start || date>=f.start) && (!f.end || date<=f.end) && (!f.card || p.card===f.card) && (!f.search || [p.reservation,p.program,p.card,p.method,p.easyPay,p.serviceDate].concat(e.ticketIds || []).join(' ').toLowerCase().includes(f.search.toLowerCase()));
     }).sort(function(a,b){return b.at.localeCompare(a.at);});
   }
@@ -81,23 +84,18 @@
     });
     return result;
   }
-  var ledgerHeaders=['예약번호','지역','담당부서','상품명','서비스 이용일','승인금액','취소금액','순매출','수수료','지급예정액','지급예정일','원본 거래 건수'];
-  function ledgerDetail(group){var t=totals(group.events);return [group.reservation,group.region,group.department,group.programs.join(' · '),group.serviceDates.join(' · '),t.approved,t.cancelled,t.net,t.fee,t.payout,group.payoutDates.join(' · '),group.events.length];}
+  var ledgerHeaders=['서비스 이용일','예약번호','상품명','카드사','승인금액','취소 여부','취소금액','취소 제외 매출','수수료','입금예정액','입금예정일'];
+  function reservationStatus(group){var t=totals(group.events);return t.cancelled===0?'미취소':t.net===0?'전체 취소':'부분 취소';}
+  function ledgerDetail(group){var t=totals(group.events);return [group.serviceDates.join(' · '),group.reservation,group.programs.join(' · '),Array.from(new Set(group.events.map(function(e){return payment(e).card||'';}))).join(' · '),t.approved,reservationStatus(group),t.cancelled,t.net,t.fee,t.payout,t.net===0?'':group.payoutDates.join(' · ')];}
   var historyHeaders=['예약번호','포트원 거래번호','거래일시','지역','담당부서','상품명','서비스 이용일','결제수단','카드사','거래구분','거래금액','지급예정일','취소 티켓 번호','취소사유'];
   function historyDetail(e){var p=payment(e);return [p.reservation,p.impUid||'',e.at,p.region,p.department,p.program,p.serviceDate,p.easyPay||p.method,p.card==='해당 없음'?'':p.card,e.type==='취소'?state(e):'승인',e.amount,e.type==='취소'?'':e.paidOutDate,(e.ticketIds||[]).join(', '),e.reason||''];}
   function sheets(rows,f) {
-    var t=totals(rows), productGroups=Array.from(new Set(rows.map(function(e){var p=payment(e);return p.region+' · '+p.department+' · '+p.program;}))),reservationGroups=groups(rows);
+    var t=totals(rows), reservationGroups=groups(rows);
     var legacyScope=(f.scope||'').split(' · '), selectedRegion=f.region||legacyScope[0]||'전체', selectedDepartment=f.department||legacyScope[1]||'전체';
-    var summary=[[],['조회 기간',(f.start||'전체')+' ~ '+(f.end||'전체')+(f.basis==='service'?' · 서비스 완료일 기준':' · 거래일 기준')],['지역',selectedRegion],['담당 부서',selectedDepartment],['조회 조건','카드사: '+(f.card||'전체')+' / 검색어: '+(f.search||'없음')],['생성시각',new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false})+' (한국시간)'],[],['승인금액','취소금액','순매출','수수료','지급예정액'],[t.approved,t.cancelled,t.net,t.fee,t.payout],[],['지역·부서·상품','승인건수','승인금액','취소건수','취소금액','순매출','수수료','지급예정액']];
-    productGroups.forEach(function(group){var s=totals(rows.filter(function(e){var p=payment(e);return p.region+' · '+p.department+' · '+p.program===group;}));summary.push([group,s.approvals,s.approved,s.cancels,s.cancelled,s.net,s.fee,s.payout]);});
-    var totalRow = summary.length + 1;
-    summary.push(['합계',t.approvals,t.approved,t.cancels,t.cancelled,t.net,t.fee,t.payout]);
-    summary.push([],['집계 기준',f.basis==='service'?'기간 내 서비스 완료 건의 결제액에서 완료 전 부분취소액을 차감합니다. 미이용·전액취소 건은 제외합니다.':'기간 내 승인금액에서 취소금액을 차감합니다.'],['수수료·지급예정액','PG 수수료는 거래금액의 2%입니다. 지급예정액은 순매출에서 수수료를 차감한 금액이며, 취소 수수료 조정은 음수입니다.']);
-    return [
-      {name:'매출 요약',rows:summary,layout:{widths:[39,15,16,15,20,17,17,20],tableRanges:[{startRow:8,endRow:9,startCol:0,endCol:4},{startRow:11,endRow:totalRow,startCol:0,endCol:7}],headerRows:[8,11],totalRows:[totalRow],accentHeaderRows:[8],totalAccentCol:5,freezeRows:11,merges:['B2:H2','B3:H3','B4:H4','B5:H5','B6:H6','B'+(totalRow+2)+':H'+(totalRow+2),'B'+(totalRow+3)+':H'+(totalRow+3)],noteRows:[totalRow+2,totalRow+3],printHeader:11}},
-      {name:'결제·정산 원장',rows:[ledgerHeaders].concat(reservationGroups.map(ledgerDetail)),layout:{widths:[24,12,26,20,18,17,17,17,17,19,17,15],tableRanges:[{startRow:1,endRow:reservationGroups.length+1,startCol:0,endCol:11}],headerRows:[1],freezeRows:1,freezeCols:1,filter:true,amountCols:[5,6,7,8,9],printHeader:1}},
-      {name:'거래 이력',rows:[historyHeaders].concat(rows.map(historyDetail)),layout:{widths:[24,24,23,12,26,20,18,16,16,15,17,17,34,28],tableRanges:[{startRow:1,endRow:rows.length+1,startCol:0,endCol:13}],headerRows:[1],freezeRows:1,freezeCols:1,filter:true,amountCols:[10],statusCol:9,printHeader:1}}
-    ];
+    var detailRows=reservationGroups.map(ledgerDetail), detailStart=11, detailEnd=detailStart+detailRows.length, totalRow=detailEnd+1;
+    var workbookRows=[[],['월 정산 내역'],['조회 기간',(f.start||'전체')+' ~ '+(f.end||'전체')],['지역 · 담당 부서',selectedRegion+' · '+selectedDepartment],['정산 기준',f.basis==='service'?'서비스 이용 완료일 기준. 전체취소 건은 예정 서비스 이용일 기준으로 포함합니다.':'거래일 기준'],['카드사',f.card||'전체 카드사'],['승인금액','취소금액','취소 제외 매출','수수료','입금예정액'],[t.approved,t.cancelled,t.net,t.fee,t.payout],[],[],ledgerHeaders].concat(detailRows);
+    workbookRows.push(['합계','','','',t.approved,'',t.cancelled,t.net,t.fee,t.payout,'']);
+    return [{name:'월 정산',rows:workbookRows,layout:{widths:[18,24,24,16,16,14,16,17,15,17,17],tableRanges:[{startRow:7,endRow:8,startCol:0,endCol:4},{startRow:detailStart,endRow:totalRow,startCol:0,endCol:10}],headerRows:[7,detailStart],totalRows:[totalRow],titleRow:2,noteRows:[9],freezeRows:detailStart,freezeCols:2,filter:true,filterRow:detailStart,filterEndRow:detailEnd,filterEndCol:10,statusCol:5,statusRange:{startRow:detailStart+1,endRow:detailEnd},merges:['A2:K2','B3:K3','B4:K4','B5:K5','B6:K6'],printHeader:detailStart}}];
   }
-  root.SettlementLedger={payments:payments,events:events,payment:payment,fee:fee,state:state,balance:balance,filter:filter,totals:totals,groups:groups,ledgerDetail:ledgerDetail,ledgerHeaders:ledgerHeaders,historyDetail:historyDetail,historyHeaders:historyHeaders,sheets:sheets,monthlyPayoutDate:monthlyPayoutDate,pgFeeRate:PG_FEE_RATE};
+  root.SettlementLedger={payments:payments,events:events,payment:payment,fee:fee,state:state,balance:balance,balanceAt:balanceAt,filter:filter,totals:totals,groups:groups,ledgerDetail:ledgerDetail,ledgerHeaders:ledgerHeaders,reservationStatus:reservationStatus,historyDetail:historyDetail,historyHeaders:historyHeaders,sheets:sheets,monthlyPayoutDate:monthlyPayoutDate,pgFeeRate:PG_FEE_RATE};
 })(typeof window==='undefined'?globalThis:window);
