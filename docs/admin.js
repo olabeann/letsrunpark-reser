@@ -43,16 +43,45 @@
     return !!currentAccount && (currentAccount.scope === "all" || (currentAccount.region === region && currentAccount.department === department));
   }
 
-  // Department accounts start from their own region, but may browse other departments'
-  // programs. Mutation controls remain locked by canManageDepartment.
-  function lockOperationRegionSelect() {
-    var select = byId("operation-region"); if (!select) return;
+  function regionForDepartment(department) {
+    return Object.keys(organization).find(function (region) { return organization[region].includes(department); }) || "";
+  }
+
+  // Department accounts start from their own region and department, but may browse other
+  // departments' programs. Mutation controls remain locked by canManageDepartment.
+  function refreshOperationScopeSelects(resetDepartment) {
+    var regionSelect = byId("operation-region");
+    var departmentSelect = byId("operation-department");
+    if (!regionSelect || !departmentSelect) return;
     var isDepartmentAccount = currentAccount && currentAccount.scope === "department";
-    select.disabled = false;
-    if (isDepartmentAccount && !select.dataset.scopeInitialized) {
-      select.value = currentAccount.region;
-      select.dataset.scopeInitialized = "true";
-    }
+    var isFirstScopedRender = !regionSelect.dataset.scopeInitialized;
+    if (isDepartmentAccount && isFirstScopedRender) regionSelect.value = currentAccount.region;
+    var previousDepartment = resetDepartment ? "" : departmentSelect.value;
+    departmentSelect.innerHTML = '<option value="">전체 부서</option>' + (organization[regionSelect.value] || []).map(function (department) {
+      return '<option value="' + escapeHtml(department) + '">' + escapeHtml(department) + '</option>';
+    }).join("");
+    if (isDepartmentAccount && isFirstScopedRender) departmentSelect.value = currentAccount.department;
+    else if (previousDepartment && regionForDepartment(previousDepartment) === regionSelect.value) departmentSelect.value = previousDepartment;
+    regionSelect.dataset.scopeInitialized = "true";
+    regionSelect.disabled = false;
+    departmentSelect.disabled = false;
+  }
+
+  function operationScope() {
+    var region = byId("operation-region").value;
+    var department = byId("operation-department").value;
+    return { department: department, region: region };
+  }
+
+  function programsInOperationScope() {
+    var scope = operationScope();
+    return programCatalog().filter(function (item) { return item.location === scope.region && (!scope.department || item.department === scope.department); });
+  }
+
+  function closureAppliesToProgram(closure, programItem) {
+    if (closure.programKey !== "all") return closure.programKey === programItem.key;
+    if (closure.department) return closure.department === programItem.department && (!closure.region || closure.region === programItem.location);
+    return closure.region === programItem.location;
   }
 
   // Reservations and settlement contain private operational data and are limited to the
@@ -486,15 +515,18 @@
     return programItem.active !== false && (!programItem.saleStartDate || programItem.saleStartDate <= dateKey) && (!programItem.saleEndDate || programItem.saleEndDate >= dateKey) && (programItem.saleDays || []).map(Number).includes(weekday);
   }
 
-  function closuresForDate(dateKey, region) {
-    return operationExceptions.filter(function (item) { return item.region === region && item.startDate <= dateKey && item.endDate >= dateKey; });
+  function closuresForDate(dateKey, scopedPrograms) {
+    return operationExceptions.filter(function (item) {
+      if (item.startDate > dateKey || item.endDate < dateKey) return false;
+      return scopedPrograms.some(function (programItem) { return closureAppliesToProgram(item, programItem); });
+    });
   }
 
   function renderOperationExceptions() {
     var list = byId("operation-exception-list");
     if (!list) return;
     list.replaceChildren();
-    var region = byId("operation-region").value;
+    var scopedPrograms = programsInOperationScope();
     var heading = byId("operation-exception-heading");
     if (!selectedOperationDateKey) {
       if (heading) heading.textContent = "운영 일정";
@@ -505,11 +537,11 @@
       var labelDate = new Date(selectedOperationDateKey + "T00:00:00");
       heading.textContent = "운영 일정 · " + (labelDate.getMonth() + 1) + "월 " + labelDate.getDate() + "일";
     }
-    var items = closuresForDate(selectedOperationDateKey, region).slice().reverse();
+    var items = closuresForDate(selectedOperationDateKey, scopedPrograms).slice().reverse();
     if (!items.length) { list.innerHTML = "<p>이 날 등록된 운영 예외가 없습니다.</p>"; return; }
     items.forEach(function (item) {
       var article = document.createElement("article");
-      var programName = item.programKey === "all" ? "전체 프로그램" : ((programCatalog().find(function (programItem) { return programItem.key === item.programKey; }) || {}).programName || "삭제된 프로그램");
+      var programName = item.programKey === "all" ? ((item.department || "해당 지역") + " 전체 프로그램") : ((programCatalog().find(function (programItem) { return programItem.key === item.programKey; }) || {}).programName || "삭제된 프로그램");
       var session = item.sessionKey ? sessionsForProgram(item.programKey).find(function (sessionItem) { return sessionItem.key === item.sessionKey; }) : null;
       var scopeLabel = session ? programName + " · " + session.start + "~" + session.end + " 회차" : programName;
       article.innerHTML = "<strong>휴장 · " + escapeHtml(item.startDate === item.endDate ? item.startDate : item.startDate + " ~ " + item.endDate) + "</strong><span>" + escapeHtml(scopeLabel + " · " + (item.reason || "사유 미입력")) + "</span><button type=\"button\">삭제</button>";
@@ -523,7 +555,7 @@
   }
 
   function isProgramFullyClosed(programItem, closures) {
-    if (closures.some(function (item) { return item.programKey === "all"; })) return true;
+    if (closures.some(function (item) { return item.programKey === "all" && closureAppliesToProgram(item, programItem); })) return true;
     if (closures.some(function (item) { return item.programKey === programItem.key && !item.sessionKey; })) return true;
     var activeSessions = sessionsForProgram(programItem.key).filter(function (session) { return session.active !== false; });
     return activeSessions.length > 0 && activeSessions.every(function (session) { return closures.some(function (item) { return item.programKey === programItem.key && item.sessionKey === session.key; }); });
@@ -538,16 +570,13 @@
     byId("operation-month-title").textContent = year + "년 " + (month + 1) + "월";
     var first = new Date(year, month, 1);
     var cursor = new Date(year, month, 1 - first.getDay());
-    var region = byId("operation-region").value;
-    var regionalPrograms = programCatalog().filter(function (item) { return item.location === region; });
+    var scopedPrograms = programsInOperationScope();
     for (var index = 0; index < 42; index += 1) {
       var date = new Date(cursor); date.setDate(cursor.getDate() + index);
       var key = operationDateKey(date);
-      var operatingPrograms = regionalPrograms.filter(function (item) { return programOperatesOn(item, key, date.getDay()); });
-      var closures = closuresForDate(key, region);
-      var isClosed = closures.some(function (item) { return item.programKey === "all"; });
-      var closedOperatingCount = operatingPrograms.filter(function (item) { return isProgramFullyClosed(item, closures); }).length;
-      if (operatingPrograms.length && closedOperatingCount === operatingPrograms.length) isClosed = true;
+      var operatingPrograms = scopedPrograms.filter(function (item) { return programOperatesOn(item, key, date.getDay()); });
+      var closures = closuresForDate(key, operatingPrograms);
+      var isClosed = operatingPrograms.length > 0 && operatingPrograms.every(function (item) { return isProgramFullyClosed(item, closures); });
       var isPartial = !isClosed && closures.length > 0;
       var isOperating = operatingPrograms.length > 0 && !isClosed && !isPartial;
       var button = document.createElement("button"); button.type = "button";
@@ -572,15 +601,13 @@
     var list = byId("operation-day-programs");
     var closeAllButton = byId("operation-day-close-all");
     if (!quick || !dateKey) return;
-    var region = byId("operation-region").value;
+    var scope = operationScope();
     var date = new Date(dateKey + "T00:00:00");
     var weekday = date.getDay();
     var dateLabel = (date.getMonth() + 1) + "월 " + date.getDate() + "일";
-    var regionalPrograms = programCatalog().filter(function (item) { return item.location === region; });
-    var operatingPrograms = regionalPrograms.filter(function (item) { return programOperatesOn(item, dateKey, weekday); });
-    var closures = closuresForDate(dateKey, region);
-    var allClosure = closures.find(function (item) { return item.programKey === "all"; });
-    byId("operation-day-quick-title").textContent = dateLabel + " · " + region;
+    var operatingPrograms = programsInOperationScope().filter(function (item) { return programOperatesOn(item, dateKey, weekday); });
+    var closures = closuresForDate(dateKey, operatingPrograms);
+    byId("operation-day-quick-title").textContent = dateLabel + " · " + (scope.department || "전체 부서");
     list.replaceChildren();
     if (!operatingPrograms.length) {
       byId("operation-day-quick-desc").textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
@@ -588,11 +615,10 @@
       closeAllButton.hidden = true;
       return;
     }
-    byId("operation-day-quick-desc").textContent = allClosure
-      ? "이 날은 전체 휴장으로 등록되어 있습니다" + (allClosure.reason ? " · " + allClosure.reason : "") + "."
-      : "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
+    byId("operation-day-quick-desc").textContent = "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
+      var allClosure = closures.find(function (closure) { return closure.programKey === "all" && closureAppliesToProgram(closure, item); });
       var programClosed = !!allClosure || closures.some(function (closure) { return closure.programKey === item.key && !closure.sessionKey; });
       var canManage = canManageDepartment(item.location, item.department) && (!allClosure || currentAccount.scope === "all");
       var activeSessions = sessionsForProgram(item.key).filter(function (session) { return session.active !== false; });
@@ -606,7 +632,7 @@
       headButton.type = "button";
       headButton.textContent = programClosed ? "휴장 처리됨" : "전체 휴장 처리";
       headButton.disabled = !canManage;
-      headButton.addEventListener("click", function () { toggleProgramClosureForDate(item, dateKey, region); });
+      headButton.addEventListener("click", function () { toggleProgramClosureForDate(item, dateKey, item.location); });
       head.append(headButton);
       li.append(head);
       if (activeSessions.length) {
@@ -625,7 +651,7 @@
           chip.className = "operation-session-chip" + (sessionClosed ? " is-closed" : "");
           chip.textContent = session.start + "~" + session.end;
           chip.disabled = programClosed || !canManage;
-          chip.addEventListener("click", function () { toggleSessionClosureForDate(item, session, dateKey, region); });
+          chip.addEventListener("click", function () { toggleSessionClosureForDate(item, session, dateKey, item.location); });
           grid.append(chip);
         });
         details.append(grid);
@@ -638,12 +664,12 @@
       }
       list.append(li);
     });
-    var allClosed = operatingPrograms.every(function (item) { return programFullyClosedForDate(item, dateKey, region, closures); });
-    closeAllButton.hidden = !currentAccount || currentAccount.scope !== "all";
+    var allClosed = operatingPrograms.every(function (item) { return programFullyClosedForDate(item, dateKey, item.location, closures); });
+    closeAllButton.hidden = !currentAccount || currentAccount.scope !== "all" || !scope.department;
     closeAllButton.textContent = allClosed ? "운영 재개" : "이 날 전체 휴장으로 전환";
     closeAllButton.onclick = allClosed
-      ? function () { reopenAllProgramsForDate(operatingPrograms, dateKey, region); }
-      : function () { closeAllProgramsForDate(operatingPrograms, dateKey, region); };
+      ? function () { reopenAllProgramsForDate(operatingPrograms, dateKey, scope); }
+      : function () { closeAllProgramsForDate(operatingPrograms, dateKey, scope); };
   }
 
   function removeMatchingExceptions(region, dateKey, programKey, sessionKey) {
@@ -655,16 +681,16 @@
   function toggleProgramClosureForDate(programItem, dateKey, region) {
     if (!canManageDepartment(programItem.location, programItem.department)) return;
     var existing = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && !item.sessionKey && item.startDate === dateKey && item.endDate === dateKey; });
-    var allClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey; });
+    var allClosure = operationExceptions.find(function (item) { return item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey && closureAppliesToProgram(item, programItem); });
     if (allClosure && currentAccount.scope !== "all") { notify("통합 관리자가 지정한 전체 휴장은 해제할 수 없습니다."); return; }
     if (existing || allClosure) {
       if (allClosure) {
         var date = new Date(dateKey + "T00:00:00");
-        var otherPrograms = programCatalog().filter(function (item) { return item.location === region && item.key !== programItem.key && programOperatesOn(item, dateKey, date.getDay()); });
+        var otherPrograms = programCatalog().filter(function (item) { return closureAppliesToProgram(allClosure, item) && item.key !== programItem.key && programOperatesOn(item, dateKey, date.getDay()); });
         operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
         otherPrograms.forEach(function (item) {
           sessionsForProgram(item.key).filter(function (session) { return session.active !== false; }).forEach(function (session) {
-            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + session.key, region: region, programKey: item.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + session.key, region: item.location, department: item.department, programKey: item.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
           });
         });
       } else {
@@ -675,7 +701,7 @@
     } else {
       requestOperationClosure("프로그램 휴장 확인", programItem.programName + " 전체 회차", region, dateKey, programItem, null, function () {
         removeMatchingExceptions(region, dateKey, programItem.key);
-        operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
+        operationExceptions.push({ id: "operation-" + Date.now() + "-" + programItem.key, region: region, department: programItem.department, programKey: programItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "프로그램 단위 휴장 처리" });
         saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
         notify(programItem.programName + "를 이 날만 휴장 처리했습니다.");
       });
@@ -686,23 +712,23 @@
     if (!canManageDepartment(programItem.location, programItem.department)) return;
     var existing = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && item.sessionKey === session.key && item.startDate === dateKey && item.endDate === dateKey; });
     var programClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === programItem.key && !item.sessionKey && item.startDate <= dateKey && item.endDate >= dateKey; });
-    var allClosure = operationExceptions.find(function (item) { return item.region === region && item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey; });
+    var allClosure = operationExceptions.find(function (item) { return item.programKey === "all" && item.startDate <= dateKey && item.endDate >= dateKey && closureAppliesToProgram(item, programItem); });
     if (allClosure && currentAccount.scope !== "all") { notify("통합 관리자가 지정한 전체 휴장은 해제할 수 없습니다."); return; }
     if (existing || programClosure || allClosure) {
       if (allClosure) {
         var date = new Date(dateKey + "T00:00:00");
-        var operatingPrograms = programCatalog().filter(function (item) { return item.location === region && programOperatesOn(item, dateKey, date.getDay()); });
+        var operatingPrograms = programCatalog().filter(function (item) { return closureAppliesToProgram(allClosure, item) && programOperatesOn(item, dateKey, date.getDay()); });
         operationExceptions = operationExceptions.filter(function (item) { return item.id !== allClosure.id; });
         operatingPrograms.forEach(function (item) {
           sessionsForProgram(item.key).filter(function (sessionItem) { return sessionItem.active !== false; }).forEach(function (sessionItem) {
             if (item.key === programItem.key && sessionItem.key === session.key) return;
-            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + sessionItem.key, region: region, programKey: item.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+            operationExceptions.push({ id: "operation-" + Date.now() + "-" + item.key + "-" + sessionItem.key, region: item.location, department: item.department, programKey: item.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
           });
         });
       } else if (programClosure) {
         operationExceptions = operationExceptions.filter(function (item) { return item.id !== programClosure.id; });
         sessionsForProgram(programItem.key).filter(function (item) { return item.active !== false && item.key !== session.key; }).forEach(function (sessionItem) {
-          operationExceptions.push({ id: "operation-" + Date.now() + "-" + sessionItem.key, region: region, programKey: programItem.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+          operationExceptions.push({ id: "operation-" + Date.now() + "-" + sessionItem.key, region: region, department: programItem.department, programKey: programItem.key, sessionKey: sessionItem.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
         });
       } else {
         operationExceptions = operationExceptions.filter(function (item) { return item.id !== existing.id; });
@@ -711,25 +737,26 @@
       saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
     } else {
       requestOperationClosure("회차 휴장 확인", programItem.programName + " · " + session.start + "~" + session.end, region, dateKey, programItem, session, function () {
-        operationExceptions.push({ id: "operation-" + Date.now() + "-" + session.key, region: region, programKey: programItem.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
+        operationExceptions.push({ id: "operation-" + Date.now() + "-" + session.key, region: region, department: programItem.department, programKey: programItem.key, sessionKey: session.key, startDate: dateKey, endDate: dateKey, status: "closed", reason: "회차별 휴장 처리" });
         saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey); renderOperationExceptions();
         notify(programItem.programName + " " + session.start + "~" + session.end + " 회차를 휴장 처리했습니다.");
       });
     }
   }
 
-  function closeAllProgramsForDate(operatingPrograms, dateKey, region) {
+  function closeAllProgramsForDate(operatingPrograms, dateKey, scope) {
     if (!currentAccount || currentAccount.scope !== "all") return;
-    requestOperationClosure("전체 휴장 확인", operatingPrograms.length + "개 프로그램 전체 회차", region, dateKey, null, null, function () {
-      operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey); });
-      operationExceptions.push({ id: "operation-" + Date.now() + "-all", region: region, programKey: "all", startDate: dateKey, endDate: dateKey, status: "closed", reason: "일괄 휴장 처리" });
+    requestOperationClosure("전체 휴장 확인", operatingPrograms.length + "개 프로그램 전체 회차", scope.region, dateKey, null, null, function () {
+      var programKeys = operatingPrograms.map(function (item) { return item.key; });
+      operationExceptions = operationExceptions.filter(function (item) { return !(item.startDate === dateKey && item.endDate === dateKey && (programKeys.includes(item.programKey) || (item.programKey === "all" && item.department === scope.department))); });
+      operationExceptions.push({ id: "operation-" + Date.now() + "-all", region: scope.region, department: scope.department, programKey: "all", startDate: dateKey, endDate: dateKey, status: "closed", reason: "부서 일괄 휴장 처리" });
       saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey);
       notify("이 날을 전체 휴장으로 전환했습니다.");
     });
   }
 
   function programFullyClosedForDate(programItem, dateKey, region, closures) {
-    if (closures.some(function (closure) { return closure.programKey === "all" || (closure.programKey === programItem.key && !closure.sessionKey); })) return true;
+    if (closures.some(function (closure) { return (closure.programKey === "all" && closureAppliesToProgram(closure, programItem)) || (closure.programKey === programItem.key && !closure.sessionKey); })) return true;
     var activeSessions = sessionsForProgram(programItem.key).filter(function (session) { return session.active !== false; });
     if (!activeSessions.length) return false;
     return activeSessions.every(function (session) {
@@ -737,10 +764,10 @@
     });
   }
 
-  function reopenAllProgramsForDate(operatingPrograms, dateKey, region) {
+  function reopenAllProgramsForDate(operatingPrograms, dateKey, scope) {
     if (!currentAccount || currentAccount.scope !== "all") return;
     confirmDelete("휴장을 해제하면 등록된 프로그램과 판매 중인 회차가<br>고객 예약 화면에 즉시 노출됩니다.<br>그래도 운영을 재개할까요?", function () {
-      operationExceptions = operationExceptions.filter(function (item) { return !(item.region === region && item.startDate === dateKey && item.endDate === dateKey && (item.programKey === "all" || operatingPrograms.some(function (program) { return program.key === item.programKey; }))); });
+      operationExceptions = operationExceptions.filter(function (item) { return !(item.region === scope.region && item.startDate === dateKey && item.endDate === dateKey && ((item.programKey === "all" && item.department === scope.department) || operatingPrograms.some(function (program) { return program.key === item.programKey; }))); });
       saveDemoState(); renderOperationCalendar(); renderOperationDayQuick(dateKey);
       notify("운영을 재개했습니다. 등록된 프로그램과 회차가 고객에게 노출됩니다.");
     }, "운영 재개", "운영을 재개할까요?", true);
@@ -768,7 +795,7 @@
     document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.adminView === navView); });
     document.querySelector(".admin-sidebar").classList.remove("is-open");
     if (viewName === "reservations") renderReservations();
-    if (viewName === "operations") { lockOperationRegionSelect(); renderOperationCalendar(); renderOperationExceptions(); }
+    if (viewName === "operations") { refreshOperationScopeSelects(false); renderOperationCalendar(); renderOperationExceptions(); }
     if (viewName === "settlement") { refreshSettlementScopeFilter(); renderSettlementSummary(); }
     var titles = { programs: "프로그램 · 회차", reservations: "예약 · 티켓", operations: "운영일 관리", settlement: "매출 · 정산", "program-edit": "프로그램 등록 · 수정", "program-sessions": "회차 관리" };
     document.title = (titles[viewName] || "관리자") + " | 렛츠런파크 관리자";
@@ -1051,10 +1078,9 @@
     sessionsForProgram(program.key).forEach(function (session) {
       persistSession(Object.assign({}, session, { deleted: true, active: false }));
     });
-    var region = byId("operation-region");
-    var closureRegion = region && region.value === program.location ? region.value : program.location;
+    var closureRegion = program.location;
     operationExceptions = operationExceptions.filter(function (item) { return !(item.region === closureRegion && item.programKey === program.key); });
-    operationExceptions.push({ id: "operation-" + Date.now() + "-" + program.key, region: closureRegion, programKey: program.key, startDate: "2020-01-01", endDate: "2099-12-31", status: "closed", reason: "프로그램 삭제로 인한 영구 휴장" });
+    operationExceptions.push({ id: "operation-" + Date.now() + "-" + program.key, region: closureRegion, department: program.department, programKey: program.key, startDate: "2020-01-01", endDate: "2099-12-31", status: "closed", reason: "프로그램 삭제로 인한 영구 휴장" });
     persistProgram(Object.assign({}, program, { deleted: true, active: false }));
     if (activeProgramKey === program.key) { activeProgramKey = null; byId("product-dialog").close(); byId("session-dialog").close(); }
     saveDemoState(); renderKioskProducts(); renderOperationCalendar(); renderOperationExceptions();
@@ -1162,18 +1188,19 @@
     return hasHistory ? "예약 이력이 있어 삭제가 제한됩니다. ‘숨김’으로 판매를 중지할 수 있습니다." : "";
   }
 
-  function matchingReservationsForClosure(region, dateKey, programItem, session) {
+  function matchingReservationsForClosure(region, dateKey, programItem, session, department) {
     var programName = programItem ? programItem.programName : "";
     var sessionTime = session ? (session.start + "~" + session.end).replace(/\s/g, "") : "";
     return allTicketGroups().filter(function (item) {
       if (!item || item.location !== region || item.dateKey !== dateKey || item.status === "취소 완료") return false;
+      if (department && item.department !== department) return false;
       if (programItem && item.programKey !== programItem.key && item.program !== programName && item.name !== programName) return false;
       return !session || String(item.time || "").replace(/\s/g, "") === sessionTime;
     });
   }
 
-  function operationClosureImpact(region, dateKey, programItem, session) {
-    return matchingReservationsForClosure(region, dateKey, programItem, session).reduce(function (impact, item) {
+  function operationClosureImpact(region, dateKey, programItem, session, department) {
+    return matchingReservationsForClosure(region, dateKey, programItem, session, department).reduce(function (impact, item) {
       impact.orders += 1;
       impact.people += Array.isArray(item.tickets) ? item.tickets.filter(function (ticket) { return ticket === "confirmed"; }).length : Number(item.qty || 0);
       return impact;
@@ -1228,11 +1255,13 @@
   }
 
   function requestOperationClosure(title, scope, region, dateKey, programItem, session, action) {
-    var impact = operationClosureImpact(region, dateKey, programItem, session);
+    var departmentSelect = byId("operation-department");
+    var department = programItem ? programItem.department : (departmentSelect ? departmentSelect.value : "");
+    var impact = operationClosureImpact(region, dateKey, programItem, session, department);
     pendingOperationClosureAction = action;
-    pendingOperationClosureImpact = { region: region, dateKey: dateKey, programItem: programItem, session: session, orders: impact.orders };
+    pendingOperationClosureImpact = { region: region, department: department, dateKey: dateKey, programItem: programItem, session: session, orders: impact.orders };
     byId("operation-closure-confirm-title").textContent = title;
-    byId("operation-closure-confirm-scope").textContent = dateKey + " · " + region + " · " + scope;
+    byId("operation-closure-confirm-scope").textContent = dateKey + " · " + region + (department ? " · " + department : "") + " · " + scope;
     var impactLine = byId("operation-closure-impact");
     var refundCheck = byId("operation-closure-refund");
     var keepCheck = byId("operation-closure-keep");
@@ -1273,7 +1302,7 @@
     byId("operation-closure-confirm-dialog").close();
     var cancelledCount = 0;
     if (shouldRefund && impact) {
-      var matches = matchingReservationsForClosure(impact.region, impact.dateKey, impact.programItem, impact.session);
+      var matches = matchingReservationsForClosure(impact.region, impact.dateKey, impact.programItem, impact.session, impact.department);
       matches.forEach(function (item) { cancelReservationForClosure(item, "기상·운영상 휴장 처리"); });
       cancelledCount = matches.length;
     }
@@ -1876,7 +1905,7 @@
     saveAdminSession(account.id); setAdminLoginState(true); renderAdminIdentity();
     renderAdminNavigation();
     lockAccountFilterSelects();
-    renderKioskProducts(); renderReservations(); lockOperationRegionSelect();
+    renderKioskProducts(); renderReservations(); refreshOperationScopeSelects(false);
     refreshSettlementScopeFilter(); renderSettlementSummary();
     restoreAdminRoute();
     notify("로그인했습니다.");
@@ -1963,7 +1992,8 @@
     filteredSettlementTransactions().forEach(function (row) { rows.push([row[0], detail.scope, detail.program, row[1], row[2], row[3], row[4], -row[5], -row[6], row[7], row[8]]); });
     downloadCsv("렛츠런파크_" + detail.program + "_거래원장.csv", rows);
   });
-  byId("operation-region").addEventListener("change", function () { renderOperationCalendar(); renderOperationExceptions(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); });
+  byId("operation-region").addEventListener("change", function () { refreshOperationScopeSelects(true); renderOperationCalendar(); renderOperationExceptions(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); });
+  byId("operation-department").addEventListener("change", function () { renderOperationCalendar(); renderOperationExceptions(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); });
   byId("operation-month-prev").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() - 1, 1); renderOperationCalendar(); });
   byId("operation-month-next").addEventListener("click", function () { operationCalendarMonth = new Date(operationCalendarMonth.getFullYear(), operationCalendarMonth.getMonth() + 1, 1); renderOperationCalendar(); });
   byId("download-reservations").addEventListener("click", function () {

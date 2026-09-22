@@ -313,6 +313,15 @@ test('calendar closures apply only to their own program', () => {
   assert.equal(runtime.operationExceptionFor('2026-09-26'), null);
 });
 
+test('department-wide closures do not block another department in the same region', () => {
+  const closure = { status: 'closed', region: '서울', department: '홍보부', programKey: 'all', startDate: '2026-09-26', endDate: '2026-09-26' };
+  const runtime = vm.createContext({ operationExceptions: [closure], program: { key: 'ride', region: '서울', department: '공원화사업추진TF' } });
+  vm.runInContext(appFunction('operationExceptionFor'), runtime);
+  assert.equal(runtime.operationExceptionFor('2026-09-26'), null);
+  runtime.program.department = '홍보부';
+  assert.equal(runtime.operationExceptionFor('2026-09-26'), closure);
+});
+
 test('booking summary shows the discount note only after a discount is selected', () => {
   const elements = {};
   const state = { qty: 1, date: '', dateKey: '', time: '', discountPolicyId: '' };

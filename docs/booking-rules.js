@@ -66,7 +66,7 @@
     var itemDate = itemRange ? new Date(itemRange.start) : null;
     var saleDays = Array.isArray(program.saleDays) ? program.saleDays.map(Number) : [6, 0];
     var closed = (program.operationExceptions || []).some(function (exception) {
-      return exception.status !== "open" && exception.region === (item.region || program.region || program.location) && (!exception.programKey || exception.programKey === "all" || exception.programKey === item.programKey) && (!exception.sessionKey || (slot && exception.sessionKey === slot.key)) && exception.startDate <= item.dateKey && exception.endDate >= item.dateKey;
+      return exception.status !== "open" && exception.region === (item.region || program.region || program.location) && (!exception.department || exception.department === (item.department || program.department)) && (!exception.programKey || exception.programKey === "all" || exception.programKey === item.programKey) && (!exception.sessionKey || (slot && exception.sessionKey === slot.key)) && exception.startDate <= item.dateKey && exception.endDate >= item.dateKey;
     });
     if (!slot || slot.disabled || program.active === false || !itemDate || !saleDays.includes(itemDate.getDay()) || (program.saleStartDate && item.dateKey < program.saleStartDate) || (program.saleEndDate && item.dateKey > program.saleEndDate) || closed) throw new Error("예약 가능한 날짜와 회차를 다시 선택해주세요.");
     if (typeof item.discount !== "boolean" || (item.discount && !discountPolicy)) throw new Error("할인 정보를 다시 확인해주세요.");

@@ -326,12 +326,13 @@
 
   function operationExceptionFor(dateKeyValue, programKey) {
     var selectedProgramKey = programKey || program.key;
-    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === "서울" && (!item.programKey || item.programKey === "all" || item.programKey === selectedProgramKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
+    var selectedProgram = programKey ? (programs[selectedProgramKey] || program) : program;
+    return operationExceptions.find(function (item) { return item.status !== "open" && !item.sessionKey && item.region === (selectedProgram.region || selectedProgram.location || "서울") && (!item.department || item.department === selectedProgram.department) && (!item.programKey || item.programKey === "all" || item.programKey === selectedProgramKey) && item.startDate <= dateKeyValue && item.endDate >= dateKeyValue; }) || null;
   }
 
   function slotOperationException(slot) {
     return operationExceptions.find(function (item) {
-      return item.status !== "open" && item.sessionKey && item.region === program.region && item.programKey === program.key && item.sessionKey === slot.key && item.startDate <= state.dateKey && item.endDate >= state.dateKey;
+      return item.status !== "open" && item.sessionKey && item.region === program.region && (!item.department || item.department === program.department) && item.programKey === program.key && item.sessionKey === slot.key && item.startDate <= state.dateKey && item.endDate >= state.dateKey;
     }) || null;
   }
 
