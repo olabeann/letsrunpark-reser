@@ -65,6 +65,10 @@ test('admin cancellation uses the checkout deadline snapshot and rechecks it on 
   assert.match(script, /selected\.some\(function \(index\) \{ return !adminTicketCanCancel/);
   assert.match(script, /ticket-cancelled-status">취소 불가/);
   assert.doesNotMatch(script, /ticket-cancelled-status">취소 마감/);
+  assert.match(html, /id="drawer-ticket-help">취소할 티켓을 선택하면 해당 인원만 부분환불됩니다/);
+  assert.match(script, /다른 지역·부서의 예약은 조회만 가능하며 취소할 수 없습니다/);
+  assert.match(script, /ticketHelp\.classList\.toggle\("is-readonly", !canManage\)/);
+  assert.match(referenceCss, /#drawer-ticket-help\.is-readonly\{color:#a34328\}/);
   assert.match(referenceCss, /\.reservation-drawer\{width:min\(560px,100vw\)\}/);
 });
 

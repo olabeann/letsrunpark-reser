@@ -31,6 +31,24 @@ function runtime(account) {
   return { context, elements };
 }
 
+function filterRuntime(account) {
+  const elements = {
+    location: { value: '', innerHTML: '', disabled: false },
+    department: { value: '', innerHTML: '', disabled: false },
+  };
+  const context = vm.createContext({
+    currentAccount: account,
+    organization: {
+      서울: ['홍보부', '브랜드총괄부', '공원화사업추진TF'],
+      부산경남: ['부산경주자원관리부', '부산운영지원부'],
+    },
+    byId: id => elements[id],
+    escapeHtml: value => String(value),
+  });
+  vm.runInContext(sourceFunction('refreshDepartmentSelect') + sourceFunction('lockLocationFilterSelect') + sourceFunction('normalizeLeadingZeroNumber'), context);
+  return { context, elements };
+}
+
 test('operation controls keep region first and add department beneath it', () => {
   const regionIndex = html.indexOf('id="operation-region"');
   const departmentIndex = html.indexOf('id="operation-department"');
@@ -76,4 +94,54 @@ test('foreign departments are identified as read-only with visibly disabled cont
 
 test('returning to the operations screen refreshes the selected day for the current account', () => {
   assert.match(source, /if \(selectedOperationDateKey\) renderOperationDayQuick\(selectedOperationDateKey\)/);
+});
+
+test('department filters start from the signed-in department and keep catalog browsing available', () => {
+  const { context, elements } = filterRuntime({ scope: 'department', region: '서울', department: '브랜드총괄부' });
+  context.lockLocationFilterSelect('location', 'department', false);
+  assert.equal(elements.location.value, '서울');
+  assert.equal(elements.department.value, '브랜드총괄부');
+  assert.equal(elements.location.disabled, false);
+  assert.equal(elements.department.disabled, false);
+  assert.match(elements.location.innerHTML, /부산경남/);
+  assert.match(elements.department.innerHTML, /공원화사업추진TF/);
+});
+
+test('reservation filters start from the signed-in department and allow cross-department lookup', () => {
+  const { context, elements } = filterRuntime({ scope: 'department', region: '서울', department: '브랜드총괄부' });
+  context.lockLocationFilterSelect('location', 'department', false);
+  assert.equal(elements.location.value, '서울');
+  assert.equal(elements.department.value, '브랜드총괄부');
+  assert.equal(elements.location.disabled, false);
+  assert.equal(elements.department.disabled, false);
+  assert.match(elements.location.innerHTML, /부산경남/);
+  assert.match(elements.department.innerHTML, /공원화사업추진TF/);
+});
+
+test('number fields remove leading zeroes while preserving a single zero', () => {
+  const { context } = filterRuntime({ scope: 'all' });
+  assert.equal(context.normalizeLeadingZeroNumber('020'), '20');
+  assert.equal(context.normalizeLeadingZeroNumber('0005'), '5');
+  assert.equal(context.normalizeLeadingZeroNumber('0'), '0');
+  assert.equal(context.normalizeLeadingZeroNumber(''), '');
+});
+
+test('foreign program detail and session routes remain read-only', () => {
+  assert.match(html, /id="program-readonly-notice"[^>]*>다른 부서의 프로그램은 조회만 가능합니다/);
+  assert.match(html, /id="session-readonly-notice"[^>]*>다른 부서의 프로그램은 조회만 가능합니다/);
+  assert.match(source, /editView\.querySelectorAll\("\.admin-panel input,\.admin-panel select,\.admin-panel textarea,\.admin-panel button"\)/);
+  assert.match(source, /byId\("add-session"\)\.disabled = !canManage/);
+  assert.match(source, /row\.querySelector\("\.session-state"\)\.disabled = !canManage/);
+  assert.match(css, /department-readonly-notice\{[^}]*color:#a34328/);
+});
+
+test('foreign program rows preserve action buttons and explain read-only access by toast', () => {
+  assert.match(source, /class="row-detail" type="button"'[\s\S]*title="다른 부서의 프로그램은 조회만 가능합니다\./);
+  assert.match(source, /class="row-sessions" type="button"'[\s\S]*title="다른 부서의 프로그램은 조회만 가능합니다\./);
+  assert.match(source, /class="row-delete" type="button"'[\s\S]*aria-disabled="true" title="다른 부서의 프로그램은 조회만 가능합니다\./);
+  assert.match(source, /row\.querySelector\("\.row-detail"\)\.addEventListener\("click", function \(\) \{ openProductDialog\(item\)/);
+  assert.match(source, /row\.querySelector\("\.row-sessions"\)\.addEventListener\("click", function \(\) \{ openSessionManager\(item\.key\)/);
+  assert.match(source, /querySelectorAll\("\.row-state,\.row-delete"\)/);
+  assert.match(source, /notify\("다른 부서의 프로그램은 조회만 가능합니다\."\)/);
+  assert.doesNotMatch(source, /<span class="row-readonly"/);
 });

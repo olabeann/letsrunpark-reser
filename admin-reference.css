@@ -244,9 +244,11 @@ tbody tr[data-reservation-id]:hover td {background:#f7faff}
 .row-sessions:hover {border-color:#1769ff;color:#1769ff}
 .row-state {border-color:#a9c8ff;background:#eef5ff;color:#1769ff}
 .row-state.is-off {border-color:#e1e3e6;background:#f4f5f6;color:#777c82}
+.row-state:disabled,.row-state.is-off:disabled {border-color:#dfe3e7;background:#eef0f2;color:#8a9098;opacity:.58;cursor:not-allowed}
+.row-actions button:disabled,.row-actions button:disabled:hover {border-color:#dfe3e7;background:#eef0f2;color:#8a9098;opacity:.58;cursor:not-allowed}
 .row-save:hover,.row-detail:hover {border-color:#1769ff;color:#1769ff}
 .row-actions {display:flex;align-items:center;gap:6px;white-space:nowrap}
-.reservation-table td.empty-table{display:table-cell!important;width:auto!important;height:132px;padding:42px!important;text-align:center!important;vertical-align:middle;color:#78847e}
+.reservation-table td.empty-table,.kiosk-product-table td.empty-table{display:table-cell!important;width:auto!important;height:132px;padding:42px!important;text-align:center!important;vertical-align:middle;color:#78847e}
 .empty-table strong,.empty-table small{display:block}.empty-table strong{color:var(--admin-ink);font-size:14px}.empty-table small{margin-top:7px;font-size:12px}
 .discount-empty-steps{counter-reset:discount-step;display:grid;gap:8px;width:100%;margin:16px 0 0;padding:0;list-style:none;text-align:left;color:#3f4852;font-size:12px;line-height:1.45}
 .discount-empty-steps li{counter-increment:discount-step;display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:9px;font-weight:600}
@@ -681,7 +683,9 @@ td small {font-size:11px}
 .operation-close-all-btn:hover{background:#fbe4da;border-color:#e6a98d}
 .operation-close-all-btn:disabled,.operation-close-all-btn:disabled:hover{border-color:#dfe3e7;background:#eef0f2;color:#8a9098;opacity:.58;cursor:not-allowed}
 .operation-close-all-btn i{width:8px;height:8px;border-radius:50%;background:#c2543b;display:inline-block}
-.row-readonly{color:var(--admin-muted);font-size:10px}
+.department-readonly-notice{margin:-12px 0 20px;color:#a34328;font-size:13px;font-weight:600}
+#drawer-ticket-help.is-readonly{color:#a34328}
+.session-row button:disabled,.session-row button:disabled:hover{border-color:#dfe3e7;background:#eef0f2;color:#8a9098;opacity:.58;cursor:not-allowed}
 .admin-login__demo-accounts{list-style:none;margin:20px 0 0;padding:12px 14px;border-radius:9px;background:#f4f7fb;font-size:11px;color:#69717a;display:flex;flex-direction:column;gap:6px}
 .admin-login__demo-accounts strong{color:#34393f}
 .operation-schedule-list{margin:16px 18px 0}
