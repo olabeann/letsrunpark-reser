@@ -458,7 +458,7 @@
     var status = byId("reservation-status").value;
     return allReservations().filter(function (item) {
       var inAccountScope = !currentAccount || currentAccount.scope === "all" || canManageDepartment(item.location, item.department);
-      return inAccountScope && (!search || (reservationNumber(item) + " " + item.orderId + " " + item.program).toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey >= date) && (!endDate || item.dateKey <= endDate) && (!program || item.programNames.includes(program)) && (!status || item.status === status);
+      return inAccountScope && (!search || (reservationNumber(item) + " " + item.orderId + " " + item.program).toLowerCase().includes(search)) && (!location || item.location === location) && (!department || item.department === department) && (!date || item.dateKey >= date) && (!endDate || item.dateKey <= endDate) && (!program || item.programNames.includes(program)) && (!status || paymentStatusLabel(item) === status);
     }).sort(function (a, b) { return (b.createdTimestamp || Date.parse(b.createdAt) || 0) - (a.createdTimestamp || Date.parse(a.createdAt) || 0); });
   }
 

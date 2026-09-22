@@ -68,6 +68,15 @@ test('admin cancellation uses the checkout deadline snapshot and rechecks it on 
   assert.match(referenceCss, /\.reservation-drawer\{width:min\(560px,100vw\)\}/);
 });
 
+test('reservation filter uses the same payment and refund labels shown in the list', () => {
+  assert.match(script, /paymentStatusLabel\(item\) === status/);
+  assert.match(html, /<span>결제·환불 상태<\/span>/);
+  assert.match(html, /<option value="결제 완료">결제 완료<\/option>/);
+  assert.match(html, /<option value="부분 환불 완료">부분 환불 완료<\/option>/);
+  assert.match(html, /<option value="전액 환불 완료">전액 환불 완료<\/option>/);
+  assert.doesNotMatch(html, /<option value="예약 확정">/);
+});
+
 test('stored customer and operation cancellations preserve original ticket snapshots', () => {
   assert.match(script, /price: item\.originalPrice \|\| item\.price \|\| 0/);
   assert.match(script, /target\.originalTicketIds = originalTicketIds/);
