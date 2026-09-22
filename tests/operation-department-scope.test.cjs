@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const source = readFileSync(path.join(__dirname, '../admin.js'), 'utf8');
 const html = readFileSync(path.join(__dirname, '../admin.html'), 'utf8');
+const css = readFileSync(path.join(__dirname, '../admin-reference.css'), 'utf8');
 
 function sourceFunction(name) {
   const start = source.indexOf('  function ' + name + '(');
@@ -55,4 +56,17 @@ test('changing region resets the department choices to that region', () => {
   assert.equal(elements['operation-department'].value, '');
   assert.match(elements['operation-department'].innerHTML, /부산경주자원관리부/);
   assert.doesNotMatch(elements['operation-department'].innerHTML, /홍보부/);
+});
+
+test('foreign departments are identified as read-only with visibly disabled controls', () => {
+  assert.match(source, /다른 부서의 운영일은 조회만 가능하며 휴장 상태를 변경할 수 없습니다\./);
+  assert.match(source, /headButton\.disabled = !canManage/);
+  assert.match(source, /chip\.disabled = programClosed \|\| !canManage/);
+  assert.match(css, /operation-program-head button:disabled/);
+  assert.match(css, /cursor:not-allowed/);
+  assert.match(css, /operation-day-quick>p\.is-readonly/);
+});
+
+test('returning to the operations screen refreshes the selected day for the current account', () => {
+  assert.match(source, /if \(selectedOperationDateKey\) renderOperationDayQuick\(selectedOperationDateKey\)/);
 });

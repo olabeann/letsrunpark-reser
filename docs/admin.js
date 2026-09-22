@@ -607,15 +607,21 @@
     var dateLabel = (date.getMonth() + 1) + "월 " + date.getDate() + "일";
     var operatingPrograms = programsInOperationScope().filter(function (item) { return programOperatesOn(item, dateKey, weekday); });
     var closures = closuresForDate(dateKey, operatingPrograms);
+    var description = byId("operation-day-quick-desc");
+    var isReadOnlyScope = currentAccount && currentAccount.scope === "department" && (scope.region !== currentAccount.region || scope.department !== currentAccount.department);
     byId("operation-day-quick-title").textContent = dateLabel + " · " + (scope.department || "전체 부서");
     list.replaceChildren();
     if (!operatingPrograms.length) {
-      byId("operation-day-quick-desc").textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
+      description.textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
+      description.classList.remove("is-readonly");
       list.hidden = true;
       closeAllButton.hidden = true;
       return;
     }
-    byId("operation-day-quick-desc").textContent = "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
+    description.textContent = isReadOnlyScope
+      ? "다른 부서의 운영일은 조회만 가능하며 휴장 상태를 변경할 수 없습니다."
+      : "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
+    description.classList.toggle("is-readonly", !!isReadOnlyScope);
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
       var allClosure = closures.find(function (closure) { return closure.programKey === "all" && closureAppliesToProgram(closure, item); });
@@ -632,6 +638,7 @@
       headButton.type = "button";
       headButton.textContent = programClosed ? "휴장 처리됨" : "전체 휴장 처리";
       headButton.disabled = !canManage;
+      if (!canManage) headButton.title = "다른 부서의 운영일은 조회만 가능합니다.";
       headButton.addEventListener("click", function () { toggleProgramClosureForDate(item, dateKey, item.location); });
       head.append(headButton);
       li.append(head);
@@ -651,6 +658,7 @@
           chip.className = "operation-session-chip" + (sessionClosed ? " is-closed" : "");
           chip.textContent = session.start + "~" + session.end;
           chip.disabled = programClosed || !canManage;
+          if (!canManage) chip.title = "다른 부서의 운영일은 조회만 가능합니다.";
           chip.addEventListener("click", function () { toggleSessionClosureForDate(item, session, dateKey, item.location); });
           grid.append(chip);
         });
@@ -795,7 +803,7 @@
     document.querySelectorAll("[data-admin-view]").forEach(function (button) { button.classList.toggle("is-active", button.dataset.adminView === navView); });
     document.querySelector(".admin-sidebar").classList.remove("is-open");
     if (viewName === "reservations") renderReservations();
-    if (viewName === "operations") { refreshOperationScopeSelects(false); renderOperationCalendar(); renderOperationExceptions(); }
+    if (viewName === "operations") { refreshOperationScopeSelects(false); renderOperationCalendar(); if (selectedOperationDateKey) renderOperationDayQuick(selectedOperationDateKey); renderOperationExceptions(); }
     if (viewName === "settlement") { refreshSettlementScopeFilter(); renderSettlementSummary(); }
     var titles = { programs: "프로그램 · 회차", reservations: "예약 · 티켓", operations: "운영일 관리", settlement: "매출 · 정산", "program-edit": "프로그램 등록 · 수정", "program-sessions": "회차 관리" };
     document.title = (titles[viewName] || "관리자") + " | 렛츠런파크 관리자";
