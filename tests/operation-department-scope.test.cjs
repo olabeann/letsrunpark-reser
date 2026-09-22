@@ -59,12 +59,19 @@ test('changing region resets the department choices to that region', () => {
 });
 
 test('foreign departments are identified as read-only with visibly disabled controls', () => {
-  assert.match(source, /다른 부서의 운영일은 조회만 가능하며 휴장 상태를 변경할 수 없습니다\./);
+  assert.match(source, /description\.hidden = !!isReadOnlyScope/);
+  assert.doesNotMatch(source, /다른 부서의 운영일은 조회만 가능하며 휴장 상태를 변경할 수 없습니다\./);
   assert.match(source, /headButton\.disabled = !canManage/);
   assert.match(source, /chip\.disabled = programClosed \|\| !canManage/);
+  assert.match(source, /details\.classList\.toggle\("is-readonly", !canManage\)/);
+  assert.match(source, /summary\.setAttribute\("aria-disabled", "true"\)/);
+  assert.match(source, /closeAllButton\.disabled = !canManageWholeDay/);
+  assert.match(source, /closeAllButton\.hidden = false/);
   assert.match(css, /operation-program-head button:disabled/);
+  assert.match(css, /operation-session-toggle\.is-readonly>summary/);
+  assert.match(css, /operation-close-all-btn:disabled/);
   assert.match(css, /cursor:not-allowed/);
-  assert.match(css, /operation-day-quick>p\.is-readonly/);
+  assert.doesNotMatch(css, /operation-day-quick>p\.is-readonly/);
 });
 
 test('returning to the operations screen refreshes the selected day for the current account', () => {

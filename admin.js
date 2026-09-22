@@ -612,16 +612,14 @@
     byId("operation-day-quick-title").textContent = dateLabel + " · " + (scope.department || "전체 부서");
     list.replaceChildren();
     if (!operatingPrograms.length) {
+      description.hidden = false;
       description.textContent = "이 날은 운영 예정인 프로그램이 없습니다.";
-      description.classList.remove("is-readonly");
       list.hidden = true;
       closeAllButton.hidden = true;
       return;
     }
-    description.textContent = isReadOnlyScope
-      ? "다른 부서의 운영일은 조회만 가능하며 휴장 상태를 변경할 수 없습니다."
-      : "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
-    description.classList.toggle("is-readonly", !!isReadOnlyScope);
+    description.hidden = !!isReadOnlyScope;
+    description.textContent = isReadOnlyScope ? "" : "프로그램 전체, 회차 또는 이 날 전체를 선택한 뒤 확인 절차를 거쳐 휴장 처리할 수 있습니다.";
     list.hidden = false;
     operatingPrograms.forEach(function (item) {
       var allClosure = closures.find(function (closure) { return closure.programKey === "all" && closureAppliesToProgram(closure, item); });
@@ -645,9 +643,15 @@
       if (activeSessions.length) {
         var details = document.createElement("details");
         details.className = "operation-session-toggle";
+        details.classList.toggle("is-readonly", !canManage);
         if (closedSessionKeys.length) details.open = true;
         var summary = document.createElement("summary");
         summary.textContent = "회차별로 보기" + (closedSessionKeys.length ? " · " + closedSessionKeys.length + "/" + activeSessions.length + " 휴장" : " (" + activeSessions.length + "개)");
+        if (!canManage) {
+          summary.setAttribute("aria-disabled", "true");
+          summary.title = "다른 부서의 운영일은 조회만 가능합니다.";
+          summary.addEventListener("click", function (event) { event.preventDefault(); });
+        }
         details.append(summary);
         var grid = document.createElement("div");
         grid.className = "operation-session-grid";
@@ -673,9 +677,12 @@
       list.append(li);
     });
     var allClosed = operatingPrograms.every(function (item) { return programFullyClosedForDate(item, dateKey, item.location, closures); });
-    closeAllButton.hidden = !currentAccount || currentAccount.scope !== "all" || !scope.department;
+    var canManageWholeDay = !!currentAccount && currentAccount.scope === "all" && !!scope.department;
+    closeAllButton.hidden = false;
+    closeAllButton.disabled = !canManageWholeDay;
+    closeAllButton.title = canManageWholeDay ? "" : !scope.department ? "대상 부서를 선택해야 휴장 처리할 수 있습니다." : "이 날 전체 휴장 처리는 통합 관리자만 가능합니다.";
     closeAllButton.textContent = allClosed ? "운영 재개" : "이 날 전체 휴장으로 전환";
-    closeAllButton.onclick = allClosed
+    closeAllButton.onclick = !canManageWholeDay ? null : allClosed
       ? function () { reopenAllProgramsForDate(operatingPrograms, dateKey, scope); }
       : function () { closeAllProgramsForDate(operatingPrograms, dateKey, scope); };
   }
