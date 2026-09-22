@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>렛츠런파크 체험 예약</title>
-  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260916-ticket-proof22"><link rel="stylesheet" href="styles.css?v=20260921-image2x1"><link rel="stylesheet" href="empty-state-icons.css?v=20260922-1">
+  <link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css?v=20260922-ticket-status-shell2"><link rel="stylesheet" href="styles.css?v=20260921-image2x1"><link rel="stylesheet" href="empty-state-icons.css?v=20260922-2">
 </head>
 <body data-page="booking" class="shop-page">
   <header class="reservation-header shop-header">
@@ -42,7 +42,7 @@
             <div class="option-field"><h2><span aria-hidden="true">03</span>이용 시간</h2><p class="option-placeholder" id="slot-placeholder">날짜를 선택하면 예약 가능한 시간을 확인할 수 있어요.</p><div class="booking-slots chips" id="booking-slots" aria-label="예약 회차 선택"></div><p class="session-duration-note">같은 상품·회차는 일일 구매 한도와 잔여 수량 내에서 인원을 추가할 수 있어요.</p></div>
             <div class="option-field" id="booking-quantity-discount"><div class="quantity-row"><div><h2><span aria-hidden="true">04</span>인원</h2><small id="booking-unit-price">1인 5,000원</small></div><div class="quantity-control"><button type="button" id="qty-minus" aria-label="인원 줄이기" aria-describedby="booking-quantity-limit">−</button><strong id="booking-qty">1</strong><button type="button" id="qty-plus" aria-label="인원 늘리기" aria-describedby="booking-quantity-limit">＋</button></div></div><small class="quantity-limit" id="booking-quantity-limit" aria-live="polite">이용일 기준 최대 4매 구매 가능합니다.</small><fieldset class="discount-options" id="booking-discount-options"><legend>할인 선택</legend></fieldset></div>
           </div>
-          <aside class="booking-review" aria-label="예약 프로그램 요약"><div class="booking-review__media"><img id="booking-review-image" src="assets/pony/cover.jpg" alt="포니 타기 체험 현장"></div><small class="product-location">서울 렛츠런파크 · 포니랜드</small><h2 id="product-title">포니 타기</h2><p id="product-subtitle"></p><p class="product-notice" id="product-notice" hidden></p><div class="product-detail-price"><strong id="product-unit-price">5,000원</strong><span>/ 1인</span></div><div class="product-purchase"><p id="selected-option-summary">날짜와 시간을 선택해주세요.</p><div class="summary-price"><span>결제 예정 금액</span><strong id="summary-price">5,000원</strong></div><div class="product-discount-note" id="product-discount-note" hidden><span>할인</span><strong id="product-discount-value">과천시민 50% · 1매</strong></div><div class="booking-actions"><button class="btn booking-cart-button" id="add-to-cart" type="button" disabled>장바구니 담기</button><button class="btn btn--cta" id="book-now" type="button" disabled>예약하기</button></div><small>담긴 상품이 있으면 장바구니에서 함께 확인한 뒤 결제해주세요.</small></div></aside>
+          <aside class="booking-review" aria-label="예약 프로그램 요약"><div class="booking-review__media"><img id="booking-review-image" src="assets/pony/cover.jpg" alt="포니 타기 체험 현장"></div><small class="product-location">서울 렛츠런파크 · 포니랜드</small><h2 id="product-title">포니 타기</h2><p id="product-subtitle"></p><p class="product-notice" id="product-notice" hidden></p><div class="product-detail-price"><strong id="product-unit-price">5,000원</strong><span>/ 1인</span></div><div class="product-purchase"><p id="selected-option-summary">날짜와 시간을 선택해주세요.</p><div class="summary-price"><span>결제 예정 금액</span><strong id="summary-price">5,000원</strong></div><div class="product-discount-note" id="product-discount-note" hidden><span>할인</span><strong id="product-discount-value">과천시민 할인 50% · 1매</strong></div><div class="booking-actions"><button class="btn booking-cart-button" id="add-to-cart" type="button" disabled>장바구니 담기</button><button class="btn btn--cta" id="book-now" type="button" disabled>예약하기</button></div><small>담긴 상품이 있으면 장바구니에서 함께 확인한 뒤 결제해주세요.</small></div></aside>
         </div>
       </div>
     </section>
@@ -141,6 +141,6 @@
       </div>
     </div>
   </footer>
-  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260915-unit-cards1"></script><script src="holiday-demo.js?v=20260921-calendar-empty1"></script><script src="developer-policy.js?v=20260915-cart-route2"></script><script src="app.js?v=20260921-current-program-notice1"></script><script src="demo-controls.js"></script>
+  <div class="toast" role="status"></div><script src="booking-rules.js?v=20260915-unit-cards1"></script><script src="holiday-demo.js?v=20260921-calendar-empty1"></script><script src="developer-policy.js?v=20260915-cart-route2"></script><script src="app.js?v=20260922-citizen-discount4"></script><script src="demo-controls.js"></script>
 </body>
 </html>

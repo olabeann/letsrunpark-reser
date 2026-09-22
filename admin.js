@@ -86,15 +86,22 @@
   var defaultBookingWindow = 14;
   var defaultCancelMinutes = 10;
   var defaultArrivalLeadMinutes = 20;
-  var discountPolicies = [];
+  var defaultDiscountPolicies = [{
+    id: "gwacheon", name: "과천시민 할인", type: "percent", value: 50,
+    maxQty: 2, noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요.",
+    scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false,
+    restoreOnCancel: true, allPrograms: false, programs: ["포니 타기", "포니랑 놀기"],
+    excludedPrograms: [], active: true
+  }];
+  var discountPolicies = defaultDiscountPolicies.map(function (discount) { return Object.assign({}, discount, { programs: discount.programs.slice() }); });
   var catalogState = { programOverrides: {}, addedPrograms: [], sessionOverrides: {}, addedSessions: [] };
 
   var demoReservations = [
     { id: "LRP-260902-00005-G01", reservationId: "LRP-260902-00005", legacyId: "LRP-260902-00005-1", orderId: "PAY-260902-3018", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:00~10:20", qty: 3, price: 15000, discount: false, status: "예약 확정", createdAt: "2026-09-02 10:42", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed"] },
-    { id: "LRP-260902-00004-G01", reservationId: "LRP-260902-00004", legacyId: "LRP-260902-00004-1", orderId: "PAY-260902-3012", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:20~10:45", qty: 2, price: 4000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", status: "부분 취소", createdAt: "2026-09-02 10:36", method: "신용카드", tickets: ["confirmed", "cancelled"], cancellationEvents: [{ source: "customer", qty: 1, amount: 2000, reason: "고객 직접 취소", createdAt: "2026-09-03 14:20" }] },
-    { id: "LRP-260902-00003-G01", reservationId: "LRP-260902-00003", legacyId: "LRP-260902-00003-1", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, discountQty: 1, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", status: "취소 완료", paymentStatus: "전액 환불 완료", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["cancelled"] },
+    { id: "LRP-260902-00004-G01", reservationId: "LRP-260902-00004", legacyId: "LRP-260902-00004-1", orderId: "PAY-260902-3012", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-05", date: "2026.09.05 (토)", time: "10:20~10:45", qty: 2, price: 4000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 할인 50%", status: "부분 취소", createdAt: "2026-09-02 10:36", method: "신용카드", tickets: ["confirmed", "cancelled"], cancellationEvents: [{ source: "customer", qty: 1, amount: 2000, reason: "고객 직접 취소", createdAt: "2026-09-03 14:20" }] },
+    { id: "LRP-260902-00003-G01", reservationId: "LRP-260902-00003", legacyId: "LRP-260902-00003-1", orderId: "PAY-260902-2998", memberId: "demo:카카오:2", programKey: "ride", program: "포니 타기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "11:00~11:20", qty: 1, price: 2500, discount: true, discountQty: 1, discountPolicyId: "gwacheon", discountLabel: "과천시민 할인 50%", status: "취소 완료", paymentStatus: "전액 환불 완료", createdAt: "2026-09-02 10:19", method: "신용카드", tickets: ["cancelled"] },
     { id: "LRP-260902-00002-G01", reservationId: "LRP-260902-00002", legacyId: "LRP-260902-00002-1", orderId: "PAY-260902-2971", memberId: "demo:네이버:1", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-06", date: "2026.09.06 (일)", time: "13:20~13:45", qty: 4, price: 16000, discount: false, status: "예약 확정", createdAt: "2026-09-02 09:51", method: "신용카드", tickets: ["confirmed", "confirmed", "confirmed", "confirmed"] },
-    { id: "LRP-260902-00001-G01", reservationId: "LRP-260902-00001", legacyId: "LRP-260902-00001-1", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "14:20~14:45", qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed", "confirmed"] },
+    { id: "LRP-260902-00001-G01", reservationId: "LRP-260902-00001", legacyId: "LRP-260902-00001-1", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", programKey: "ride", program: "포니 타기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "14:20~14:45", qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 할인 50%", status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed", "confirmed"] },
     { id: "LRP-260902-00001-G02", reservationId: "LRP-260902-00001", legacyId: "LRP-260902-00001-2", orderId: "PAY-260902-2944", memberId: "demo:카카오:1", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:20~15:45", qty: 1, price: 4000, discount: false, status: "예약 확정", createdAt: "2026-09-02 09:27", method: "신용카드", tickets: ["confirmed"] },
     { id: "LRP-260901-00001-G01", reservationId: "LRP-260901-00001", legacyId: "LRP-260901-00001-1", orderId: "PAY-260901-2886", memberId: "demo:네이버:2", programKey: "play", program: "포니랑 놀기", dateKey: "2026-09-12", date: "2026.09.12 (토)", time: "15:00~15:20", qty: 1, price: 4000, discount: false, status: "취소 완료", createdAt: "2026-09-01 18:44", method: "신용카드", tickets: ["cancelled"], cancellationEvents: [{ source: "admin", qty: 1, amount: 4000, reason: "운영사 사정", createdAt: "2026-09-02 09:10" }] }
   ];
@@ -197,6 +204,7 @@
     byId("program-guidance-text").value = typeof text === "string" ? text : guidanceItemsToText(legacyItems);
   }
   function money(value) { return new Intl.NumberFormat("ko-KR").format(value) + "원"; }
+  function discountDisplayLabel(name, type, value) { return String(name || "할인").trim() + " " + (type === "percent" ? Number(value || 0) + "%" : money(Number(value || 0))); }
   function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, function (char) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]; }); }
   function notify(message) {
     var toast = document.querySelector(".toast");
@@ -210,6 +218,7 @@
     try {
       var state = JSON.parse(localStorage.getItem(adminStateKey) || "null");
       if (!state) return;
+      var discountStateChanged = false;
       if (Array.isArray(state.reservations)) {
         state.reservations.forEach(function (saved) {
           var target = demoReservations.find(function (item) { return item.id === saved.id || item.legacyId === saved.id; });
@@ -219,6 +228,12 @@
       if (Array.isArray(state.discountsV2)) discountPolicies = state.discountsV2;
       discountPolicies = discountPolicies.map(function (discount) {
         var policy = Object.assign({ maxQty: 1, noticeText: "", scope: "day", proof: "onsite", startDate: "", endDate: "", stackable: false, restoreOnCancel: true }, discount);
+        if (["과천", "과천 할인"].includes(String(policy.name || "").trim())) {
+          policy.name = "과천시민 할인";
+          policy.type = "percent";
+          policy.value = 50;
+          discountStateChanged = true;
+        }
         delete policy.maxAmount;
         return policy;
       });
@@ -229,6 +244,25 @@
         catalogState.addedSessions = Array.isArray(state.catalog.addedSessions) ? state.catalog.addedSessions : [];
       }
       if (Array.isArray(state.operationExceptions)) operationExceptions = state.operationExceptions.filter(function (item) { return item.status !== "open"; }).map(function (item) { return Object.assign({ programKey: "all", status: "closed" }, item); });
+      var citizenProgramNames = programCatalog().filter(function (program) {
+        return program.location === "서울" && program.department === "공원화사업추진TF";
+      }).map(function (program) { return program.programName; });
+      if (!discountPolicies.length) {
+        var citizenDiscount = Object.assign({}, defaultDiscountPolicies[0], { programs: citizenProgramNames });
+        discountPolicies = [citizenDiscount];
+        discountStateChanged = true;
+      } else {
+        discountPolicies.forEach(function (discount) {
+          var isCitizenDiscount = discount.id === "gwacheon" || ["과천", "과천 할인", "과천시민 할인"].includes(String(discount.name || "").trim());
+          var hasCurrentProgram = (discount.programs || []).some(function (name) { return citizenProgramNames.includes(name); });
+          if (isCitizenDiscount && citizenProgramNames.length && !hasCurrentProgram) {
+            discount.programs = citizenProgramNames.slice();
+            discount.allPrograms = false;
+            discountStateChanged = true;
+          }
+        });
+      }
+      if (discountStateChanged) saveDemoState();
     } catch (error) { /* Keep the review prototype usable if browser storage is unavailable. */ }
   }
 
@@ -1673,12 +1707,11 @@
     if (!discounted) return "";
     if (reservation.discountLabel) return reservation.discountLabel;
     var policy = discountPolicies.find(function (item) { return item.id === reservation.discountPolicyId; }) || discountPolicies.find(function (item) { return item.id === "gwacheon"; });
-    var name = policy ? policy.name.replace(/\s*할인$/, "") : "할인";
-    if (policy && policy.type === "percent") return name + " " + policy.value + "% 할인";
-    if (policy && policy.type === "fixed") return name + " " + money(policy.value) + " 할인";
+    var name = policy ? String(policy.name || "할인").trim() : "할인";
+    if (policy && (policy.type === "percent" || policy.type === "fixed")) return discountDisplayLabel(name, policy.type, policy.value);
     var programPrice = programs[reservation.programKey] ? programs[reservation.programKey].price : 0;
     var rate = programPrice ? Math.round((1 - ticketUnitPrice(reservation, index) / programPrice) * 100) : 0;
-    return name + (rate > 0 ? " " + rate + "%" : "") + " 할인";
+    return name + (rate > 0 ? " " + rate + "%" : "");
   }
   function ticketRefundTotal(reservation) {
     return reservation.tickets.reduce(function (sum, ticket, index) { return sum + (ticket === "cancelled" ? ticketUnitPrice(reservation, index) : 0); }, 0);

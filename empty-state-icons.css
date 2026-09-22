@@ -57,6 +57,12 @@
   height: 30px;
 }
 
+/* Match the real reservation-ticket canvas shown behind populated ticket groups. */
+.customer-ticket-empty-screen {
+  --ticket-canvas: #f7f5f0;
+  background: var(--ticket-canvas);
+}
+
 .admin-empty-icon {
   width: 44px;
   height: 44px;

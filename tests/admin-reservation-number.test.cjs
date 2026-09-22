@@ -28,7 +28,7 @@ test('admin identity uses account scope without personal manager names', () => {
 });
 
 test('admin groups product tickets under one reservation and labels each person ticket', () => {
-  const functionNames = ['reservationNumber', 'ticketUnitPrice', 'ticketDiscountLabel', 'groupReservationItems'];
+  const functionNames = ['reservationNumber', 'ticketUnitPrice', 'discountDisplayLabel', 'ticketDiscountLabel', 'groupReservationItems'];
   const functions = functionNames.map(name => {
     const start = script.indexOf('  function ' + name + '(');
     assert.notEqual(start, -1);
@@ -48,7 +48,7 @@ test('admin groups product tickets under one reservation and labels each person 
   assert.equal(grouped[0].program, '포니 타기, 포니랑 놀기');
   assert.deepEqual(Array.from(grouped[0].ticketDetails, ticket => ticket.program), ['포니 타기', '포니 타기', '포니랑 놀기']);
   assert.deepEqual(Array.from(grouped[0].ticketIds), ['LRP-260902-00001-T01', 'LRP-260902-00001-T02', 'LRP-260902-00001-T03']);
-  assert.deepEqual(Array.from(grouped[0].ticketDetails, ticket => ticket.discountLabel), ['과천시민 50% 할인', '과천시민 50% 할인', '']);
+  assert.deepEqual(Array.from(grouped[0].ticketDetails, ticket => ticket.discountLabel), ['과천시민 할인 50%', '과천시민 할인 50%', '']);
   assert.match(script, /escapeHtml\(detail\.program\).*escapeHtml\(ticketId\)/);
   assert.doesNotMatch(script, /배분 결제액/);
   assert.doesNotMatch(script, /할인 미적용/);

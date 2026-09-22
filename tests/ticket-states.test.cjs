@@ -51,6 +51,7 @@ function runtime(now, saved = [], examples = false) {
     program: { key: 'pony' },
     showTicketExamples: examples,
     BookingRules,
+    discountDisplayLabel: (name, type, value) => String(name || '할인').trim() + ' ' + (type === 'percent' ? Number(value || 0) + '%' : Number(value || 0).toLocaleString('ko-KR') + '원'),
     money: value => value + '원',
     byId: id => elements[id],
     document: { querySelectorAll: () => cards },
@@ -245,6 +246,13 @@ test('ticket colors use only design-system tokens instead of one-off color value
   assert.doesNotMatch(ticketCss, /#[0-9a-f]{3,8}|rgba?\(/i);
   assert.match(ticketCss, /status--active\{[^}]*background:var\(--green-100\)/);
   assert.match(ticketCss, /status--ended\{[^}]*color:var\(--grey\)/);
+});
+
+test('ticket details share a black shell while each access state keeps its card treatment', () => {
+  assert.match(componentCss, /my-tickets-screen:has\(\.ticket-detail-view:not\(\[hidden\]\)\)\{background:linear-gradient\(180deg,var\(--ink\)/);
+  assert.match(componentCss, /\.entry-ticket__status\{[^}]*border-radius:28px[^}]*background:var\(--ticket-upcoming-bg\)/);
+  assert.match(componentCss, /data-access-state="active"[^}]*\.entry-ticket__status\{[^}]*background:var\(--green-100\)/);
+  assert.match(componentCss, /data-access-state="ended"[^}]*\.entry-ticket__status\{[^}]*background:var\(--grey\)/);
 });
 
 test('discount notice visibility follows the selected ticket in every access state', () => {

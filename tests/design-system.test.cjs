@@ -18,6 +18,6 @@ test('storefront uses design-system colors, radii and category tags', () => {
   assert.match(html, /class="booking-program-head"/);
   assert.match(styles, /\.shop-header \.reservation-brand img\{[^}]*height:38\.4px/);
   assert.match(styles, /\.reservation-brand__context b\{[^}]*font-size:var\(--fs-card\)/);
-  assert.match(html, /styles\.css\?v=20260916-footer3/);
+  assert.match(html, /styles\.css\?v=20260921-image2x1/);
   assert.match(styles, /@media\(max-width:420px\)\{[\s\S]*?\.reservation-brand__context\{display:none\}[\s\S]*?\.shop-nav__logout\{display:none\}/);
 });

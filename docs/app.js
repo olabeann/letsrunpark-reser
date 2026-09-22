@@ -18,6 +18,11 @@
     });
   }
 
+  function discountDisplayLabel(name, type, value) {
+    var amountText = type === "percent" ? Number(value || 0) + "%" : new Intl.NumberFormat("ko-KR").format(Number(value || 0)) + "원";
+    return String(name || "할인").trim() + " " + amountText;
+  }
+
   document.querySelectorAll("[data-toast]").forEach(function (button) {
     button.addEventListener("click", function () { notify(button.getAttribute("data-toast")); });
   });
@@ -114,10 +119,9 @@
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
       guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.",
       requiresGuidanceConfirmation: false,
-      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       discountPolicies: [
-        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
-        { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
+        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50), noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." }
       ],
       purchasePolicy: { maxQty: 4 },
       bookingWindow: 14,
@@ -143,10 +147,9 @@
       notes: ["연령 제한 없이 누구나 체험 가능", "어린이는 보호자 동반을 권장", "포니 빗질하기·꾸며주기·산책하기", "카우보이 의상 무료 이용 가능", "동물복지를 위해 먹이주기는 진행하지 않음"],
       guidanceText: "[이용 대상] 연령 제한 없이 누구나 이용할 수 있습니다.\n[체험 방법] 포니 빗질하기, 꾸며주기, 산책하기 순서로 진행됩니다.\n[준비 사항] 어린이는 보호자와 함께 방문해주세요.",
       requiresGuidanceConfirmation: false,
-      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       discountPolicies: [
-        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인", noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." },
-        { id: "multi-child", type: "percent", value: 20, rate: 0.2, maxQty: 1, maxQtyPerDate: 1, label: "다자녀 가족 20% 할인", noticeText: "다자녀 가족 증빙서류를 현장에서 확인합니다." }
+        { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50), noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." }
       ],
       purchasePolicy: { maxQty: 4 },
       bookingWindow: 14,
@@ -161,7 +164,7 @@
       department: "공원화사업추진TF",
       price: 5000,
       image: "assets/pony/cover.jpg",
-      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: "과천시민 50% 할인" },
+      discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       experiences: {
         ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg" },
         play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg" }
@@ -267,18 +270,18 @@
         programs[key].slots = configuredSlots.map(function (slot, index) {
           return Object.assign({}, slot, { stock: (index + 1) + "회차 · " + (slot.disabled ? "마감" : slot.capacity + "자리") });
         });
-        var savedDiscounts = adminState && Array.isArray(adminState.discounts) ? adminState.discounts : null;
+        var savedDiscounts = adminState && Array.isArray(adminState.discountsV2) ? adminState.discountsV2 : null;
         if (savedDiscounts) {
           var discountIds = Array.isArray(source.discountIds) ? source.discountIds : base.discountPolicy ? ["gwacheon"] : [];
           programs[key].discountPolicies = savedDiscounts.filter(function (discount) {
             var included = discount.allPrograms ? !(discount.excludedPrograms || []).includes(programs[key].name) : discountIds.includes(discount.id) || (discount.programs || []).includes(programs[key].name);
             return discount.active !== false && included;
           }).map(function (discount) {
-            var discountName = String(discount.name || "할인").replace(/\s*할인$/, "");
-            return { id: discount.id, type: discount.type, value: discount.value, rate: discount.type === "percent" ? discount.value / 100 : 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", noticeText: discount.noticeText || "", label: discountName + (discount.type === "percent" ? " " + discount.value + "% 할인" : " " + Number(discount.value || 0).toLocaleString("ko-KR") + "원 할인") };
-          });
-          (base.discountPolicies || []).forEach(function (samplePolicy) {
-            if (!programs[key].discountPolicies.some(function (policy) { return policy.id === samplePolicy.id; })) programs[key].discountPolicies.push(Object.assign({}, samplePolicy));
+            var legacyCitizenDiscount = ["과천", "과천 할인"].includes(String(discount.name || "").trim());
+            var discountName = legacyCitizenDiscount ? "과천시민 할인" : String(discount.name || "할인").trim();
+            var discountType = legacyCitizenDiscount ? "percent" : discount.type;
+            var discountValue = legacyCitizenDiscount ? 50 : discount.value;
+            return { id: discount.id, type: discountType, value: discountValue, rate: discountType === "percent" ? discountValue / 100 : 0, maxQty: discount.maxQty || 1, maxQtyPerDate: discount.maxQty || 1, startDate: discount.startDate || "", endDate: discount.endDate || "", noticeText: discount.noticeText || "", label: discountDisplayLabel(discountName, discountType, discountValue) };
           });
           programs[key].discountPolicy = programs[key].discountPolicies[0] || null;
         } else {
@@ -1039,7 +1042,7 @@
     while (!isWeekend(endedDate)) endedDate.setDate(endedDate.getDate() - 1);
     var groupedReservationId = ticketReservationId(samplePaidDate, 1);
     var defaults = [
-      { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: "과천시민 50% 할인", arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: discountDisplayLabel("과천시민 할인", "percent", 50), arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
       { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt },
       { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
@@ -1443,7 +1446,7 @@
     byId("summary-price").textContent = money(price);
     var selectedPolicy = selectedDiscountPolicy();
     byId("product-discount-note").hidden = !selectedPolicy;
-    if (selectedPolicy) byId("product-discount-value").textContent = selectedPolicy.label.replace(/\s*할인$/, "") + " · " + selectedDiscountQty() + "매";
+    if (selectedPolicy) byId("product-discount-value").textContent = selectedPolicy.label + " · " + selectedDiscountQty() + "매";
     var selectionError = bookingSelectionError();
     var actionError = selectionError || (!programIsVisible(program) ? "현재 예약할 수 없는 프로그램입니다." : "");
     setExplainedButtonState(byId("add-to-cart"), !!actionError, actionError);

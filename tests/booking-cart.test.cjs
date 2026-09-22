@@ -6,7 +6,9 @@ const rules = require('../booking-rules.js');
 
 const source = readFileSync(require.resolve('../app.js'), 'utf8');
 const pageSource = readFileSync(require.resolve('../index.html'), 'utf8');
-const context = vm.createContext({});
+const context = vm.createContext({
+  discountDisplayLabel: (name, type, value) => String(name || '할인').trim() + ' ' + (type === 'percent' ? Number(value || 0) + '%' : new Intl.NumberFormat('ko-KR').format(Number(value || 0)) + '원'),
+});
 vm.runInContext(source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query =')), context);
 const programs = context.programs;
 const now = new Date(2026, 7, 28, 9);
@@ -113,7 +115,7 @@ test('caps each program independently and enforces per-usage-date citizen discou
 });
 
 test('allows only one discount policy per account and usage date', () => {
-  const alternate = { id: 'staff', type: 'percent', value: 20, rate: 0.2, maxQty: 2, maxQtyPerDate: 2, label: '임직원 20% 할인' };
+  const alternate = { id: 'staff', type: 'percent', value: 20, rate: 0.2, maxQty: 2, maxQtyPerDate: 2, label: '임직원 20%' };
   const multiPrograms = {
     ...programs,
     ride: { ...programs.ride, discountPolicies: [programs.ride.discountPolicy, alternate] },
@@ -319,7 +321,7 @@ test('booking summary shows the discount note only after a discount is selected'
     amount: () => 5000,
     currentPrice: () => 5000,
     money: value => value + '원',
-    selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId, label: '과천시민 50% 할인' } : null,
+    selectedDiscountPolicy: () => state.discountPolicyId ? { id: state.discountPolicyId, label: '과천시민 할인 50%' } : null,
     selectedDiscountQty: () => state.discountPolicyId ? 1 : 0,
     selectedMaxQty: () => 4,
     quantityLimitText: () => '수량 제한 안내',
@@ -338,7 +340,7 @@ test('booking summary shows the discount note only after a discount is selected'
   state.discountPolicyId = 'gwacheon-resident';
   runtime.update();
   assert.equal(runtime.byId('product-discount-note').hidden, false);
-  assert.equal(runtime.byId('product-discount-value').textContent, '과천시민 50% · 1매');
+  assert.equal(runtime.byId('product-discount-value').textContent, '과천시민 할인 50% · 1매');
   assert.equal(runtime.byId('booking-quantity-limit').textContent, '이용일 기준 최대 4매 구매 가능합니다.');
   assert.match(pageSource, /id="product-discount-note" hidden/);
 });
@@ -712,7 +714,18 @@ test('customer catalog consumes administrator programs, sessions, closures and d
   assert.match(source, /catalog\.addedSessions \|\| \[\]/);
   assert.match(source, /programs\[key\]\.operationExceptions = operationExceptions/);
   assert.match(source, /savedDiscounts\.filter/);
+  assert.doesNotMatch(source, /multi-child|다자녀 가족/);
+  assert.doesNotMatch(source, /samplePolicy/);
   assert.match(source, /Object\.keys\(programs\)\.filter\(function \(programKey\) \{ return programs\[programKey\]\.userBookable/);
+});
+
+test('discount labels preserve the configured name and append only its value', () => {
+  const runtime = vm.createContext({ Intl });
+  vm.runInContext(appFunction('discountDisplayLabel'), runtime);
+  assert.equal(runtime.discountDisplayLabel('과천시민 할인', 'percent', 50), '과천시민 할인 50%');
+  assert.equal(runtime.discountDisplayLabel('다자녀 가족', 'percent', 20), '다자녀 가족 20%');
+  assert.equal(runtime.discountDisplayLabel('지역 주민 할인', 'fixed', 1000), '지역 주민 할인 1,000원');
+  assert.match(pageSource, /id="product-discount-value">과천시민 할인 50% · 1매</);
 });
 
  test('supports configured program limits above four and counts all sessions', () => {
