@@ -8,7 +8,7 @@
   <title>렛츠런플레이 계정 발급 관리</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="admin.css?v=20260921-image2x1">
-  <link rel="stylesheet" href="admin-reference.css?v=20260915-settlement-reservation1">
+  <link rel="stylesheet" href="admin-reference.css?v=20261007-commerce1">
   <link rel="stylesheet" href="empty-state-icons.css?v=20260922-2">
 </head>
 <body class="admin-page account-admin-page">
@@ -59,6 +59,11 @@
           <div class="fixed-access-policy__head"><strong id="fixed-access-policy-title">이용할 수 있는 범위</strong><span>계정 종류에 따라 자동으로 정해집니다.</span></div>
           <div class="fixed-access-policy__cards" id="fixed-access-policy-cards"></div>
         </section>
+        <section class="commerce-account-permission" aria-labelledby="commerce-permission-title">
+          <strong id="commerce-permission-title">커머스 관리자 권한</strong>
+          <label><input id="account-commerce-permission" type="checkbox"><span>커머스 권한 부여</span></label>
+          <p id="account-commerce-help">상품·주문·배송·반품·정산과 스토어 운영 기능을 관리할 수 있습니다.</p>
+        </section>
         <p class="account-security"><i>i</i> 부서별 이용 범위는 계정을 저장하면 자동으로 적용됩니다.</p>
       </div>
       <footer><button class="account-delete-text" id="delete-admin-account" type="button" hidden>계정 삭제</button><button class="admin-button admin-button--ghost" value="close">닫기</button><button class="admin-button admin-button--primary" id="save-admin-account" type="button">계정 저장</button></footer>
@@ -82,6 +87,6 @@
     </form>
   </dialog>
   <div class="toast" id="account-toast" role="status"></div>
-  <script src="developer-policy.js?v=20260915-admin-profile1"></script><script src="account-admin.js?v=20260914-account-delete1"></script>
+  <script src="developer-policy.js?v=20260915-admin-profile1"></script><script src="account-admin.js?v=20261007-commerce1"></script>
 </body>
 </html>

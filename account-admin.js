@@ -34,6 +34,30 @@
       if (Array.isArray(saved) && saved.length) accounts = saved;
     } catch (error) { /* Keep the review prototype usable when storage is unavailable. */ }
   }
+  function canManageCommercePermission() {
+    var loginId;
+    try { loginId = sessionStorage.getItem("letsrunPlayAdminSessionV1"); }
+    catch (error) { return false; }
+    // Match the reservation prototype's default integrated-admin session.
+    if (!loginId) return true;
+    return loginId === "admin" || accounts.some(function (account) {
+      return account.type === "super" && account.active !== false && account.loginId === loginId;
+    });
+  }
+  function hasCommercePermission(account) {
+    return !!account && (account.type === "super" || !!(account.permissions && account.permissions.commerce));
+  }
+  function renderCommercePermission(account) {
+    var isSuper = !!account && account.type === "super";
+    var checkbox = byId("account-commerce-permission");
+    checkbox.checked = hasCommercePermission(account);
+    checkbox.disabled = isSuper || !canManageCommercePermission();
+    byId("account-commerce-help").textContent = isSuper
+      ? "통합관리자는 커머스 권한이 기본 부여됩니다."
+      : !canManageCommercePermission()
+        ? "커머스 권한은 통합관리자만 변경할 수 있습니다."
+        : "상품·주문·배송·반품·정산과 스토어 운영 기능을 관리할 수 있습니다.";
+  }
   function save() {
     try { localStorage.setItem(storeKey, JSON.stringify(accounts)); }
     catch (error) { notify("이 브라우저에 계정 설정을 저장하지 못했습니다."); }
@@ -97,6 +121,7 @@
     byId("account-password").placeholder = account ? "재발급할 때만 입력" : "8자 이상 임시 비밀번호";
     byId("delete-admin-account").hidden = !account || isSuper;
     renderFixedAccessPolicy(isSuper, locationSelect.value, byId("account-department").value);
+    renderCommercePermission(account);
     byId("account-dialog").showModal();
   }
   function requestAccountDeletion() {
@@ -145,7 +170,7 @@
     if ((!existing || password) && password.length < 8) { notify("임시 비밀번호는 8자 이상이어야 합니다."); return; }
     var saved = Object.assign({}, existing || {}, {
       key: activeAccountKey || "department-account-" + Date.now(), loginId: loginId, type: isSuper ? "super" : "department", access: isSuper ? { ownDepartment: "crud", otherDepartments: "crud" } : { ownDepartment: "crud", otherDepartments: "read" },
-      location: location, department: department, permissions: { programs: true, reservations: true, refunds: true, settlement: true },
+      location: location, department: department, permissions: Object.assign({}, existing && existing.permissions, { programs: true, reservations: true, refunds: true, settlement: true, commerce: isSuper || (canManageCommercePermission() ? byId("account-commerce-permission").checked : hasCommercePermission(existing)) }),
       active: true, lastLogin: existing ? existing.lastLogin : "미접속"
     });
     var index = accounts.findIndex(function (account) { return account.key === saved.key; });

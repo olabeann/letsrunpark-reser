@@ -803,3 +803,5 @@ td small {font-size:11px}
   vertical-align:middle!important;
   color:#78847e;
 }
+
+.commerce-account-permission{margin:18px 0;padding:16px;border:1px solid #dfe4e9;border-radius:9px;background:#f7f8fa}.commerce-account-permission>strong{display:block;font-size:12px;margin-bottom:12px}.commerce-account-permission>label{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;cursor:pointer}.commerce-account-permission input{width:18px;height:18px;accent-color:#1769ff}.commerce-account-permission p{margin:9px 0 0;color:#69737e;font-size:11px;line-height:1.5}
