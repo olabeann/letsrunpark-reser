@@ -7,7 +7,7 @@
   <title>렛츠런플레이 통합 예약 관리자</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="admin.css?v=20260921-image2x1">
-  <link rel="stylesheet" href="admin-reference.css?v=20260921-session-empty3">
+  <link rel="stylesheet" href="admin-reference.css?v=20261008-otp1-20260921-session-empty3">
   <link rel="stylesheet" href="empty-state-icons.css?v=20260922-2">
 </head>
 <body data-screen="settlement" class="admin-page">
@@ -23,8 +23,20 @@
         <label><span>아이디</span><input id="admin-login-id" type="text" autocomplete="username" placeholder="아이디를 입력해주세요" required></label>
         <label><span>비밀번호</span><input id="admin-login-password" type="password" autocomplete="current-password" placeholder="비밀번호를 입력해주세요" required></label>
         <p class="admin-login__error" id="admin-login-error" role="alert" hidden>아이디 또는 비밀번호를 확인해주세요.</p>
-        <button type="submit">로그인</button>
+        <button type="submit">다음 · OTP 인증</button>
         <ul class="admin-login__demo-accounts"><li><strong>admin / 1234</strong> — 통합 운영 관리자 (전체 지역·부서 관리)</li><li><strong>seoul_brand / brand1234</strong> — 브랜드총괄부 공용 계정</li><li><strong>seoul_park / park1234</strong> — 공원화사업추진TF 공용 계정</li><li><strong>busan_ops / busan1234</strong> — 부산운영지원부 공용 계정</li><li><strong>jeju_ops / jeju1234</strong> — 제주운영지원부 공용 계정</li></ul>
+      </form>
+      <form class="admin-login__form" id="admin-otp-form" hidden novalidate>
+        <small class="admin-login__eyebrow">2-STEP VERIFICATION</small>
+        <h1 id="admin-otp-title">OTP 인증</h1>
+        <p id="admin-otp-description"></p>
+        <div id="admin-otp-setup" hidden><ol><li>휴대폰에서 Google Authenticator를 엽니다.</li><li>PC의 QR코드를 본인 휴대폰 앱의 ＋ → QR 코드 스캔으로 등록합니다. 앱이 없으면 휴대폰의 앱 스토어에서 설치해 주세요.</li></ol><div class="otp-qr"><img src="assets/otp-demo-qr.svg" width="180" height="180" alt="OTP 등록 화면 검토용 QR코드"><small>시연용 QR · 실제 앱 인증과 연결되지 않습니다.</small></div><div class="otp-key">계정: <strong id="admin-otp-account"></strong><code>JBSW Y3DP EHPK 3PXP</code><button class="admin-button admin-button--ghost" id="admin-otp-copy" type="button">수동 입력 키 복사</button><small id="admin-otp-copy-status" role="status"></small><small>QR을 스캔할 수 없으면 위 키를 수동 입력하고 시간 기준을 선택하세요.</small></div></div>
+        <label><span>6자리 인증번호</span><input id="admin-otp-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6자리 숫자" aria-describedby="admin-otp-error"></label>
+        <p class="admin-login__error" id="admin-otp-error" role="alert" hidden></p>
+        <button type="submit" id="admin-otp-submit">인증하고 로그인</button>
+        <button class="otp-back" type="button" id="admin-otp-back">아이디·비밀번호 다시 입력</button>
+        <details class="otp-help"><summary>휴대폰을 변경했거나 인증할 수 없나요?</summary><p>통합 관리자에게 OTP 초기화를 요청해주세요. 초기화 후 비밀번호를 입력하고 새 휴대폰에 다시 등록합니다. 통합 관리자 계정은 별도 운영 복구 절차로 본인 확인 후 초기화합니다.</p></details>
+        <aside>UX 검토용 인증번호: 123456<br>실제 Google Authenticator 인증은 서버 연동 후 제공됩니다.</aside>
       </form>
     </div>
   </section>
@@ -36,6 +48,7 @@
       <button type="button" data-admin-view="operations"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M8 17h7"/></svg></i><span>운영일 관리</span></button>
       <button type="button" data-admin-view="settlement"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M3 19h18"/><path d="m4 7 6-4 6 6 4-4"/></svg></i><span>매출 · 정산</span></button>
       <button type="button" data-admin-href="account-admin.html" data-integrated-admin-only hidden><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M18 5v6M15 8h6"/></svg></i><span>계정 · 권한</span></button>
+      <button type="button" data-admin-href="admin-security.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><span>내 계정 · 보안</span></button>
     </nav>
     <div class="admin-sidebar__footer"><a href="booking.html?product=ride">사용자 예약 화면 <span>↗</span></a><div class="admin-user"><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/></svg></span><p><strong>통합 운영 관리자</strong><small>전체 지역·부서</small></p><button type="button" id="admin-logout">로그아웃</button></div></div>
   </aside>
@@ -146,6 +159,6 @@
   <dialog class="cancel-dialog" id="generic-confirm-dialog"><form method="dialog"><header><div><h2 id="generic-confirm-title">삭제할까요?</h2></div></header><div class="cancel-dialog__body"><p class="operation-closure-message"><i>!</i><span id="generic-confirm-message"></span></p></div><footer><button class="admin-button admin-button--ghost" value="close">취소</button><button class="admin-button admin-button--danger" id="generic-confirm-action" type="button">삭제</button></footer></form></dialog>
   <dialog class="cancel-dialog" id="cancel-dialog"><form method="dialog"><header><div><small>개별 티켓 취소</small><h2>선택한 티켓을 취소할까요?</h2></div><button value="close" aria-label="닫기">×</button></header><div class="cancel-dialog__body"><div class="refund-preview"><span><small>취소 대상</small><strong id="refund-count">1명</strong></span><span><small>환불 예정 금액</small><strong id="refund-amount">5,000원</strong></span></div><label><span>취소 사유</span><select id="cancel-reason"><option value="">사유를 선택해주세요</option><option>고객 요청</option><option>기상 악화</option><option>운영사 사정</option><option>중복 결제</option><option>기타</option></select></label><label><span>관리자 메모</span><textarea id="cancel-memo" rows="3" placeholder="처리 근거를 남겨주세요. (선택)"></textarea></label></div><footer><button class="admin-button admin-button--ghost" value="close">돌아가기</button><button class="admin-button admin-button--danger" id="confirm-cancel" type="button">취소 요청</button></footer></form></dialog>
   <div class="toast" id="admin-toast" role="status"></div>
-  <script src="holiday-demo.js?v=20260921-calendar-empty1"></script><script src="developer-policy.js?v=20260915-settlement-xlsx1"></script><script src="settlement.js?v=20260915-settlement-xlsx1"></script><script src="xlsx-export.js?v=20260914-borderfix5"></script><script src="admin.js?v=20260922-citizen-discount4"></script>
+  <script src="holiday-demo.js?v=20260921-calendar-empty1"></script><script src="developer-policy.js?v=20260915-settlement-xlsx1"></script><script src="settlement.js?v=20260915-settlement-xlsx1"></script><script src="xlsx-export.js?v=20260914-borderfix5"></script><script src="admin.js?v=20261008-otp1"></script>
 </body>
 </html>

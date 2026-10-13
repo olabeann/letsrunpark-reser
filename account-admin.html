@@ -8,7 +8,7 @@
   <title>렛츠런플레이 계정 발급 관리</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="admin.css?v=20260921-image2x1">
-  <link rel="stylesheet" href="admin-reference.css?v=20261007-commerce1">
+  <link rel="stylesheet" href="admin-reference.css?v=20261013-otp-self3">
   <link rel="stylesheet" href="empty-state-icons.css?v=20260922-2">
 </head>
 <body class="admin-page account-admin-page">
@@ -21,6 +21,7 @@
       <button type="button" data-admin-href="admin-operations.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M8 17h7"/></svg></i><span>운영일 관리</span></button>
       <button type="button" data-admin-href="admin-settlement.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M3 19h18"/><path d="m4 7 6-4 6 6 4-4"/></svg></i><span>매출 · 정산</span></button>
       <button class="is-active" type="button" aria-current="page"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M18 5v6M15 8h6"/></svg></i><span>계정 · 권한</span></button>
+<a class="otp-security-nav" href="admin-security.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> 내 계정 · 보안</a>
     </nav>
     <div class="admin-sidebar__footer"><a href="booking.html?product=ride">사용자 예약 화면 <span>↗</span></a><div class="admin-user"><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/></svg></span><p><strong>통합 운영 관리자</strong><small>전체 지역·부서</small></p><button type="button" id="account-admin-logout">로그아웃</button></div></div>
   </aside>
@@ -29,25 +30,25 @@
     <header class="admin-topbar"><button class="mobile-menu" id="mobile-menu" type="button" aria-label="관리자 메뉴 열기">☰</button><div class="topbar-path"><span>전체 지역</span><b>›</b><span>통합 예약</span><b>›</b><strong>계정 · 권한</strong></div></header>
   <main class="account-admin-main" id="account-admin-main">
     <div class="page-head">
-      <div><span class="page-kicker">DEPARTMENT ACCOUNTS</span><h1>관리자 계정 · 권한</h1><p>담당 부서별 공용 계정을 발급하고 로그인 정보를 관리합니다.</p></div>
+      <div><span class="page-kicker">DEPARTMENT ACCOUNTS</span><h1>관리자 계정 · 권한</h1><p>담당 부서별 공용 계정을 발급하고 로그인 정보와 커머스 권한을 관리합니다.</p></div>
       <div class="page-head__actions"><button class="admin-button admin-button--primary" id="issue-account" type="button">＋ 부서 계정 발급</button></div>
     </div>
 
-    <section class="account-policy-note"><i>i</i><p><strong>계정별 이용 범위</strong><span>통합 관리자는 모든 지역·부서를 관리합니다. 부서 계정은 자기 부서 프로그램만 관리하고 다른 부서 프로그램은 조회만 할 수 있습니다.</span></p></section>
+    <section class="account-policy-note"><i>i</i><p><strong>계정별 이용 범위</strong><span>통합 관리자는 모든 지역·부서를 관리합니다. 부서 계정은 자기 부서 프로그램만 관리하고 다른 부서 프로그램은 조회만 할 수 있습니다. 커머스 권한은 통합 관리자가 계정별로 부여·해제합니다.</span></p></section>
 
     <section class="account-panel admin-panel">
       <div class="account-toolbar">
         <label><span>지역</span><select id="account-location-filter"><option value="">전체 지역</option><option>서울</option><option>부산경남</option><option>제주</option></select></label>
         <label class="account-search"><span>계정 검색</span><input id="account-search" type="search" placeholder="지역·부서명 또는 로그인 ID"></label>
       </div>
-      <div class="table-scroll"><table class="account-table"><thead><tr><th>관리 범위</th><th>로그인 ID</th><th>계정 유형</th><th>관리</th></tr></thead><tbody id="admin-account-body"></tbody></table></div>
+      <div class="table-scroll"><table class="account-table"><thead><tr><th>관리 범위</th><th>로그인 ID</th><th>계정 유형</th><th>커머스 권한</th><th>OTP 인증</th><th>관리</th></tr></thead><tbody id="admin-account-body"></tbody></table></div>
     </section>
   </main>
   </div>
 
   <dialog class="kiosk-dialog account-dialog" id="account-dialog">
     <form method="dialog">
-      <header><div><small>DEPARTMENT ACCOUNT</small><h2 id="account-dialog-title">부서 계정 발급</h2><p>로그인 정보와 담당 부서를 설정합니다.</p></div><button value="close" aria-label="닫기">×</button></header>
+      <header><div><small>DEPARTMENT ACCOUNT</small><h2 id="account-dialog-title">부서 계정 발급</h2><p>로그인 정보와 담당 부서, 커머스 이용 권한을 설정합니다.</p></div><button value="close" aria-label="닫기">×</button></header>
       <div class="account-form">
         <div class="account-form-grid">
           <label><span>지역</span><select id="account-location"><option>서울</option><option>부산경남</option><option>제주</option></select></label>
@@ -64,6 +65,7 @@
           <label><input id="account-commerce-permission" type="checkbox"><span>커머스 권한 부여</span></label>
           <p id="account-commerce-help">상품·주문·배송·반품·정산과 스토어 운영 기능을 관리할 수 있습니다.</p>
         </section>
+<section class="otp-settings otp-card" aria-labelledby="account-otp-title"><div class="otp-card-heading"><h2 id="account-otp-title">2단계 인증 (OTP)</h2><span id="account-otp-badge" class="otp-badge">등록 대기</span></div><p id="account-otp-status" role="status"></p><p>발급 담당자는 OTP를 대신 등록하지 않습니다. 로그인 ID와 임시 비밀번호를 담당자에게 전달해 주세요.</p></section>
         <p class="account-security"><i>i</i> 부서별 이용 범위는 계정을 저장하면 자동으로 적용됩니다.</p>
       </div>
       <footer><button class="account-delete-text" id="delete-admin-account" type="button" hidden>계정 삭제</button><button class="admin-button admin-button--ghost" value="close">닫기</button><button class="admin-button admin-button--primary" id="save-admin-account" type="button">계정 저장</button></footer>
@@ -87,6 +89,6 @@
     </form>
   </dialog>
   <div class="toast" id="account-toast" role="status"></div>
-  <script src="developer-policy.js?v=20260915-admin-profile1"></script><script src="account-admin.js?v=20261007-commerce1"></script>
+  <script src="developer-policy.js?v=20261013-otp-self3"></script><script src="account-admin.js?v=20261013-otp-self3"></script>
 </body>
 </html>

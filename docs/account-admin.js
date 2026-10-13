@@ -5,6 +5,7 @@
   var toastTimer;
   var activeAccountKey = null;
   var pendingDeletionKey = null;
+  var pendingOtpRegistered = false;
   var seededProgramCounts = {
     "서울|공원화사업추진TF": 2
   };
@@ -75,11 +76,13 @@
       row.innerHTML = '<td><strong>' + escapeHtml(account.location) + '</strong><small>' + escapeHtml(account.department) + '</small></td>' +
         '<td><strong>' + escapeHtml(account.loginId) + '</strong></td>' +
         '<td><span class="account-type ' + (account.type === "super" ? 'is-super' : '') + '">' + (account.type === "super" ? '통합 관리자' : '관리자') + '</span></td>' +
+        '<td><span class="account-type ' + (hasCommercePermission(account) ? 'is-super' : '') + '">' + (account.type === "super" ? '기본 부여' : hasCommercePermission(account) ? '부여' : '미부여') + '</span></td>' +
+        '<td><span class="account-type">' + (account.otpRegistered ? '등록 완료' : '등록 대기') + '</span></td>' +
         '<td><button class="account-edit" type="button">계정 정보</button></td>';
       row.querySelector(".account-edit").addEventListener("click", function () { openDialog(account); });
       body.append(row);
     });
-    if (!visible.length) body.innerHTML = '<tr><td colspan="4" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-account.svg" alt=""></span><strong>조건에 맞는 관리자 계정이 없습니다.</strong><small>지역이나 계정 검색어를 변경해 다시 확인해주세요.</small></td></tr>';
+    if (!visible.length) body.innerHTML = '<tr><td colspan="6" class="empty-table"><span class="admin-empty-icon" aria-hidden="true"><img src="assets/icons/empty-account.svg" alt=""></span><strong>조건에 맞는 관리자 계정이 없습니다.</strong><small>지역이나 계정 검색어를 변경해 다시 확인해주세요.</small></td></tr>';
   }
   function refreshDepartments(location, selected) {
     var departments = location === "전체" ? ["통합 운영"] : organization[location] || [];
@@ -122,6 +125,8 @@
     byId("delete-admin-account").hidden = !account || isSuper;
     renderFixedAccessPolicy(isSuper, locationSelect.value, byId("account-department").value);
     renderCommercePermission(account);
+    pendingOtpRegistered = !!(account && account.otpRegistered);
+    renderOtpSettings();
     byId("account-dialog").showModal();
   }
   function requestAccountDeletion() {
@@ -171,14 +176,109 @@
     var saved = Object.assign({}, existing || {}, {
       key: activeAccountKey || "department-account-" + Date.now(), loginId: loginId, type: isSuper ? "super" : "department", access: isSuper ? { ownDepartment: "crud", otherDepartments: "crud" } : { ownDepartment: "crud", otherDepartments: "read" },
       location: location, department: department, permissions: Object.assign({}, existing && existing.permissions, { programs: true, reservations: true, refunds: true, settlement: true, commerce: isSuper || (canManageCommercePermission() ? byId("account-commerce-permission").checked : hasCommercePermission(existing)) }),
-      active: true, lastLogin: existing ? existing.lastLogin : "미접속"
+      otpRegistered: !!(existing && existing.otpRegistered), active: true, lastLogin: existing ? existing.lastLogin : "미접속"
     });
     var index = accounts.findIndex(function (account) { return account.key === saved.key; });
     if (index === -1) accounts.push(saved); else accounts[index] = saved;
     save(); render(); byId("account-password").value = ""; byId("account-dialog").close(); notify(department + " 관리자 계정과 권한을 저장했습니다.");
   }
 
-  load(); render();
+  function renderOtpCard(prefix, enabled, feedback) {
+    byId(prefix + "-badge").textContent = enabled ? "사용 중" : "등록 대기";
+    byId(prefix + "-badge").classList.toggle("is-enabled", enabled);
+    byId(prefix + "-status").textContent = enabled
+      ? "인증 기기를 변경하려면 기존 휴대폰의 현재 인증 코드를 먼저 확인해 주세요."
+      : "QR코드 또는 수동 입력 키로 등록한 뒤 6자리 인증 코드를 확인해 주세요.";
+    byId(prefix + "-enroll").hidden = enabled;
+    byId(prefix + "-verify").hidden = enabled;
+    byId(prefix + "-reset").hidden = !enabled;
+    byId(prefix + "-verify").disabled = !/^[0-9]{6}$/.test(byId(prefix + "-code").value);
+    byId(prefix + "-reset").disabled = !/^[0-9]{6}$/.test(byId(prefix + "-code").value);
+    if (feedback !== undefined) {
+      byId(prefix + "-feedback").textContent = feedback;
+      byId(prefix + "-feedback").classList.toggle("is-success", false);
+    }
+  }
+  function renderOtpSettings() {
+    byId("account-otp-badge").textContent = pendingOtpRegistered ? "등록 완료" : "등록 대기";
+    byId("account-otp-badge").classList.toggle("is-enabled", pendingOtpRegistered);
+    byId("account-otp-status").textContent = pendingOtpRegistered
+      ? "담당자가 직접 등록한 OTP입니다. 인증 기기 변경은 담당자의 ‘내 계정 · 보안’에서 진행합니다."
+      : "계정을 저장하면 OTP 등록 대기로 발급됩니다. 담당자가 최초 로그인할 때 본인 휴대폰으로 등록해야 관리자 기능을 사용할 수 있습니다.";
+  }
+  function checkOtpCode(prefix) {
+    if (byId(prefix + "-code").value !== "123456") {
+      byId(prefix + "-feedback").classList.remove("is-success");
+      byId(prefix + "-feedback").textContent = "인증 코드가 올바르지 않거나 만료되었습니다. 시연용 코드 123456으로 다시 시도해 주세요.";
+      byId(prefix + "-code").setAttribute("aria-invalid", "true");
+      byId(prefix + "-code").focus();
+      return false;
+    }
+    byId(prefix + "-code").removeAttribute("aria-invalid");
+    return true;
+  }
+  function bindOtpInput(prefix, renderState) {
+    byId(prefix + "-code").addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+      this.removeAttribute("aria-invalid");
+      renderState();
+    });
+  }
+  function mountPersonalSecurity() {
+    if (!byId("account-security-main")) return;
+    var sessionId = sessionStorage.getItem("letsrunPlayAdminSessionV1") || "admin";
+    var account = accounts.find(function (item) { return item.loginId === sessionId || (sessionId === "admin" && item.type === "super"); });
+    if (!account || account.active === false) {
+      byId("account-security-main").innerHTML = '<h1>내 계정 · 보안</h1><p>로그인 후 보안 설정을 관리할 수 있습니다.</p><a href="admin.html">관리자 로그인</a>';
+      return;
+    }
+    byId("security-login-id").textContent = account.loginId;
+    var enabled = !!account.otpRegistered;
+    // Preserve the login demo's legacy registration for seeded accounts.
+    if (!Object.prototype.hasOwnProperty.call(account, "otpRegistered")) {
+      try { enabled = JSON.parse(localStorage.getItem("letsrunParkOtpDemoV1") || "{}")[sessionId] === true; } catch (error) {}
+    }
+    var changingDevice = false;
+    function renderSecurity() {
+      renderOtpCard("security-otp", enabled && !changingDevice);
+      byId("security-otp-verify").textContent = changingDevice ? "새 기기 등록 완료" : "등록 완료";
+      if (changingDevice) {
+        byId("security-otp-badge").textContent = "기기 변경 중";
+        byId("security-otp-status").textContent = "새 휴대폰으로 QR을 등록하고 새 기기의 코드를 확인해 주세요. 완료 전까지 기존 OTP가 유지됩니다.";
+      }
+    }
+    function updateSecurity(next) {
+      if (!checkOtpCode("security-otp")) return;
+      var updated = accounts.map(function (item) { return item.key === account.key ? Object.assign({}, item, {otpRegistered: next}) : item; });
+      try { localStorage.setItem(storeKey, JSON.stringify(updated)); }
+      catch (error) { byId("security-otp-feedback").textContent = "저장하지 못했습니다. 브라우저 저장소 설정을 확인해 주세요."; return; }
+      accounts = updated; account.otpRegistered = next; enabled = next; changingDevice = false;
+      byId("security-otp-code").value = "";
+      renderSecurity(); render();
+      byId("security-otp-feedback").textContent = "OTP 등록을 완료했습니다. 이후 로그인에는 등록한 휴대폰의 코드를 입력해 주세요.";
+      byId("security-otp-feedback").classList.add("is-success");
+    }
+    byId("security-otp-copy").addEventListener("click", function () {
+      if (!navigator.clipboard) { byId("security-otp-feedback").textContent = "표시된 키를 직접 선택해 복사해 주세요."; return; }
+      navigator.clipboard.writeText("JBSWY3DPEHPK3PXP").then(function () {
+        byId("security-otp-feedback").textContent = "수동 입력 키를 복사했습니다.";
+      }).catch(function () { byId("security-otp-feedback").textContent = "복사할 수 없습니다. 표시된 키를 직접 선택해 복사해 주세요."; });
+    });
+    bindOtpInput("security-otp", renderSecurity);
+    byId("security-otp-verify").addEventListener("click", function () { updateSecurity(true); });
+    byId("security-otp-reset").addEventListener("click", function () {
+      if (!checkOtpCode("security-otp")) return;
+      changingDevice = true;
+      byId("security-otp-code").value = "";
+      byId("security-otp-feedback").textContent = "";
+      renderSecurity();
+    });
+    byId("security-otp-cancel").addEventListener("click", function () {
+      changingDevice = false; byId("security-otp-code").value = ""; renderSecurity(); byId("security-otp-feedback").textContent = "변경을 취소했습니다.";
+    });
+    renderSecurity();
+  }
+  load(); render(); mountPersonalSecurity();
   document.querySelectorAll("[data-admin-href]").forEach(function (button) { button.addEventListener("click", function () { window.location.href = button.dataset.adminHref; }); });
   byId("mobile-menu").addEventListener("click", function () { document.querySelector(".admin-sidebar").classList.toggle("is-open"); });
   byId("account-admin-logout").addEventListener("click", function () {
