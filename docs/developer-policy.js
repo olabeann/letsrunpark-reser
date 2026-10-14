@@ -38,7 +38,7 @@
         ,{ title: "운영 관리자 계정·권한 화면", eyebrow: "ACCOUNT ADMIN", items: [
           ["계정 검색 · 조회", "지역 필터 또는 계정 검색어를 변경", "통합 관리자 권한으로 지역·부서·로그인 ID 조건을 적용합니다.", "조건에 맞는 계정과 권한 범위를 표시합니다.", "부서 계정에는 계정 발급 화면과 다른 계정의 보안 정보를 노출하지 않습니다."],
           ["부서 계정 발급 · 재설정", "‘부서 계정 발급’ 또는 ‘계정 정보’를 클릭 후 저장", "같은 지역·부서에 공용 계정이 중복되지 않는지와 로그인 ID, 신규/재발급 임시 비밀번호를 검증합니다.", "지역과 담당 부서를 선택해 공용 계정을 발급하고 임시 비밀번호는 최초 전달 후 다시 표시하지 않습니다.", "통합 관리자만 부서 계정을 발급·삭제·재발급할 수 있으며 부서 계정은 자기 소속 범위를 변경할 수 없습니다."],
-          ["Google Authenticator · OTP", "계정은 OTP 등록 대기로 발급. 담당자가 최초 로그인에서 직접 등록. 내 계정·보안에서 기존 코드 확인 후 인증 기기 변경", "계정별 QR·설정 키로 담당자의 앱을 연결하고 코드를 검증한 뒤 등록을 확정합니다.", "미등록은 등록 화면, 등록 완료는 OTP 인증 화면으로 안내하며 성공 전에는 로그인 세션을 발급하지 않습니다. 휴대폰 변경은 통합 관리자 초기화 후 재등록합니다.", "현재 123456 검토용 UX입니다. 서버에서 TOTP 키 보관, 시도·만료·재사용 제한, 초기화 시 세션 폐기와 감사 로그를 구현해야 합니다."],
+          ["Google Authenticator · OTP","계정 발급 → 로그인 인증 → 개인 재등록","최초 등록은 통합 운영 관리자의 신규 계정 발급 시에만 진행합니다.","로그인은 등록된 코드 확인만, 재등록은 로그인 후 내 계정·보안에서 기존 코드와 새 코드를 확인합니다.","관리자 초기화 UI는 제외합니다. OTP-01~04에서 서비스·FE·BE 및 예외 정책을 확인하세요."],
           ["커머스 관리자 권한", "계정 정보에서 ‘커머스 권한 부여’를 변경 후 저장", "예약의 지역·부서 권한과 별개로 계정별 커머스 권한을 확인합니다. 통합 관리자는 기본 부여되며 해제할 수 없습니다.", "일반 계정은 통합 관리자만 커머스 권한을 부여·해제할 수 있습니다. 상품·주문·배송·반품·정산과 스토어 운영 기능에 적용합니다.", "서버에서도 변경 요청자의 통합 관리자 권한과 각 커머스 API의 접근 권한을 검사하고 권한 변경 이력을 기록해야 합니다."],
           ["부서별 관리 · 조회 권한", "부서 계정으로 프로그램·예약·환불·정산 기능 접근", "로그인 계정과 대상 데이터의 소속 지역·부서를 함께 비교합니다.", "자기 부서 프로그램은 관리하고 다른 부서 프로그램은 조회만 하며, 예약·환불·정산은 자기 부서 데이터만 접근합니다.", "다른 부서의 등록·수정·삭제·상태 변경·환불·다운로드 요청은 화면 상태와 별개로 API에서도 거절해야 합니다."],
           ["계정 삭제 · 비밀번호 재발급", "계정 삭제 또는 새 임시 비밀번호 저장", "통합 관리자는 삭제할 수 없습니다. 부서 계정 삭제 시 프로그램·회차·예약·결제·환불·정산 등 운영 이력이 전혀 없는지 확인합니다.", "연결된 프로그램이나 운영 이력이 없을 때만 확인 후 삭제합니다. 이력이 있으면 삭제를 차단하고 사유를 안내합니다. 로그인 이력만으로는 삭제를 제한하지 않습니다.", "서버가 삭제 직전 조건을 다시 검사하고 삭제 요청자·시각·대상·사유·결과를 대상 계정과 분리된 감사 로그에 남깁니다."]
@@ -161,7 +161,10 @@
     return '<details class="policy-flow"' + (itemIndex === 0 ? " open" : "") + '><summary><span>' + escapeHtml(item[0]) + '</span><i aria-hidden="true"></i></summary><dl>' + rows + '</dl></details>';
   }
 
+  function otpTopics() { return [{"key":"OTP-01","title":"최초 OTP 등록 · 계정 발급","summary":"통합 운영 관리자의 신규 발급 시에만 최초 등록","service":[["최초 등록 주체·위치","계정·권한 → 부서 계정 발급","통합 운영 관리자만 신규 계정과 최초 OTP를 발급합니다. 담당자의 인증 앱에 연결하며 관리자 본인의 OTP를 대신 연결하지 않습니다.","ID·임시 비밀번호 입력 → 담당자 QR·수동 키 등록 → 담당자 앱의 6자리 코드 확인 → 계정 저장 순서입니다.","기존 계정 정보는 OTP 상태 조회만 제공합니다. 초기화·재등록 버튼과 로그인 화면의 최초 등록 QR은 없습니다."]],"fe":[["발급 화면과 임시 인증 확인","신규 발급 창 열기·OTP 확인·계정 저장","올바른 로그인 ID와 6자리 코드를 확인합니다. 인증 확인은 입력한 ID에 연결하고 ID 변경 시 다시 인증합니다.","인증 전 계정 저장은 차단합니다. 확인 후에도 계정 저장 전에는 발급을 확정하지 않습니다.","창을 닫으면 임시 확인을 폐기합니다. 저장 실패 시 발급 완료로 안내하지 않으며 계정·권한·OTP 상태를 유지합니다."]],"be":[["최초 발급 확정 — 서버 구현 요구","통합 관리자의 계정 발급 요청","서버에서 통합 관리자 권한, ID 중복, 부서당 공용 계정 1개, 비밀번호 정책과 계정별 TOTP 확인을 검증합니다.","서버가 임시 키를 생성하고 확인 성공 후 계정 저장과 OTP 등록 완료를 원자적으로 확정합니다.","임시 비밀번호 원문·TOTP 키·코드는 로그에 기록하지 않습니다. 통합 운영 관리자 최초 계정·OTP는 별도 초기 프로비저닝 절차로 준비합니다."]]},{"key":"OTP-02","title":"로그인 OTP 인증","summary":"등록된 OTP 코드 확인 후 로그인 세션 발급","service":[["로그인 단계","통합·부서 관리자 로그인","발급 때 등록한 OTP를 사용합니다. 로그인 화면에는 QR·수동 키를 통한 최초 등록 기능이 없습니다.","ID·비밀번호 확인 → OTP 코드 입력 → 인증 성공 → 관리자 진입 순서입니다.","미등록 계정은 로그인과 신규 등록을 차단하고 계정 발급 담당자 확인 안내를 표시합니다."]],"fe":[["로그인 대기와 코드 입력","ID·비밀번호 제출 또는 OTP 제출","비밀번호가 맞아도 OTP 성공 전에는 로그인 완료 상태로 바꾸지 않습니다. 코드 오류는 입력 화면에서 재시도합니다.","성공 시 로그인 대기 정보와 코드 입력값을 지우고 해당 계정으로 이동합니다.","뒤로가기·로그아웃 시 대기 정보를 폐기합니다. 기기 변경은 로그인 후 내 계정·보안에서만 시작합니다."]],"be":[["OTP 로그인 검증 — 서버 구현 요구","로그인 대기 토큰과 OTP 제출","서버가 계정 활성 여부·등록 여부·대기 토큰의 계정 연결과 만료·TOTP 유효성을 재검증합니다.","OTP 성공 후에만 로그인 세션을 발급합니다. 등록 상태를 클라이언트의 값만으로 승인하지 않습니다.","검증 시도 제한·코드 재사용 방지·시간 오차 허용·대기 만료를 적용합니다. 수치와 잠금·해제 기준은 서버 보안 설정으로 별도 확정합니다."]]},{"key":"OTP-03","title":"개인 OTP 재등록 · 기기 변경","summary":"모든 관리자가 독립 메뉴 내 계정·보안에서 본인 OTP 변경","service":[["본인 계정 관리","로그인 후 내 계정·보안","통합·부서 관리자 모두 동일 수준의 독립 메뉴를 사용하며 로그인한 자기 계정만 관리합니다.","기본 화면은 로그인 ID·OTP 상태·인증 기기 변경 버튼만 표시합니다.","계정·권한 메뉴는 통합 관리자 전용이며 개인 재등록의 진입점이 아닙니다."]],"fe":[["기기 변경 두 단계","인증 기기 변경 버튼 클릭","1단계: 현재 앱의 OTP 확인. 2단계: 새 앱 QR·수동 키 등록 및 새 OTP 코드 확인. 단계에 맞는 필드와 버튼만 보여줍니다.","새 코드 확인 성공 시 별도 계정 저장 없이 등록 완료를 반영하고 기본 상태 화면으로 돌아갑니다.","새 등록 완료 전까지 기존 OTP를 유지합니다. 취소·오류·저장 실패 시 기존 OTP를 폐기하거나 미등록으로 바꾸지 않습니다."]],"be":[["본인 재등록과 키 교체 — 서버 구현 요구","기존 코드 확인·새 키 요청·새 코드 확인","현재 로그인 계정과 요청 대상을 일치시키고 기존 등록 키로 OTP를 확인한 후 만료되는 변경 권한을 발급합니다.","새 키를 임시 보관하고 새 코드 확인 성공 시에만 기존 키와 원자적으로 교체합니다. 기존 코드와 새 코드를 각각 해당 키로 검증합니다.","기존 키·변경 토큰을 폐기하고 본인을 제외한 기존 세션 정리 정책을 적용합니다. 처리자·대상·시각·결과 이력을 기록하되 키·코드는 기록하지 않습니다."]]},{"key":"OTP-04","title":"OTP 예외 · MVP와 서버 연동 범위","summary":"초기화 UI 제외, 로그인 불가 복구와 시연 한계 구분","service":[["MVP 제외·별도 운영 결정","휴대폰 분실·기존 OTP 접근 불가·담당자 교체","관리자 초기화와 로그인 화면의 등록·복구 UI는 제공하지 않습니다. 개인 재등록은 로그인과 기존 OTP 확인이 가능할 때 사용합니다.","로그인 불가 또는 이전 담당자 OTP를 사용할 수 없는 경우의 복구는 별도 운영 절차와 권한을 정해야 합니다.","비밀번호만으로 OTP를 건너뛰거나 계정 삭제·재발급으로 업무 이력을 지우는 우회 절차는 제공하지 않습니다."]],"fe":[["현재 프로토타입 범위","화면 검토·개발 전달","QR·설정 키는 공통 예시이고 확인 코드 123456은 시연용입니다. 실제 Authenticator 코드와 연결되지 않습니다.","예시 계정으로 화면을 검토하고 발급 ID·비밀번호의 실제 로그인 연결은 서버에서 구현합니다.","화면의 등록 완료는 브라우저 저장소 상태입니다. 시연용 저장소와 기본 관리자 상태를 실제 인증·권한 검증에 사용하지 않습니다."]],"be":[["보관·감사·연동 요구","모든 OTP 등록·인증·변경 API","키는 서버에서 계정별로 생성해 암호화 보관하며 등록 성공 후 재노출하지 않습니다. 전송 경로와 API 권한을 검증합니다.","발급·로그인·변경의 성공·실패 이력을 업무 데이터와 분리해 보존합니다. 보관 기간과 세션 정리 기준은 운영 설정으로 확정합니다.","분실 복구·최초 통합 관리자 프로비저닝·변경 알림 채널은 별도 결정 항목이며 현재 화면에 구현된 것으로 간주하지 않습니다."]]}]; }
+
   function topicsFor(context) {
+    if (context === "security") return otpTopics();
     var customer = policy.frontend.groups[0].items;
     var admin = policy.frontend.groups[1].items;
     var account = policy.frontend.groups[2].items;
@@ -172,7 +175,7 @@
       { key: "ACC-02", title: "부서 계정 발급 · 재설정", summary: "부서당 공용 계정 1개와 임시 비밀번호 처리", fe: [account[1]], be: [adminApi[5], adminApi[6]] },
       { key: "ACC-03", title: "부서별 접근 권한", summary: "자기 부서 관리·다른 부서 프로그램 조회의 화면 및 API 접근 제어", fe: [account[2]], be: [adminApi[0], adminApi[6]] },
       { key: "ACC-04", title: "삭제 · 보안", summary: "프로그램·운영 이력에 따른 삭제 제한과 감사 이력", fe: [account[3]], be: [adminApi[5], adminApi[6], adminApi[7]] }
-    ]);
+    ]).concat(otpTopics());
     if (context === "admin") return withService([
       { key: "ADM-01", title: "예약 조회 · 권한", summary: "예약 목록 조회부터 상세 열람, 부서별 접근 제어까지", fe: [admin[0]], be: [adminApi[0]] },
       { key: "ADM-02", title: "프로그램 관리", summary: "검색·초기화·목록 축약 표기부터 판매 상태와 저장까지", fe: [admin[1], admin[2], admin[3]], be: [adminApi[1]] },
@@ -182,7 +185,7 @@
       { key: "ADM-06", title: "회차 운영 취소", summary: "기상·시설·안전 사유의 일괄 취소 처리", fe: [admin[8]], be: [adminApi[3], bookingApi[10]] },
       { key: "ADM-07", title: "매출 · 정산과 엑셀", summary: "서비스 이용일 기준 조회부터 요약·거래내역·엑셀 산식과 표시 범위까지", fe: [admin[9]], be: [adminApi[4]] },
       { key: "ADM-08", title: "계정 · 보안", summary: "관리자 권한 검증과 비밀번호·개인정보 보호", fe: [], be: [adminApi[0], adminApi[5], adminApi[6], adminApi[7]] }
-    ]);
+    ]).concat(otpTopics());
     return withService([
       { key: "RSV-01", title: "로그인 · 계정", summary: "소셜 로그인부터 계정별 예약 데이터 분리까지", fe: [customer[0]], be: [bookingApi[0]] },
       { key: "RSV-02", title: "프로그램 · 날짜", summary: "체험 선택과 예약 가능한 이용일 노출 기준", fe: [customer[1], customer[2]], be: [bookingApi[1]] },
@@ -211,7 +214,7 @@
   }
 
   function renderTopic(topic, context, embedded) {
-    var contextLabel = context === "account" ? "계정 관리 화면" : context === "admin" ? "관리자 화면" : "예약 화면";
+    var contextLabel = context === "security" ? "내 계정 · 보안 화면" : context === "account" ? "계정 관리 화면" : context === "admin" ? "관리자 화면" : "예약 화면";
     return '<section class="policy-topic"' + (embedded ? "" : ' id="policy-topic" role="tabpanel" aria-labelledby="policy-key-' + topic.key + '"') + '><header class="policy-topic-head"><div><small>' + topic.key + ' · ' + contextLabel + '</small><h3>' + escapeHtml(topic.title) + '</h3><p>' + escapeHtml(topic.summary) + '</p></div><span>정책 → FE → BE</span></header><div class="policy-lanes">' + renderLane("service", "서비스 정책", topic.service) + renderLane("frontend", "화면 동작", topic.fe) + renderLane("backend", "서버 처리", topic.be) + '</div></section>';
   }
 
@@ -220,9 +223,12 @@
       "ACC-01": ".account-toolbar",
       "ACC-02": "#issue-account",
       "ACC-03": ".account-policy-note",
-      "ACC-04": "#delete-admin-account"
+      "ACC-04": "#delete-admin-account",
+      "OTP-01": "#account-otp-title", "OTP-02": "#account-otp-badge", "OTP-03": "#account-otp-owner-help", "OTP-04": "#account-otp-title"
     };
+    if (context === "security") return {"OTP-01":"#security-login-id","OTP-02":"#security-otp-badge","OTP-03":"#security-otp-title","OTP-04":"#security-otp-title"};
     return context === "admin" ? {
+      "OTP-01":"#admin-login", "OTP-02":"#admin-otp-form", "OTP-03":"[data-admin-href='admin-security.html']", "OTP-04":"#admin-login",
       "ADM-01": '[data-admin-view="reservations"]',
       "ADM-02": "#add-product",
       "ADM-03": ".row-sessions",
@@ -257,15 +263,17 @@
     var activeTopic = null;
 
     function currentPageTopicKeys() {
-      if (context === "account") return ["ACC-01", "ACC-02", "ACC-03", "ACC-04"];
+      if (context === "security") return ["OTP-01", "OTP-02", "OTP-03", "OTP-04"];
+      if (context === "account") return ["ACC-01", "ACC-02", "ACC-03", "ACC-04", "OTP-01", "OTP-02", "OTP-03", "OTP-04"];
       if (context === "admin") {
+        if (document.querySelector("#admin-login:not([hidden])")) return ["OTP-01", "OTP-02", "OTP-04"];
         var view = document.querySelector(".admin-view:not([hidden])");
         var viewName = view && view.dataset.view;
         if (viewName === "reservations") return ["ADM-01", "ADM-05", "ADM-06"];
         if (viewName === "programs" || viewName === "program-edit") return ["ADM-02", "ADM-04"];
         if (viewName === "program-sessions" || viewName === "operations") return ["ADM-03"];
         if (viewName === "settlement") return ["ADM-07"];
-        return ["ADM-08"];
+        return ["ADM-08", "OTP-01", "OTP-02", "OTP-03", "OTP-04"];
       }
       var ticketScreen = document.getElementById("my-tickets-screen");
       if (!ticketScreen || ticketScreen.hidden) {
@@ -396,7 +404,7 @@
     var keys = dialog.querySelector(".developer-policy-keys");
     var body = dialog.querySelector(".developer-policy-body");
     if (!keys || !body) return;
-    var context = document.body.classList.contains("account-admin-page") ? "account" : document.body.classList.contains("admin-page") ? "admin" : "booking";
+    var context = document.getElementById("account-security-main") ? "security" : document.body.classList.contains("account-admin-page") ? "account" : document.body.classList.contains("admin-page") ? "admin" : "booking";
     var topics = topicsFor(context);
     dialog.dataset.policyContext = context;
     keys.innerHTML = topics.map(function (topic, index) {
@@ -427,6 +435,9 @@
   });
 
   document.addEventListener("keydown", function (event) {
+    var policyShortcut = event.altKey && (event.metaKey || event.ctrlKey) && (event.code === "KeyK" || event.key.toLowerCase() === "k");
+    var securityShortcut = document.getElementById("account-security-main") && event.altKey && !event.metaKey && !event.ctrlKey && (event.code === "KeyP" || event.key.toLowerCase() === "p");
+    if (policyShortcut || securityShortcut) { event.preventDefault(); if (window.DeveloperPolicy) window.DeveloperPolicy.toggle(); return; }
     var shortcut = ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "e") || (event.altKey && !event.metaKey && !event.ctrlKey && event.key.toLowerCase() === "e");
     if (!shortcut) return;
     event.preventDefault();

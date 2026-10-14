@@ -19,7 +19,7 @@ test('password validation cannot create a session before OTP; invalid OTP remain
   const h = loginHarness();
   h.node('admin-login-id').value = 'admin'; h.node('admin-login-password').value = '1234'; h.submit('admin-login-form');
   assert.equal(h.storage.has('session'), false);
-  assert.equal(h.node('admin-otp-setup').hidden, false);
+  assert.equal(h.node('admin-otp-title').textContent, 'OTP 인증');
   assert.equal(h.node('admin-login-password').value, '');
   h.node('admin-otp-code').value = '000000'; h.submit('admin-otp-form');
   assert.equal(h.storage.has('session'), false);
@@ -29,7 +29,7 @@ test('password validation cannot create a session before OTP; invalid OTP remain
   assert.equal(h.context.pendingOtpAccount, null);
   assert.equal(h.node('admin-otp-code').value, '');
 });
-test('registered users see verification; a shared-account reset overrides older demo registration', () => {
+test('shared registration state takes precedence over legacy demo state', () => {
   const h = loginHarness([{ loginId: 'letsrun_admin', type: 'super', otpRegistered: true }]);
   assert.equal(h.context.readOtpRegistration('admin'), true);
   h.storage.set('letsrunParkOtpDemoV1', JSON.stringify({ admin: true }));
@@ -38,4 +38,10 @@ test('registered users see verification; a shared-account reset overrides older 
   h.node('admin-login-id').value = 'admin'; h.node('admin-login-password').value = 'wrong'; h.submit('admin-login-form');
   assert.equal(h.context.pendingOtpAccount, null);
   assert.equal(h.storage.has('session'), false);
+});
+
+test('unregistered accounts cannot enroll during login',()=>{
+ const h=loginHarness([{loginId:'letsrun_admin',type:'super',otpRegistered:false}]);h.node('admin-login-id').value='admin';h.node('admin-login-password').value='1234';h.submit('admin-login-form');
+ assert.equal(h.context.pendingOtpAccount,null);assert.equal(h.storage.has('session'),false);assert.match(h.node('admin-login-error').textContent,/계정 발급 담당자/);
+ assert.doesNotMatch(fs.readFileSync(require('node:path').join(__dirname,'../admin.html'),'utf8'),/admin-otp-setup|OTP 최초 등록/);
 });

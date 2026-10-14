@@ -11,6 +11,7 @@
 | 이용자 예약 | 체험·날짜·회차·인원·할인 선택 → 장바구니 또는 바로 예약 → 결제 → 예약 완료 | `index.html`, `app.js` |
 | 예약 조회 | 로그인 → 티켓 목록 → 상세·입장 상태 → 인원 선택 취소·환불 내역 | `reservations.html`, `ticket.html`, `app.js` |
 | 운영 관리자 | 예약·티켓 / 프로그램·회차 / 운영일 관리 / 매출·정산 | `admin.html`, `admin.js` |
+| 내 계정·보안 | 모든 관리자가 로그인한 본인의 OTP 상태 확인·인증 기기 변경 | `admin-security.html`, `admin-security.js` |
 | 운영 관리자의 계정·권한 | 부서 계정 발급·수정·비밀번호 재발급·삭제 | `account-admin.html`, `account-admin.js` |
 | 지역 안내 | 부산경남·제주 준비 중 안내 | `busan.html`, `jeju.html` |
 | 오류 안내 | 결제 예외 / 시스템 오류 | `payment-failed.html`, `error.html` |

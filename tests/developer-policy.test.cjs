@@ -77,3 +77,23 @@ test('administrator access is scoped by department instead of region', () => {
   assert.doesNotMatch(accountAdmin, /REGIONAL ACCOUNTS|지역 계정 발급|지역 통합 운영/);
   assert.doesNotMatch(source, /지역당 계정 1개|자기 지역 CRUD|타 지역 Read/);
 });
+
+test('OTP policy defines separate service, frontend, and backend rules for the complete flow',()=>{
+ const vm=require('node:vm');const context={};vm.createContext(context);
+ const start=source.indexOf('  function otpTopics()');const end=source.indexOf('  function topicsFor(',start);vm.runInContext(source.slice(start,end),context);
+ const topics=context.otpTopics();assert.deepEqual(Array.from(topics,t=>t.key),['OTP-01','OTP-02','OTP-03','OTP-04']);
+ for(const topic of topics)for(const lane of ['service','fe','be'])assert.ok(topic[lane].length>0);
+ assert.match(JSON.stringify(topics),/관리자 초기화 UI는 제외|초기화·재등록 버튼/);assert.match(JSON.stringify(topics),/완료 전까지 기존 OTP|기존 OTP를 유지/);
+});
+test('Command Option K and Ctrl Alt K toggle the shared developer policy panel',()=>{
+ const vm=require('node:vm');let handler,toggles=0;
+ const start=source.lastIndexOf('  document.addEventListener("keydown", function (event) {');
+ const end=source.indexOf('  document.querySelectorAll(".developer-policy-dialog").forEach',start);
+ vm.runInNewContext(source.slice(start,end),{document:{addEventListener:(name,cb)=>handler=cb,getElementById:()=>null},window:{DeveloperPolicy:{toggle:()=>toggles++}}});
+ for(const modifiers of [{metaKey:true,ctrlKey:false},{metaKey:false,ctrlKey:true}]){let prevented=false;handler({...modifiers,altKey:true,key:'k',code:'KeyK',preventDefault(){prevented=true;}});assert.equal(prevented,true);}
+ assert.equal(toggles,2);
+});
+test('personal security includes the policy panel and documents its independent OTP context',()=>{
+ const html=readFileSync(resolve(__dirname,'../admin-security.html'),'utf8');assert.match(html,/class="developer-policy-dialog"/);assert.match(html,/developer-policy.js/);assert.match(source,/context === "security"/);
+ const handoff=readFileSync(resolve(__dirname,'../FRONTEND_HANDOFF.md'),'utf8');for(const key of ['OTP-01','OTP-02','OTP-03','OTP-04'])assert.ok(handoff.includes(key));
+});

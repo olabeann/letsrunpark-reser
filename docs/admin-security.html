@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <meta name="description" content="렛츠런파크 고객사 운영 관리자 내 계정·권한 관리 화면">
+  <meta name="description" content="관리자 본인의 OTP 상태 확인과 인증 기기 변경 화면">
   <title>내 계정 · 보안 | 렛츠런파크 관리자</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="admin.css?v=20260921-image2x1">
-  <link rel="stylesheet" href="admin-reference.css?v=20261013-otp-self3">
+  <link rel="stylesheet" href="admin-reference.css?v=20261014-personal-only1">
   <link rel="stylesheet" href="empty-state-icons.css?v=20260922-2">
 </head>
 <body class="admin-page account-admin-page">
@@ -20,85 +20,39 @@
       <button type="button" data-admin-href="admin.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h2M14 14h2M8 17h2M14 17h2"/></svg></i><span>프로그램 · 회차</span></button>
       <button type="button" data-admin-href="admin-operations.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M8 17h7"/></svg></i><span>운영일 관리</span></button>
       <button type="button" data-admin-href="admin-settlement.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M3 19h18"/><path d="m4 7 6-4 6 6 4-4"/></svg></i><span>매출 · 정산</span></button>
-      <button type="button" data-admin-href="account-admin.html"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M18 5v6M15 8h6"/></svg></i><span>계정 · 권한</span></button>
-<a class="otp-security-nav is-active" aria-current="page" href="admin-security.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> 내 계정 · 보안</a>
+      <button type="button" data-admin-href="account-admin.html" data-integrated-admin-only hidden><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M18 5v6M15 8h6"/></svg></i><span>계정 · 권한</span></button>
+      <button type="button" data-admin-href="admin-security.html" class="is-active" aria-current="page"><i aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><span>내 계정 · 보안</span></button>
     </nav>
     <div class="admin-sidebar__footer"><a href="booking.html?product=ride">사용자 예약 화면 <span>↗</span></a><div class="admin-user"><span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 20v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/></svg></span><p><strong>통합 운영 관리자</strong><small>전체 지역·부서</small></p><button type="button" id="account-admin-logout">로그아웃</button></div></div>
   </aside>
 
   <div class="admin-shell">
     <header class="admin-topbar"><button class="mobile-menu" id="mobile-menu" type="button" aria-label="관리자 메뉴 열기">☰</button><div class="topbar-path"><span>전체 지역</span><b>›</b><span>통합 예약</span><b>›</b><strong>내 계정 · 보안</strong></div></header>
-  <main class="account-admin-main" id="account-admin-main" hidden>
-    <div class="page-head">
-      <div><span class="page-kicker">DEPARTMENT ACCOUNTS</span><h1>관리자 계정 · 권한</h1><p>담당 부서별 공용 계정을 발급하고 로그인 정보와 커머스 권한을 관리합니다.</p></div>
-      <div class="page-head__actions"><button class="admin-button admin-button--primary" id="issue-account" type="button">＋ 부서 계정 발급</button></div>
+<main class="account-admin-main personal-security-main" id="account-security-main">
+  <div class="page-head"><div><h1>내 계정 · 보안</h1><p>본인의 로그인 보안과 인증 기기를 관리합니다.</p></div></div>
+  <dl class="security-account-summary"><div><dt>로그인 ID</dt><dd id="security-login-id"></dd></div></dl>
+  <section class="otp-settings otp-card personal-security-section" aria-labelledby="security-otp-title">
+    <div class="personal-security-heading"><div><div class="personal-security-title"><h2 id="security-otp-title">2단계 인증 (OTP)</h2><span id="security-otp-badge" class="otp-badge">등록 대기</span></div><p>로그인할 때 인증 앱의 OTP 코드로 본인을 확인합니다.</p></div><button id="security-otp-change" class="admin-button admin-button--ghost" type="button">인증 기기 변경</button></div>
+    <ol id="security-otp-progress" class="security-step-progress" aria-label="인증 기기 변경 단계" hidden><li id="security-otp-step-existing"><span>1</span> 기존 OTP 확인</li><li id="security-otp-step-new"><span>2</span> 새 기기 등록</li></ol>
+    <p id="security-otp-status" role="status" hidden></p>
+    <div id="security-otp-flow" class="personal-security-flow" hidden>
+      <div id="security-otp-enroll" hidden><h3>새 인증 앱 연결</h3><p>Google Authenticator 앱에서 QR코드를 스캔해 주세요.</p><div class="otp-qr"><img src="assets/otp-demo-qr.svg" width="160" height="160" alt="OTP 등록 화면 검토용 QR코드"></div><details class="otp-manual-option"><summary>QR 스캔이 안 되나요?</summary><label class="otp-key-label">수동 입력 키<code class="otp-manual-key">JBSWY3DPEHPK3PXP</code></label><button id="security-otp-copy" class="admin-button admin-button--ghost" type="button">키 복사</button></details></div>
+      <div class="personal-security-code"><h3 id="security-otp-step-title">기존 OTP 확인</h3><label for="security-otp-code"><span id="security-otp-code-label">현재 휴대폰의 인증 코드</span><input id="security-otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6자리 숫자" aria-describedby="security-otp-feedback"></label><div class="otp-actions"><button id="security-otp-cancel" class="admin-button admin-button--ghost" type="button">취소</button><button id="security-otp-reset" class="admin-button admin-button--primary" type="button" disabled>확인하고 계속</button><button id="security-otp-verify" class="admin-button admin-button--primary" type="button" hidden disabled>새 OTP 등록 완료</button></div></div>
     </div>
-
-    <section class="account-policy-note"><i>i</i><p><strong>계정별 이용 범위</strong><span>통합 관리자는 모든 지역·부서를 관리합니다. 부서 계정은 자기 부서 프로그램만 관리하고 다른 부서 프로그램은 조회만 할 수 있습니다. 커머스 권한은 통합 관리자가 계정별로 부여·해제합니다.</span></p></section>
-
-    <section class="account-panel admin-panel">
-      <div class="account-toolbar">
-        <label><span>지역</span><select id="account-location-filter"><option value="">전체 지역</option><option>서울</option><option>부산경남</option><option>제주</option></select></label>
-        <label class="account-search"><span>계정 검색</span><input id="account-search" type="search" placeholder="지역·부서명 또는 로그인 ID"></label>
-      </div>
-      <div class="table-scroll"><table class="account-table"><thead><tr><th>관리 범위</th><th>로그인 ID</th><th>계정 유형</th><th>커머스 권한</th><th>OTP 인증</th><th>관리</th></tr></thead><tbody id="admin-account-body"></tbody></table></div>
-    </section>
-  </main>
-<main class="account-admin-main" id="account-security-main"><div class="page-head"><div><h1>내 계정 · 보안</h1><p>로그인 보안 설정을 관리합니다. <span id="security-login-id"></span></p></div></div><section class="otp-settings otp-card" aria-labelledby="security-otp-title">
- <div class="otp-card-heading"><div><h2 id="security-otp-title">2단계 인증 (OTP)</h2><p>Google Authenticator 등 OTP 앱으로 로그인 시 추가 인증을 요구합니다.</p></div><span id="security-otp-badge" class="otp-badge">사용 안 함</span></div>
- <p id="security-otp-status" role="status"></p>
- <div id="security-otp-enroll" class="otp-controls"><p>PC에 표시된 QR코드를 본인 휴대폰의 Google Authenticator 앱으로 스캔해 주세요. 앱이 없으면 휴대폰의 앱 스토어에서 설치한 후 ＋ → QR 코드 스캔을 선택하세요. 수동 등록 시 아래 키와 시간 기준 유형을 사용합니다.</p>
- <div class="otp-qr"><img src="assets/otp-demo-qr.svg" width="180" height="180" alt="OTP 등록 화면 검토용 QR코드"><small>화면 검토용 QR코드</small></div>
- <label class="otp-key-label">수동 입력 키<code class="otp-manual-key">JBSWY3DPEHPK3PXP</code></label><button id="security-otp-copy" class="admin-button admin-button--ghost" type="button">수동 입력 키 복사</button></div>
- <div class="otp-controls"><label for="security-otp-code"><span id="security-otp-code-label">앱에 표시된 인증 코드</span><input id="security-otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6자리 숫자" aria-describedby="security-otp-feedback"></label>
- <p id="security-otp-feedback" class="otp-feedback" role="status"></p><div class="otp-actions"><button class="admin-button admin-button--ghost" id="security-otp-cancel" type="button">취소</button><button class="admin-button admin-button--primary" id="security-otp-verify" type="button" disabled>등록 완료</button><button class="admin-button admin-button--danger" id="security-otp-reset" type="button" hidden disabled>인증 기기 변경</button></div></div>
- <details class="otp-help"><summary>휴대폰을 분실했거나 기존 코드를 확인할 수 없나요?</summary><p>통합 관리자에게 OTP 초기화를 요청해 주세요. 본인 확인 후 초기화하면 다음 로그인에서 새 휴대폰으로 다시 등록합니다.</p></details><small class="otp-demo-notice">UX 시연용 · 확인 코드 123456. QR·키는 공통 예시이며 실제 인증 앱의 코드와 연결되지 않습니다.</small>
- </section></main>
+    <p id="security-otp-feedback" class="otp-feedback" role="status"></p>
+    <small id="security-otp-demo" class="otp-demo-notice" hidden>시연용 확인 코드: 123456 · QR과 키는 화면 검토용 예시입니다.</small>
+  </section>
+</main>
   </div>
 
-  <dialog class="kiosk-dialog account-dialog" id="account-dialog">
-    <form method="dialog">
-      <header><div><small>DEPARTMENT ACCOUNT</small><h2 id="account-dialog-title">부서 계정 발급</h2><p>로그인 정보와 담당 부서, 커머스 이용 권한을 설정합니다.</p></div><button value="close" aria-label="닫기">×</button></header>
-      <div class="account-form">
-        <div class="account-form-grid">
-          <label><span>지역</span><select id="account-location"><option>서울</option><option>부산경남</option><option>제주</option></select></label>
-          <label><span>담당 부서</span><select id="account-department"></select></label>
-          <label><span>로그인 ID</span><input id="account-login-id" autocomplete="off" placeholder="예: seoul_brand"></label>
-          <label><span>임시 비밀번호</span><div class="password-control"><input id="account-password" type="text" autocomplete="off" placeholder="8자 이상 임시 비밀번호"></div><small>입력 중에는 확인할 수 있으며 저장하면 즉시 사라집니다. 발급한 값을 해당 부서 담당자에게 별도로 전달하세요.</small></label>
-        </div>
-        <section class="fixed-access-policy" aria-labelledby="fixed-access-policy-title">
-          <div class="fixed-access-policy__head"><strong id="fixed-access-policy-title">이용할 수 있는 범위</strong><span>계정 종류에 따라 자동으로 정해집니다.</span></div>
-          <div class="fixed-access-policy__cards" id="fixed-access-policy-cards"></div>
-        </section>
-        <section class="commerce-account-permission" aria-labelledby="commerce-permission-title">
-          <strong id="commerce-permission-title">커머스 관리자 권한</strong>
-          <label><input id="account-commerce-permission" type="checkbox"><span>커머스 권한 부여</span></label>
-          <p id="account-commerce-help">상품·주문·배송·반품·정산과 스토어 운영 기능을 관리할 수 있습니다.</p>
-        </section>
-<section class="otp-settings otp-card" aria-labelledby="account-otp-title"><div class="otp-card-heading"><h2 id="account-otp-title">2단계 인증 (OTP)</h2><span id="account-otp-badge" class="otp-badge">등록 대기</span></div><p id="account-otp-status" role="status"></p><p>발급 담당자는 OTP를 대신 등록하지 않습니다. 로그인 ID와 임시 비밀번호를 담당자에게 전달해 주세요.</p></section>
-        <p class="account-security"><i>i</i> 부서별 이용 범위는 계정을 저장하면 자동으로 적용됩니다.</p>
-      </div>
-      <footer><button class="account-delete-text" id="delete-admin-account" type="button" hidden>계정 삭제</button><button class="admin-button admin-button--ghost" value="close">닫기</button><button class="admin-button admin-button--primary" id="save-admin-account" type="button">계정 저장</button></footer>
-    </form>
-  </dialog>
-  <dialog class="cancel-dialog" id="account-delete-dialog" aria-labelledby="account-delete-title">
-    <form method="dialog">
-      <header><div><small>ACCOUNT DELETE</small><h2 id="account-delete-title">관리자 계정을 삭제할까요?</h2></div><button value="close" aria-label="닫기">×</button></header>
-      <div class="cancel-dialog__body">
-        <div class="operation-closure-summary"><strong id="account-delete-scope"></strong><span id="account-delete-impact"></span></div>
-        <p class="operation-closure-message"><i>!</i><span id="account-delete-message">삭제한 계정은 복구할 수 없습니다.</span></p>
-      </div>
-      <footer><button class="admin-button admin-button--ghost" id="account-delete-close" value="close">취소</button><button class="admin-button admin-button--danger" id="confirm-account-delete" type="button">계정 삭제</button></footer>
-    </form>
-  </dialog>
   <dialog class="developer-policy-dialog" id="developer-policy-dialog" aria-labelledby="developer-policy-title">
     <form method="dialog">
-      <header><div><small>DEVELOPER POLICY · Alt+P</small><h2 id="developer-policy-title">서비스 정책 · FE · BE</h2><p>계정 관리 화면의 운영 기준, 화면 동작과 서버 검증 규칙을 함께 표시합니다.</p></div><button value="close" aria-label="정책서 닫기">×</button></header>
+      <header><div><small>DEVELOPER POLICY · ⌘⌥K / Ctrl+Alt+K / Alt+P</small><h2 id="developer-policy-title">서비스 정책 · FE · BE</h2><p>계정 관리 화면의 운영 기준, 화면 동작과 서버 검증 규칙을 함께 표시합니다.</p></div><button value="close" aria-label="정책서 닫기">×</button></header>
       <nav class="developer-policy-keys" role="tablist" aria-label="계정 관리 정책 키"></nav>
       <div class="developer-policy-body"></div>
     </form>
   </dialog>
-  <div class="toast" id="account-toast" role="status"></div>
-  <script src="developer-policy.js?v=20261013-otp-self3"></script><script src="account-admin.js?v=20261013-otp-self3"></script>
+  <script src="developer-policy.js?v=20261014-otp-policy1"></script>
+  <script src="admin-security.js?v=20261014-personal-only1"></script>
 </body>
 </html>

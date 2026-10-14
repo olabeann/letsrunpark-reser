@@ -811,3 +811,109 @@ td small {font-size:11px}
 
 /* OTP enrollment and personal security settings */
 .otp-card{background:#fff;padding:20px}.otp-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.otp-card h2{margin:0;font-size:18px}.otp-card-heading p{margin:4px 0 0}.otp-badge{flex-shrink:0;border-radius:20px;padding:5px 12px;background:#f2f3f5;color:#78818b;font-size:11px;font-weight:700}.otp-badge.is-enabled{background:#e5f4ee;color:#17795c}.otp-controls{max-width:340px}.otp-qr{display:inline-flex;flex-direction:column;align-items:center;padding:10px;border:1px solid #e0e5ec;border-radius:10px;background:#fff}.otp-qr img{width:180px;height:180px;max-width:100%}.otp-key-label{color:#78818b;font-size:12px}.otp-manual-key{display:block;margin-top:6px;background:#f4f5f5;border-radius:7px;padding:9px 10px;font-size:13px;color:#24282e;overflow-wrap:anywhere}.otp-actions{display:flex;justify-content:flex-end;gap:10px}.otp-actions button{width:auto}.otp-actions button:disabled{opacity:.4;cursor:not-allowed}.otp-card .otp-feedback{color:#b42318;min-height:0}.otp-card .otp-feedback:empty{display:none}.otp-card .otp-feedback.is-success{color:#17795c}.otp-demo-notice{margin-top:18px;padding-top:12px;border-top:1px solid #edf0f4}.otp-security-nav{display:flex;align-items:center;gap:12px;margin:4px 0;padding:12px 16px;border-radius:8px;color:#48515c;text-decoration:none;font-size:13px;font-weight:600}.otp-security-nav.is-active{background:#edf3ff;color:#1769ff}.account-admin-page [hidden]{display:none!important}@media(max-width:560px){.otp-card{padding:16px}.otp-controls{max-width:100%}.otp-card-heading{gap:8px}.otp-card h2{font-size:16px}}
+
+/* Match the account form's control sizes inside OTP recovery. */
+.otp-reset-panel{margin-top:16px;padding:16px;border:1px solid #e0e5ec;border-radius:10px;background:#fff}
+.otp-reset-panel>strong{display:block;font-size:14px;line-height:1.5}
+.otp-reset-panel>p{margin:8px 0 16px}
+.otp-settings .otp-reset-panel label{display:grid;gap:6px;margin:16px 0;font-size:12px;line-height:1.5;color:#34393f}
+.otp-settings .otp-reset-panel label>span{margin:0;font-size:12px;line-height:1.5;font-weight:700}
+.otp-settings .otp-reset-panel select,.otp-settings .otp-reset-panel input:not([type="checkbox"]){box-sizing:border-box;display:block;width:100%;min-width:0;height:40px;margin:0;padding:0 10px;border:1px solid #dbe0e5;border-radius:7px;background:#fff;color:#24282e;font-family:inherit;font-size:13px;letter-spacing:normal}
+.otp-settings .otp-reset-panel select{cursor:pointer}
+.otp-settings .otp-reset-panel .otp-reset-identity{display:flex;align-items:flex-start;gap:8px;margin:16px 0}
+.otp-settings .otp-reset-identity input[type="checkbox"]{box-sizing:border-box;flex:0 0 16px;width:16px;height:16px;margin:1px 0 0;padding:0;border-radius:3px;accent-color:#1769ff}
+.otp-settings .otp-reset-identity>span{font-weight:400}
+.otp-settings #account-otp-admin-code{max-width:320px;font-size:16px;letter-spacing:.16em;font-variant-numeric:tabular-nums}
+.otp-settings #account-otp-admin-code::placeholder{font-size:13px;letter-spacing:normal}
+.otp-reset-panel .otp-actions{margin-top:16px;flex-wrap:wrap}
+.otp-settings .otp-reset-panel select:focus-visible,.otp-settings .otp-reset-panel input:focus-visible{outline:2px solid #1769ff;outline-offset:2px}
+@media(max-width:560px){.otp-reset-panel{padding:14px}.otp-reset-panel .otp-actions>button{flex:1;min-width:0}.otp-settings #account-otp-admin-code{max-width:none}}
+
+/* Use spacing rather than nested card outlines in the account dialog. */
+.account-dialog .otp-card{border:0;border-radius:0;padding:20px 0 0;background:transparent}
+.account-dialog .otp-reset-panel{margin-top:20px;padding:0;border:0;border-radius:0;background:transparent}
+.account-dialog .otp-demo-notice{border-top:0;margin-top:20px;padding-top:0}
+
+/* OTP enrollment follows two compact steps within the account form. */
+.account-dialog .account-section-title{margin:0 0 14px;font-size:14px;line-height:1.5;font-weight:700}
+.account-dialog .otp-card h2{font-size:14px;line-height:1.5}
+.account-dialog .otp-registration-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;margin-top:20px;align-items:start}
+.account-dialog .otp-registration-step{min-width:0}
+.account-dialog .otp-registration-step h3{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;line-height:1.5}
+.account-dialog .otp-step-number{display:inline-grid;place-items:center;flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:#edf4ff;color:#1769ff;font-size:11px}
+.account-dialog .otp-registration-step>p{margin:8px 0 16px;font-size:12px;line-height:1.6}
+.account-dialog .otp-registration-step .otp-qr{padding:0;border:0;border-radius:0}
+.account-dialog .otp-registration-step .otp-qr img{width:160px;height:160px}
+.account-dialog .otp-manual-option{margin-top:12px;font-size:11px;color:#69737e}
+.account-dialog .otp-manual-option summary{cursor:pointer}
+.account-dialog .otp-manual-option label{margin:8px 0 0}
+.account-dialog .otp-manual-key{font-family:monospace;font-size:12px}
+.account-dialog .otp-registration-step label{margin:0 0 12px}
+.account-dialog #account-otp-code{box-sizing:border-box;height:40px;font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:.16em}
+.account-dialog #account-otp-code::placeholder{font-size:13px;letter-spacing:normal}
+.account-dialog .otp-registration-action{width:100%;min-height:40px;background:#edf4ff;border:0;color:#1769ff}
+.account-dialog .otp-registration-action:disabled{opacity:.45;cursor:not-allowed}
+.account-dialog .otp-registration-step .otp-save-help{margin-top:10px;font-size:11px;color:#7b838b;line-height:1.6}
+.account-dialog .otp-demo-notice{font-size:10px;color:#7b838b}
+@media(max-width:560px){.account-dialog .otp-registration-layout{grid-template-columns:minmax(0,1fr);gap:24px}.account-dialog .otp-registration-step .otp-qr img{width:144px;height:144px}}
+
+/* Registered OTP is a compact status; administrator recovery is secondary. */
+.account-dialog .otp-recovery-options{margin-top:12px;font-size:12px;color:#69737e}
+.account-dialog .otp-recovery-options summary{cursor:pointer;width:fit-content}
+.account-dialog .otp-recovery-options p{margin:10px 0}
+.account-dialog .otp-recovery-options button{font-size:12px;min-height:34px;padding:7px 12px}
+.account-dialog #account-otp-owner-help{margin:10px 0 0;font-size:12px}
+
+/* Compact, borderless confirmation for OTP reset only. */
+#account-otp-reset-dialog{width:min(400px,calc(100vw - 32px));border:0;border-radius:14px}
+#account-otp-reset-dialog header{padding:20px 20px 12px;border:0;align-items:center;gap:12px}
+#account-otp-reset-dialog header h2{margin:0;font-size:17px;font-weight:700;line-height:1.5}
+#account-otp-reset-dialog header button{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;padding:0;font-size:21px;line-height:1;color:#78818b}
+#account-otp-reset-dialog .cancel-dialog__body{padding:0 20px}
+#account-otp-reset-target{margin:0 0 10px;color:#34393f;font-size:13px;line-height:1.6;font-weight:600;overflow-wrap:anywhere}
+#account-otp-reset-description{margin:0;color:#69737e;font-size:13px;line-height:1.7;font-weight:400}
+#account-otp-reset-feedback{margin:10px 0 0;font-size:12px;line-height:1.6;color:#b42318}
+#account-otp-reset-feedback:empty{display:none}
+#account-otp-reset-dialog footer{padding:20px;border:0;gap:8px}
+#account-otp-reset-dialog footer button{min-height:36px;padding:8px 16px;font-size:12px;line-height:1.5;border-radius:8px}
+
+/* Personal security: status first, device-change fields on demand. */
+.personal-security-main .security-account-summary{margin:0 0 28px;font-size:13px}
+.security-account-summary>div{display:flex;align-items:baseline;gap:16px}
+.security-account-summary dt{color:#78818b;font-size:12px}.security-account-summary dd{margin:0;font-weight:600}
+.personal-security-main .personal-security-section{max-width:800px;margin:0;padding:24px 0 0;border:0;border-top:1px solid #edf0f4;border-radius:0;background:transparent}
+.personal-security-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.personal-security-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.personal-security-main .otp-card h2{font-size:16px;line-height:1.5}
+.personal-security-heading p{margin:8px 0 0}
+.personal-security-heading>button{flex-shrink:0;min-height:36px;padding:8px 14px;font-size:12px}
+.personal-security-main #security-otp-status{margin:24px 0 16px;color:#34393f;font-weight:600}
+.personal-security-flow{max-width:360px}.personal-security-flow.is-enrolling{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;max-width:none;align-items:start}
+.personal-security-flow h3{margin:0 0 12px;font-size:13px;line-height:1.5}
+.personal-security-flow p{margin:0 0 14px}
+.personal-security-main .otp-qr{border:0;padding:0}.personal-security-main .otp-qr img{width:160px;height:160px}
+.personal-security-main .otp-manual-option{margin-top:12px;font-size:11px;color:#69737e}.personal-security-main summary{cursor:pointer}
+.personal-security-main .otp-controls{max-width:none}
+.personal-security-code label{margin:0 0 12px}
+.personal-security-code #security-otp-code{height:40px;font-size:16px;letter-spacing:.16em;font-variant-numeric:tabular-nums}
+.personal-security-code #security-otp-code::placeholder{font-size:13px;letter-spacing:normal}
+.personal-security-code .otp-actions>button{min-height:36px;padding:8px 14px;font-size:12px}
+.personal-security-main .otp-help{margin-top:24px;font-size:12px}
+.personal-security-main .otp-demo-notice{border:0;margin-top:18px;padding:0;font-size:10px}
+@media(max-width:560px){.personal-security-heading{flex-direction:column;gap:16px}.personal-security-flow.is-enrolling{grid-template-columns:minmax(0,1fr);gap:24px}.personal-security-flow{max-width:none}}
+
+/* Subtle surface contrast separates identity, OTP status, and the active task. */
+.personal-security-main .security-account-summary{max-width:800px;margin-bottom:20px;padding:16px 0;border-bottom:1px solid #e5e9ef}
+.personal-security-main .personal-security-section{padding:24px;background:#f7f9fc;border:0;border-radius:12px}
+.personal-security-heading>button{background:#1769ff;color:#fff;border:0}
+.personal-security-main .personal-security-flow{max-width:none;padding:20px;background:#fff;border-radius:10px}
+.personal-security-main .personal-security-code{max-width:360px}
+.personal-security-main .is-enrolling .personal-security-code{max-width:none}
+.personal-security-main #security-otp-status{font-size:12px;line-height:1.7;color:#69737e;font-weight:400;margin:12px 0}
+.security-step-progress{display:flex;gap:24px;list-style:none;margin:24px 0 0;padding:0}
+.security-step-progress li{display:flex;align-items:center;gap:8px;color:#78818b;font-size:12px;line-height:1.5}
+.security-step-progress li>span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8edf3;color:#69737e;font-size:11px;font-weight:700}
+.security-step-progress li.is-current{color:#1769ff;font-weight:700}
+.security-step-progress li.is-current>span{background:#1769ff;color:#fff}
+.personal-security-main .otp-help{border-top:1px solid #e5e9ef;padding-top:16px;margin-top:20px}
+@media(max-width:560px){.personal-security-main .personal-security-section{padding:18px}.personal-security-main .personal-security-flow{padding:16px}.security-step-progress{gap:16px;flex-wrap:wrap}}

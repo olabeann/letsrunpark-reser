@@ -1960,16 +1960,19 @@
     var account = adminAccounts.find(function (item) { return item.id === enteredId && item.password === byId("admin-login-password").value; });
     byId("admin-login-error").hidden = !!account;
     if (!account) { byId("admin-login-password").focus(); return; }
+    if (!readOtpRegistration(account.id)) {
+      pendingOtpAccount = null;
+      byId("admin-login-error").hidden = false;
+      byId("admin-login-error").textContent = "OTP가 등록되지 않은 계정입니다. 계정 발급 담당자에게 확인해 주세요.";
+      return;
+    }
     pendingOtpAccount = account;
     byId("admin-login-password").value = "";
-    var registered = readOtpRegistration(account.id);
     byId("admin-login-form").hidden = true;
     byId("admin-otp-form").hidden = false;
-    byId("admin-otp-setup").hidden = registered;
-    byId("admin-otp-title").textContent = registered ? "OTP 인증" : "OTP 최초 등록";
-    byId("admin-otp-description").textContent = registered ? "Google Authenticator 앱에 표시된 인증번호를 입력해주세요." : "계정 보안을 위해 인증 앱을 연결합니다. 등록과 인증을 완료하면 로그인됩니다.";
-    byId("admin-otp-submit").textContent = registered ? "인증하고 로그인" : "등록 완료하고 로그인";
-    byId("admin-otp-account").textContent = account.id;
+    byId("admin-otp-title").textContent = "OTP 인증";
+    byId("admin-otp-description").textContent = "Google Authenticator 앱에 표시된 인증번호를 입력해주세요.";
+    byId("admin-otp-submit").textContent = "인증하고 로그인";
     byId("admin-otp-error").hidden = true;
     byId("admin-otp-code").value = "";
     byId("admin-otp-code").focus();
@@ -1979,31 +1982,21 @@
       var accounts = JSON.parse(localStorage.getItem("letsrunParkDepartmentAccountsV3") || "[]");
       var found = accounts.find(function (item) { return item.loginId === id || (id === "admin" && item.type === "super"); });
       if (found) return !!found.otpRegistered;
-      return JSON.parse(localStorage.getItem("letsrunParkOtpDemoV1") || "{}")[id] === true;
+      var state = JSON.parse(localStorage.getItem("letsrunParkOtpDemoV1") || "{}");
+      if (Object.prototype.hasOwnProperty.call(state, id)) return state[id] === true;
+      return adminAccounts.some(function (item) { return item.id === id; }); // Pre-issued demo accounts.
     } catch (error) { return false; }
   }
-  byId("admin-otp-copy").addEventListener("click", function () {
-    if (!navigator.clipboard) { byId("admin-otp-copy-status").textContent = "표시된 키를 직접 선택해 복사해 주세요."; return; }
-    navigator.clipboard.writeText("JBSWY3DPEHPK3PXP").then(function () {
-      byId("admin-otp-copy-status").textContent = "수동 입력 키를 복사했습니다.";
-    }).catch(function () { byId("admin-otp-copy-status").textContent = "표시된 키를 직접 선택해 복사해 주세요."; });
-  });
   byId("admin-otp-back").addEventListener("click", function () { setAdminLoginState(false); });
   byId("admin-otp-form").addEventListener("submit", function (event) {
     event.preventDefault();
-    if (!pendingOtpAccount) return;
+    if (!pendingOtpAccount || !readOtpRegistration(pendingOtpAccount.id)) return;
     if (byId("admin-otp-code").value !== "123456") {
       byId("admin-otp-error").hidden = false;
       byId("admin-otp-error").textContent = "인증번호가 올바르지 않거나 만료되었습니다. 최신 6자리 번호로 다시 시도해주세요. 검토용 번호: 123456";
       byId("admin-otp-code").focus(); return;
     }
     var account = pendingOtpAccount;
-    try {
-      var accounts = JSON.parse(localStorage.getItem("letsrunParkDepartmentAccountsV3") || "[]");
-      var found = accounts.find(function (item) { return item.loginId === account.id || (account.id === "admin" && item.type === "super"); });
-      if (found) { found.otpRegistered = true; localStorage.setItem("letsrunParkDepartmentAccountsV3", JSON.stringify(accounts)); }
-      else { var state = JSON.parse(localStorage.getItem("letsrunParkOtpDemoV1") || "{}"); state[account.id] = true; localStorage.setItem("letsrunParkOtpDemoV1", JSON.stringify(state)); }
-    } catch (error) { byId("admin-otp-error").hidden = false; byId("admin-otp-error").textContent = "등록 상태를 저장하지 못했습니다. 브라우저 저장소 설정을 확인해주세요."; return; }
     pendingOtpAccount = null;
     byId("admin-otp-code").value = "";
     currentAccount = account;
