@@ -11,7 +11,7 @@ const componentCss = readFileSync(resolve(__dirname, '../components.css'), 'utf8
 const programSource = source.slice(source.indexOf('  var ponySlots ='), source.indexOf('  var query ='));
 const names = [
   'dateKey', 'formatBookingDate', 'formatTime', 'ticketSessionStart', 'ticketSessionEnd',
-  'ticketTiming', 'ticketDiscountQty', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
+  'ticketGuidanceHidden', 'ticketTiming', 'ticketDiscountQty', 'isWeekend', 'ticketReservationId', 'slotDateTime', 'activeSlotForNow',
   'ticketReservationNumber',
   'formatTicketGroupDate', 'ticketListGroups',
   'exampleTicketsNeedRefresh',

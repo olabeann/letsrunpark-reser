@@ -915,6 +915,8 @@
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
+    byId("detail-hide-arrival-guidance").checked = item.hideArrivalGuidance === true;
+    byId("detail-hide-cancel-guidance").checked = item.hideCancelGuidance === true;
     var cancelUnit = item.cancelOffsetUnit || (cancelMinutes > 0 && cancelMinutes % 1440 === 0 ? "days" : cancelMinutes > 0 && cancelMinutes % 60 === 0 ? "hours" : "minutes");
     var cancelDivisor = cancelUnit === "days" ? 1440 : cancelUnit === "hours" ? 60 : 1;
     byId("detail-cancel-unit").value = cancelUnit;
@@ -1171,6 +1173,8 @@
       purchaseMaxQty: purchaseMaxQty,
       bookingWindow: bookingWindow,
       arrivalLeadMinutes: arrivalLeadMinutes,
+      hideArrivalGuidance: byId("detail-hide-arrival-guidance").checked,
+      hideCancelGuidance: byId("detail-hide-cancel-guidance").checked,
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: price, image: pendingImageDataUrl || (existing && existing.image),

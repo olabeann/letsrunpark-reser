@@ -919,3 +919,11 @@ td small {font-size:11px}
 @media(max-width:560px){.personal-security-main .personal-security-section{padding:18px}.personal-security-main .personal-security-flow{padding:16px}.security-step-progress{gap:16px;flex-wrap:wrap}}
 
 .otp-settings .otp-required-option{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-size:13px;font-weight:600}.otp-settings .otp-required-option input{width:18px;height:18px;padding:0;accent-color:#1769ff}.otp-settings .otp-required-option span{margin:0}
+
+/* Keep visibility settings beside their time controls. */
+.guidance-visibility-row{display:flex;align-items:center;gap:28px;min-width:0;max-width:460px}
+.guidance-visibility-row>.field-wide,.guidance-visibility-row>.cancel-offset-control{flex:1;min-width:0}
+.admin-view[data-view="program-edit"] .guidance-visibility-toggle{display:flex;flex:0 0 auto;align-items:center;gap:5px;margin:0;white-space:nowrap;font-size:12px}
+.admin-view[data-view="program-edit"] .guidance-visibility-toggle input{width:14px;height:14px;min-height:0;margin:0;padding:0;accent-color:#1769ff}
+.admin-view[data-view="program-edit"] .guidance-visibility-toggle span{margin:0}
+@media(max-width:560px){.guidance-visibility-row{flex-wrap:wrap;gap:12px}.guidance-visibility-row>.cancel-offset-control{flex-basis:100%}}

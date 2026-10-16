@@ -237,6 +237,8 @@
         programs[key].name = source.programName || base.name;
         programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
         programs[key].arrivalLeadMinutes = source && Number.isInteger(source.arrivalLeadMinutes) && source.arrivalLeadMinutes >= 0 && source.arrivalLeadMinutes <= 100 ? source.arrivalLeadMinutes : base.arrivalLeadMinutes;
+        programs[key].hideArrivalGuidance = source.hideArrivalGuidance === true;
+        programs[key].hideCancelGuidance = source.hideCancelGuidance === true;
         programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
         programs[key].price = Number.isFinite(source.price) ? source.price : base.price;
         programs[key].image = source.image || base.image;
@@ -390,6 +392,11 @@
     return new Date(range ? range.end : sessionStart.getTime());
   }
 
+  function ticketGuidanceHidden(reservation, setting) {
+    var configured = programs[reservation.programKey];
+    return configured && typeof configured[setting] === "boolean" ? configured[setting] : reservation[setting] === true;
+  }
+
   function ticketTiming(reservation, now) {
     var sessionStart = ticketSessionStart(reservation);
     var arrivalLeadMinutes = Number.isInteger(reservation.arrivalLeadMinutes) && reservation.arrivalLeadMinutes >= 0 ? reservation.arrivalLeadMinutes : 20;
@@ -418,6 +425,8 @@
     byId("ticket-status-label").textContent = timing.status.label;
     byId("ticket-access-title").textContent = timing.status.title;
     byId("ticket-access-detail").textContent = timing.status.detail;
+    byId("ticket-access-detail").hidden = timing.accessState !== "ended" && ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    byId("ticket-window-note").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
     byId("ticket-live-message").textContent = timing.status.live;
     byId("ticket-session-summary").textContent = ticketReservation.date + " · " + ticketReservation.name;
     byId("ticket-window-open").textContent = formatTime(timing.entryOpen, false);
@@ -530,6 +539,7 @@
     var canCancel = ticketCanCancel(ticketReservation, timing, now);
     var deadline = ticketCancellationDeadline(ticketReservation);
     byId("open-ticket-cancel").disabled = !canCancel;
+    byId("ticket-cancel-deadline").hidden = ticketGuidanceHidden(ticketReservation, "hideCancelGuidance");
     byId("ticket-cancel-deadline").textContent = canCancel ? formatCancellationDeadline(deadline) + "까지 취소할 수 있어요." : timing.accessState !== "upcoming" ? "입장 대기 상태에서만 취소할 수 있어요." : "관리자가 설정한 취소 가능 시간이 지났어요.";
     if (!canCancel) byId("ticket-cancel-panel").hidden = true;
     renderTicketRefundHistory();
