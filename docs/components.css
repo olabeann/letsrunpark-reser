@@ -420,4 +420,4 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 
 .ticket-list-card>img{object-fit:contain;background:#fff}
 
-.ticket-free-notice{white-space:pre-wrap;overflow-wrap:anywhere;text-align:left}
+.ticket-free-notice{margin:18px 0;padding:20px 24px;border-radius:var(--r-lg);background:var(--yellow-100);color:var(--ink);font-size:var(--fs-body-sm);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;text-align:left}

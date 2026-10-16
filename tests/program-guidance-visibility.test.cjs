@@ -52,9 +52,11 @@ test('hidden guidance preserves admission and cancellation rules and can be show
     assert.equal(byId('open-ticket-cancel').disabled,true);
     c.updateTicketAccess();
     assert.equal(byId('ticket-window-note').hidden,hidden);
+    assert.equal(byId('ticket-time-window').hidden,hidden);
     assert.equal(byId('ticket-access-detail').hidden,hidden);
   }
   for (const notice of ['당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.', '<img src=x onerror=alert(1)>', '', '   ']) {
+    c.programs.ride.hideArrivalGuidance=true;
     c.programs.ride.ticketNoticeText=notice;
     c.updateTicketAccess();
     assert.equal(byId('ticket-free-notice').textContent,notice);

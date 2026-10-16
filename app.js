@@ -428,6 +428,7 @@
     byId("ticket-access-detail").textContent = timing.status.detail;
     byId("ticket-access-detail").hidden = timing.accessState !== "ended" && ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
     byId("ticket-window-note").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    byId("ticket-time-window").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
     var configuredProgram = programs[ticketReservation.programKey];
     var ticketNoticeText = configuredProgram && typeof configuredProgram.ticketNoticeText === "string" ? configuredProgram.ticketNoticeText : ticketReservation.ticketNoticeText || "";
     byId("ticket-free-notice").textContent = ticketNoticeText;
