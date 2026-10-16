@@ -133,6 +133,9 @@
       key: "play",
       userBookable: true,
       name: "포니랑 놀기",
+      hideArrivalGuidance: true,
+      hideCancelGuidance: true,
+      ticketNoticeText: "당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.",
       meta: "서울 렛츠런파크 · 1인 4,000원",
       price: 4000,
       tag: "누구나 체험",
@@ -198,7 +201,7 @@
   var baseCancelMinutes = { ride: programs.ride.cancelMinutes, play: programs.play.cancelMinutes };
   var baseProgramSettings = {
     ride: { name: programs.ride.name, price: programs.ride.price, image: programs.ride.image, noticeText: programs.ride.noticeText || "", guidanceText: programs.ride.guidanceText, requiresGuidanceConfirmation: programs.ride.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: ponySlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.ride.discountPolicy), discountPolicies: programs.ride.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) },
-    play: { name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", guidanceText: programs.play.guidanceText, requiresGuidanceConfirmation: programs.play.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy), discountPolicies: programs.play.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) }
+    play: { hideArrivalGuidance: programs.play.hideArrivalGuidance, hideCancelGuidance: programs.play.hideCancelGuidance, ticketNoticeText: programs.play.ticketNoticeText, name: programs.play.name, price: programs.play.price, image: programs.play.image, noticeText: programs.play.noticeText || "", guidanceText: programs.play.guidanceText, requiresGuidanceConfirmation: programs.play.requiresGuidanceConfirmation, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, purchaseGroup: "SEOUL-PONY", saleStartDate: "2026-09-01", saleEndDate: "2026-12-31", visibleStartAt: "2026-08-25T09:00", visibleEndAt: "2026-12-31T23:59", saleDays: [6, 0], active: true, slots: playSlots.map(function (slot) { return Object.assign({}, slot); }), discountPolicy: Object.assign({}, programs.play.discountPolicy), discountPolicies: programs.play.discountPolicies.map(function (policy) { return Object.assign({}, policy); }) }
   };
   var operationExceptions = [];
   var bookingStart, bookingEnd, calendarFirstMonth, calendarMonths = [];
@@ -237,9 +240,9 @@
         programs[key].name = source.programName || base.name;
         programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
         programs[key].arrivalLeadMinutes = source && Number.isInteger(source.arrivalLeadMinutes) && source.arrivalLeadMinutes >= 0 && source.arrivalLeadMinutes <= 100 ? source.arrivalLeadMinutes : base.arrivalLeadMinutes;
-        programs[key].hideArrivalGuidance = source.hideArrivalGuidance === true;
-        programs[key].hideCancelGuidance = source.hideCancelGuidance === true;
-        programs[key].ticketNoticeText = typeof source.ticketNoticeText === "string" ? source.ticketNoticeText : "";
+        programs[key].hideArrivalGuidance = typeof source.hideArrivalGuidance === "boolean" ? source.hideArrivalGuidance : base.hideArrivalGuidance === true;
+        programs[key].hideCancelGuidance = typeof source.hideCancelGuidance === "boolean" ? source.hideCancelGuidance : base.hideCancelGuidance === true;
+        programs[key].ticketNoticeText = typeof source.ticketNoticeText === "string" ? source.ticketNoticeText : base.ticketNoticeText || "";
         programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
         programs[key].price = Number.isFinite(source.price) ? source.price : base.price;
         programs[key].image = source.image || base.image;
@@ -1064,7 +1067,10 @@
       { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
-    return defaults.map(function (reservation) { return savedCancellations[reservation.id] || reservation; }).filter(function (reservation) { return reservation.qty > 0; });
+    return defaults.map(function (reservation) {
+      var settings = programs[reservation.programKey];
+      return savedCancellations[reservation.id] || Object.assign({}, reservation, { hideArrivalGuidance: settings.hideArrivalGuidance === true, hideCancelGuidance: settings.hideCancelGuidance === true, ticketNoticeText: settings.ticketNoticeText || "" });
+    }).filter(function (reservation) { return reservation.qty > 0; });
   }
 
   function exampleTicketsNeedRefresh(records) {

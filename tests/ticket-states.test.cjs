@@ -260,3 +260,20 @@ test('discount notice visibility follows the selected ticket in every access sta
   assert.match(source, /ticket-discount-label"\)\.textContent = "할인 증빙 검토 필요"/);
   assert.match(source, /ticket\.setAttribute\("data-access-state", timing\.accessState\)/);
 });
+
+
+test('example tickets include hidden timing with a multiline notice and a visible comparison', () => {
+  const fixture = runtime(new Date(2026, 9, 16, 10));
+  const tickets = fixture.context.persistDefaultTicketReservations(fixture.context.defaultTicketReservations());
+  const hidden = tickets.find(ticket => ticket.programKey === 'play');
+  const visible = tickets.find(ticket => ticket.programKey === 'ride');
+  assert.equal(hidden.hideArrivalGuidance, true);
+  assert.equal(hidden.hideCancelGuidance, true);
+  assert.equal(hidden.ticketNoticeText, '당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.');
+  assert.equal(visible.hideArrivalGuidance, false);
+  assert.equal(visible.hideCancelGuidance, false);
+  assert.equal(visible.ticketNoticeText, '');
+  const saved = BookingRules.ticketRecords(fixture.writtenStore().reservations).find(ticket => ticket.programKey === 'play');
+  assert.equal(saved.ticketNoticeText, hidden.ticketNoticeText);
+  assert.equal(saved.hideArrivalGuidance, true);
+});
