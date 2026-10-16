@@ -239,6 +239,7 @@
         programs[key].arrivalLeadMinutes = source && Number.isInteger(source.arrivalLeadMinutes) && source.arrivalLeadMinutes >= 0 && source.arrivalLeadMinutes <= 100 ? source.arrivalLeadMinutes : base.arrivalLeadMinutes;
         programs[key].hideArrivalGuidance = source.hideArrivalGuidance === true;
         programs[key].hideCancelGuidance = source.hideCancelGuidance === true;
+        programs[key].ticketNoticeText = typeof source.ticketNoticeText === "string" ? source.ticketNoticeText : "";
         programs[key].cancelMinutes = source && Number.isFinite(source.cancelMinutes) && source.cancelMinutes >= 0 ? source.cancelMinutes : baseCancelMinutes[key];
         programs[key].price = Number.isFinite(source.price) ? source.price : base.price;
         programs[key].image = source.image || base.image;
@@ -427,6 +428,10 @@
     byId("ticket-access-detail").textContent = timing.status.detail;
     byId("ticket-access-detail").hidden = timing.accessState !== "ended" && ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
     byId("ticket-window-note").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    var configuredProgram = programs[ticketReservation.programKey];
+    var ticketNoticeText = configuredProgram && typeof configuredProgram.ticketNoticeText === "string" ? configuredProgram.ticketNoticeText : ticketReservation.ticketNoticeText || "";
+    byId("ticket-free-notice").textContent = ticketNoticeText;
+    byId("ticket-free-notice").hidden = !ticketNoticeText.trim();
     byId("ticket-live-message").textContent = timing.status.live;
     byId("ticket-session-summary").textContent = ticketReservation.date + " · " + ticketReservation.name;
     byId("ticket-window-open").textContent = formatTime(timing.entryOpen, false);

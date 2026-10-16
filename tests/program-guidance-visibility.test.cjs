@@ -20,13 +20,18 @@ test('visibility preferences save independently, reopen, and reset for legacy pr
     c.openProductDialog(program);
     byId('detail-hide-arrival-guidance').checked=arrival;
     byId('detail-hide-cancel-guidance').checked=cancel;
+    const notice = arrival ? '당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.' : '';
+    byId('detail-ticket-notice').value=notice;
     c.saveProductDetail({preventDefault(){assert.fail('unexpected validation error');}});
+    assert.equal(c.saved.ticketNoticeText,notice);
     assert.equal(c.saved.hideArrivalGuidance,arrival); assert.equal(c.saved.hideCancelGuidance,cancel);
     assert.equal(c.saved.arrivalLeadMinutes,5); assert.equal(c.saved.cancelMinutes,60);
     c.openProductDialog(c.saved);
+    assert.equal(byId('detail-ticket-notice').value,notice);
     assert.equal(byId('detail-hide-arrival-guidance').checked,arrival); assert.equal(byId('detail-hide-cancel-guidance').checked,cancel);
   }
   c.openProductDialog(program);
+  assert.equal(byId('detail-ticket-notice').value,'');
   assert.equal(byId('detail-hide-arrival-guidance').checked,false); assert.equal(byId('detail-hide-cancel-guidance').checked,false);
 });
 test('hidden guidance preserves admission and cancellation rules and can be shown again', () => {
@@ -48,6 +53,12 @@ test('hidden guidance preserves admission and cancellation rules and can be show
     c.updateTicketAccess();
     assert.equal(byId('ticket-window-note').hidden,hidden);
     assert.equal(byId('ticket-access-detail').hidden,hidden);
+  }
+  for (const notice of ['당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.', '<img src=x onerror=alert(1)>', '', '   ']) {
+    c.programs.ride.ticketNoticeText=notice;
+    c.updateTicketAccess();
+    assert.equal(byId('ticket-free-notice').textContent,notice);
+    assert.equal(byId('ticket-free-notice').hidden,!notice.trim());
   }
   assert.equal(c.ticketGuidanceHidden({programKey:'deleted',hideArrivalGuidance:true},'hideArrivalGuidance'),true);
   assert.equal(c.ticketGuidanceHidden({programKey:'legacy'},'hideArrivalGuidance'),false);

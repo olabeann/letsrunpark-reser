@@ -266,6 +266,7 @@
         adminTicketStatuses: ticketStatuses,
         hideArrivalGuidance: programs[item.programKey].hideArrivalGuidance === true,
         hideCancelGuidance: programs[item.programKey].hideCancelGuidance === true,
+        ticketNoticeText: programs[item.programKey].ticketNoticeText || "",
         arrivalLeadMinutes: Number.isInteger(programs[item.programKey].arrivalLeadMinutes) && programs[item.programKey].arrivalLeadMinutes >= 0 && programs[item.programKey].arrivalLeadMinutes <= 100 ? programs[item.programKey].arrivalLeadMinutes : 20,
         cancelMinutes: Number.isFinite(programs[item.programKey].cancelMinutes) ? programs[item.programKey].cancelMinutes : 10,
         status: "confirmed", createdAt: now.toISOString(), paymentMethod: "demo-card"

@@ -917,6 +917,7 @@
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
     byId("detail-hide-arrival-guidance").checked = item.hideArrivalGuidance === true;
     byId("detail-hide-cancel-guidance").checked = item.hideCancelGuidance === true;
+    byId("detail-ticket-notice").value = item.ticketNoticeText || "";
     var cancelUnit = item.cancelOffsetUnit || (cancelMinutes > 0 && cancelMinutes % 1440 === 0 ? "days" : cancelMinutes > 0 && cancelMinutes % 60 === 0 ? "hours" : "minutes");
     var cancelDivisor = cancelUnit === "days" ? 1440 : cancelUnit === "hours" ? 60 : 1;
     byId("detail-cancel-unit").value = cancelUnit;
@@ -1175,6 +1176,7 @@
       arrivalLeadMinutes: arrivalLeadMinutes,
       hideArrivalGuidance: byId("detail-hide-arrival-guidance").checked,
       hideCancelGuidance: byId("detail-hide-cancel-guidance").checked,
+      ticketNoticeText: byId("detail-ticket-notice").value.trim(),
       cancelMinutes: cancelOffsetValue * cancelMultiplier, cancelOffsetValue: cancelOffsetValue, cancelOffsetUnit: cancelOffsetUnit,
       saleStartDate: saleStartDate, saleEndDate: saleEndDate, visibleStartAt: visibleStartAt, visibleEndAt: visibleEndAt, saleDays: saleDays,
       price: price, image: pendingImageDataUrl || (existing && existing.image),
