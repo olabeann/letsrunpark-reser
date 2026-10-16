@@ -45,3 +45,14 @@ test('unregistered accounts cannot enroll during login',()=>{
  assert.equal(h.context.pendingOtpAccount,null);assert.equal(h.storage.has('session'),false);assert.match(h.node('admin-login-error').textContent,/계정 발급 담당자/);
  assert.doesNotMatch(fs.readFileSync(require('node:path').join(__dirname,'../admin.html'),'utf8'),/admin-otp-setup|OTP 최초 등록/);
 });
+
+test('optional unregistered accounts skip enrollment after correct password only',()=>{
+  const h=loginHarness([{loginId:'letsrun_admin',type:'super',otpRequired:false,otpRegistered:false}]);
+  h.node('admin-login-id').value='admin';h.node('admin-login-password').value='bad';h.submit('admin-login-form');assert.equal(h.storage.has('session'),false);
+  h.node('admin-login-password').value='1234';h.submit('admin-login-form');assert.equal(h.storage.get('session'),'admin');
+});
+test('optional policy preserves verification for an already registered OTP',()=>{
+  const h=loginHarness([{loginId:'letsrun_admin',type:'super',otpRequired:false,otpRegistered:true}]);
+  h.node('admin-login-id').value='admin';h.node('admin-login-password').value='1234';h.submit('admin-login-form');
+  assert.equal(h.storage.has('session'),false);assert.equal(h.node('admin-otp-title').textContent,'OTP 인증');
+});

@@ -78,7 +78,7 @@
         '<td><strong>' + escapeHtml(account.loginId) + '</strong></td>' +
         '<td><span class="account-type ' + (account.type === "super" ? 'is-super' : '') + '">' + (account.type === "super" ? '통합 관리자' : '관리자') + '</span></td>' +
         '<td><span class="account-type ' + (hasCommercePermission(account) ? 'is-super' : '') + '">' + (account.type === "super" ? '기본 부여' : hasCommercePermission(account) ? '부여' : '미부여') + '</span></td>' +
-        '<td><span class="account-type">' + (account.otpRegistered ? '등록 완료' : '등록 대기') + '</span></td>' +
+        '<td><span class="account-type">' + (account.otpRequired === false ? '선택 인증' : account.otpRegistered ? '필수 · 등록 완료' : '필수 · 등록 대기') + '</span></td>' +
         '<td><button class="account-edit" type="button">계정 정보</button></td>';
       row.querySelector(".account-edit").addEventListener("click", function () { openDialog(account); });
       body.append(row);
@@ -128,6 +128,8 @@
     renderFixedAccessPolicy(isSuper, locationSelect.value, byId("account-department").value);
     renderCommercePermission(account);
     pendingOtpRegistered = !!(account && account.otpRegistered);
+    byId("account-otp-required").checked = !account || account.otpRequired !== false;
+    byId("account-otp-required").disabled = !canManageCommercePermission();
     verifiedOtpLoginId = "";
     byId("account-otp-code").value = "";
     byId("account-otp-code").removeAttribute("aria-invalid");
@@ -182,10 +184,11 @@
     if (!isSuper && accounts.some(function (account) { return account.key !== activeAccountKey && account.type === "department" && account.location === location && account.department === department; })) { notify("해당 부서에는 이미 발급된 관리자 계정이 있습니다."); return; }
     if ((!existing || password) && password.length < 8) { notify("임시 비밀번호는 8자 이상이어야 합니다."); return; }
     var issuerVerified = pendingOtpRegistered && verifiedOtpLoginId === loginId;
-    if (!existing && !issuerVerified) { notify("OTP 인증을 완료한 뒤 계정을 발급해 주세요."); byId("account-otp-code").focus(); return; }
+    if (!existing && byId("account-otp-required").checked && !issuerVerified) { notify("OTP 인증을 완료한 뒤 계정을 발급해 주세요."); byId("account-otp-code").focus(); return; }
     var saved = Object.assign({}, existing || {}, {
       key: activeAccountKey || "department-account-" + Date.now(), loginId: loginId, type: isSuper ? "super" : "department", access: isSuper ? { ownDepartment: "crud", otherDepartments: "crud" } : { ownDepartment: "crud", otherDepartments: "read" },
       location: location, department: department, permissions: Object.assign({}, existing && existing.permissions, { programs: true, reservations: true, refunds: true, settlement: true, commerce: isSuper || (canManageCommercePermission() ? byId("account-commerce-permission").checked : hasCommercePermission(existing)) }),
+      otpRequired: byId("account-otp-required").checked,
       otpRegistered: !!(existing && existing.otpRegistered) || !!issuerVerified, active: true, lastLogin: existing ? existing.lastLogin : "미접속"
     });
     if (issuerVerified && !(existing && existing.otpRegistered)) {
@@ -205,11 +208,12 @@
 
   function renderOtpSettings() {
     var existing = !!activeAccountKey;
-    byId("account-otp-badge").textContent = pendingOtpRegistered ? "등록 완료" : "미등록";
+    var required = byId("account-otp-required").checked;
+    byId("account-otp-badge").textContent = pendingOtpRegistered ? "등록 완료" : required ? "미등록" : "선택 인증";
     byId("account-otp-badge").classList.toggle("is-enabled", pendingOtpRegistered);
-    byId("account-otp-status").hidden = existing || pendingOtpRegistered;
-    byId("account-otp-status").textContent = "계정 발급 시 담당자의 인증 앱을 연결하고 OTP를 확인해 주세요.";
-    var showEnrollment = !existing && !pendingOtpRegistered;
+    byId("account-otp-status").hidden = required && (existing || pendingOtpRegistered);
+    byId("account-otp-status").textContent = required ? "계정 발급 시 담당자의 인증 앱을 연결하고 OTP를 확인해 주세요." : "OTP 미등록 계정은 비밀번호로 로그인합니다. 이미 등록한 OTP 인증은 유지됩니다.";
+    var showEnrollment = required && !existing && !pendingOtpRegistered;
     byId("account-otp-enroll").hidden = !showEnrollment;
     byId("account-otp-controls").hidden = !showEnrollment;
     byId("account-otp-registration").hidden = !showEnrollment;
@@ -250,6 +254,7 @@
     });
   }
   load(); render();
+  byId("account-otp-required").addEventListener("change", renderOtpSettings);
   bindOtpInput("account-otp", renderOtpSettings);
   byId("account-otp-verify").addEventListener("click", verifyIssuerOtp);
   byId("account-login-id").addEventListener("input", function () {

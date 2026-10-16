@@ -15,7 +15,7 @@ function harness() {
   vm.runInContext(source.slice(source.indexOf('  function saveAccount()'), source.indexOf('  function renderOtpSettings(')),ctx);
   vm.runInContext(source.slice(source.indexOf('  function renderOtpSettings()'),source.indexOf('  function bindOtpInput(')),ctx);
   ctx.byId('account-location').value='서울';ctx.byId('account-department').value='홍보부';
-  ctx.byId('account-login-id').value='otp_review';ctx.byId('account-password').value='preview-only';
+  ctx.byId('account-otp-required').checked=true;ctx.byId('account-login-id').value='otp_review';ctx.byId('account-password').value='preview-only';
   return ctx;
 }
 test('new account cannot be issued before OTP verification or with invalid code',()=>{
@@ -62,4 +62,9 @@ test('existing accounts show status only and issuance is the only administrator 
 });
 test('storage failure cannot issue an account after OTP verification',()=>{
  const c=harness();c.byId('account-otp-code').value='123456';c.verifyIssuerOtp();c.storageFails=true;c.saveAccount();assert.equal(c.accounts.length,0);assert.equal(c.closed,undefined);
+});
+
+test('issuer can persist optional enrollment without registering OTP',()=>{
+  const c=harness();c.byId('account-otp-required').checked=false;c.saveAccount();
+  assert.equal(c.accounts[0].otpRequired,false);assert.equal(c.accounts[0].otpRegistered,false);
 });

@@ -917,3 +917,5 @@ td small {font-size:11px}
 .security-step-progress li.is-current>span{background:#1769ff;color:#fff}
 .personal-security-main .otp-help{border-top:1px solid #e5e9ef;padding-top:16px;margin-top:20px}
 @media(max-width:560px){.personal-security-main .personal-security-section{padding:18px}.personal-security-main .personal-security-flow{padding:16px}.security-step-progress{gap:16px;flex-wrap:wrap}}
+
+.otp-settings .otp-required-option{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-size:13px;font-weight:600}.otp-settings .otp-required-option input{width:18px;height:18px;padding:0;accent-color:#1769ff}.otp-settings .otp-required-option span{margin:0}

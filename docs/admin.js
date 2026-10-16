@@ -1960,6 +1960,7 @@
     var account = adminAccounts.find(function (item) { return item.id === enteredId && item.password === byId("admin-login-password").value; });
     byId("admin-login-error").hidden = !!account;
     if (!account) { byId("admin-login-password").focus(); return; }
+    if (!requiresOtp(account.id)) { byId("admin-login-password").value = ""; pendingOtpAccount = null; completeAdminLogin(account); return; }
     if (!readOtpRegistration(account.id)) {
       pendingOtpAccount = null;
       byId("admin-login-error").hidden = false;
@@ -1977,6 +1978,25 @@
     byId("admin-otp-code").value = "";
     byId("admin-otp-code").focus();
   });
+  function completeAdminLogin(account) {
+    currentAccount = account;
+    delete byId("operation-region").dataset.scopeInitialized;
+    saveAdminSession(account.id); setAdminLoginState(true); renderAdminIdentity();
+    renderAdminNavigation();
+    lockAccountFilterSelects();
+    renderKioskProducts(); renderReservations(); refreshOperationScopeSelects(false);
+    refreshSettlementScopeFilter(); renderSettlementSummary();
+    restoreAdminRoute();
+    notify("로그인했습니다.");
+  }
+  function requiresOtp(id) {
+    try {
+      var accounts = JSON.parse(localStorage.getItem("letsrunParkDepartmentAccountsV3") || "[]");
+      var found = accounts.find(function (item) { return item.loginId === id || (id === "admin" && item.type === "super"); });
+      // Keep existing registrations protected even when enrollment is optional.
+      return !found || found.otpRequired !== false || !!found.otpRegistered;
+    } catch (error) { return true; }
+  }
   function readOtpRegistration(id) {
     try {
       var accounts = JSON.parse(localStorage.getItem("letsrunParkDepartmentAccountsV3") || "[]");
@@ -1999,15 +2019,7 @@
     var account = pendingOtpAccount;
     pendingOtpAccount = null;
     byId("admin-otp-code").value = "";
-    currentAccount = account;
-    delete byId("operation-region").dataset.scopeInitialized;
-    saveAdminSession(account.id); setAdminLoginState(true); renderAdminIdentity();
-    renderAdminNavigation();
-    lockAccountFilterSelects();
-    renderKioskProducts(); renderReservations(); refreshOperationScopeSelects(false);
-    refreshSettlementScopeFilter(); renderSettlementSummary();
-    restoreAdminRoute();
-    notify("로그인했습니다.");
+    completeAdminLogin(account);
   });
   document.querySelectorAll("[data-go-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.goView); }); });
   ["reservation-search", "reservation-department", "reservation-date", "reservation-end-date", "reservation-program", "reservation-status"].forEach(function (id) { byId(id).addEventListener(id === "reservation-search" ? "input" : "change", function () { reservationPage = 1; renderReservations(); }); });
