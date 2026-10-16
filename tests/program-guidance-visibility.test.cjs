@@ -18,19 +18,23 @@ test('visibility preferences save independently, reopen, and reset for legacy pr
   vm.runInContext(functions(admin,['openProductDialog','saveProductDetail']),c);
   for (const [arrival,cancel] of [[true,false],[false,true],[true,true],[false,false]]) {
     c.openProductDialog(program);
+    byId('detail-booking-open-time').value='09:00';
     byId('detail-hide-arrival-guidance').checked=arrival;
     byId('detail-hide-cancel-guidance').checked=cancel;
     const notice = arrival ? '당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.' : '';
     byId('detail-ticket-notice').value=notice;
     c.saveProductDetail({preventDefault(){assert.fail('unexpected validation error');}});
+    assert.equal(c.saved.bookingOpenTime,'09:00');
     assert.equal(c.saved.ticketNoticeText,notice);
     assert.equal(c.saved.hideArrivalGuidance,arrival); assert.equal(c.saved.hideCancelGuidance,cancel);
     assert.equal(c.saved.arrivalLeadMinutes,5); assert.equal(c.saved.cancelMinutes,60);
     c.openProductDialog(c.saved);
+    assert.equal(byId('detail-booking-open-time').value,'09:00');
     assert.equal(byId('detail-ticket-notice').value,notice);
     assert.equal(byId('detail-hide-arrival-guidance').checked,arrival); assert.equal(byId('detail-hide-cancel-guidance').checked,cancel);
   }
   c.openProductDialog(program);
+  assert.equal(byId('detail-booking-open-time').value,'00:00');
   assert.equal(byId('detail-ticket-notice').value,'');
   assert.equal(byId('detail-hide-arrival-guidance').checked,false); assert.equal(byId('detail-hide-cancel-guidance').checked,false);
 });

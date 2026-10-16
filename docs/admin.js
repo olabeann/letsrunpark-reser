@@ -912,6 +912,7 @@
     byId("detail-purchase-max-qty").value = item.purchaseMaxQty != null ? item.purchaseMaxQty : 4;
     byId("detail-booking-window").value = item.bookingWindow != null ? item.bookingWindow : defaultBookingWindow;
     byId("detail-arrival-lead-minutes").value = item.arrivalLeadMinutes != null ? item.arrivalLeadMinutes : defaultArrivalLeadMinutes;
+    byId("detail-booking-open-time").value = item.bookingOpenTime || "00:00";
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
@@ -1149,6 +1150,7 @@
     var visibleEndAt = byId("detail-visible-end").value;
     var purchaseMaxQty = Number(byId("detail-purchase-max-qty").value);
     if (!Number.isInteger(purchaseMaxQty) || purchaseMaxQty < 1) { event.preventDefault(); notify("최대 구매 수량은 1 이상의 정수로 입력해주세요."); return; }
+    var bookingOpenTime = byId("detail-booking-open-time").value;
     var bookingWindow = Number(byId("detail-booking-window").value);
     var arrivalLeadMinutes = Number(byId("detail-arrival-lead-minutes").value);
     var guidanceText = byId("program-guidance-text").value.trim();
@@ -1159,10 +1161,11 @@
     if (saleEndDate < saleStartDate) { event.preventDefault(); notify("운영 종료일은 시작일보다 빠를 수 없습니다."); return; }
     if (!visibleStartAt || !visibleEndAt) { event.preventDefault(); notify("프로그램 노출 시작과 종료 일시를 모두 설정해주세요."); return; }
     if (visibleEndAt < visibleStartAt) { event.preventDefault(); notify("프로그램 노출 종료는 시작보다 빨라질 수 없습니다."); return; }
-    if (!Number.isFinite(bookingWindow) || bookingWindow < 1) { event.preventDefault(); notify("예약 가능 일수를 1일 이상으로 설정해주세요."); return; }
+    if (!Number.isInteger(bookingWindow) || bookingWindow < 1) { event.preventDefault(); notify("예약 가능 일수를 1일 이상으로 설정해주세요."); return; }
     if (!Number.isInteger(arrivalLeadMinutes) || arrivalLeadMinutes < 0 || arrivalLeadMinutes > 100) { event.preventDefault(); notify("입장 대기 시간은 0~100분 사이의 정수로 입력해주세요."); return; }
     if (!saleDays.length) { event.preventDefault(); notify("판매 요일을 하나 이상 선택해주세요."); return; }
     if (!Number.isFinite(cancelOffsetValue) || cancelOffsetValue < 0) { event.preventDefault(); notify("취소 마감 값을 확인해주세요."); return; }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(bookingOpenTime)) { event.preventDefault(); notify("예약 오픈 시각을 입력해주세요."); return; }
     var cancelMultiplier = cancelOffsetUnit === "days" ? 1440 : cancelOffsetUnit === "hours" ? 60 : 1;
     var program = Object.assign({}, existing || {}, {
       key: activeProgramKey || "custom-program-" + Date.now(),
@@ -1172,7 +1175,7 @@
       settlementTag: (existing && existing.settlementTag) || location + "-" + department,
       purchaseGroup: (existing && existing.purchaseGroup) || "", conflictGroup: (existing && existing.conflictGroup) || "",
       purchaseMaxQty: purchaseMaxQty,
-      bookingWindow: bookingWindow,
+      bookingWindow: bookingWindow, bookingOpenTime: bookingOpenTime,
       arrivalLeadMinutes: arrivalLeadMinutes,
       hideArrivalGuidance: byId("detail-hide-arrival-guidance").checked,
       hideCancelGuidance: byId("detail-hide-cancel-guidance").checked,

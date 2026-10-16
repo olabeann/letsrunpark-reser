@@ -250,6 +250,7 @@ test('calendar opens the first available month and explains only a fully empty b
     'calendar-prev': {}, 'calendar-next': {},
   };
   const runtime = vm.createContext({
+    BookingRules: rules,
     calendarMonth: new Date(2026, 8, 1), calendarFirstMonth: new Date(2026, 9, 1), calendarMonths: [new Date(2026, 9, 1)],
     bookingStart: new Date(2026, 8, 21), bookingEnd: new Date(2026, 9, 5),
     program: { bookingWindow: 14, saleDays: [0, 6] }, state: { dateKey: '' },
@@ -742,3 +743,29 @@ test('discount labels preserve the configured name and append only its value', (
  assert.equal(rules.validationError([item({ qty: 6, time: '15:00~15:20' })], [], memberId, configured, now), '');
  assert.match(rules.validationError([item({ qty: 4, time: '15:00~15:20' })], [item({ qty: 3 })], memberId, configured, now), /최대 6매/);
  });
+
+test('KST booking release opens exactly 14 days before use at the configured minute', () => {
+  const configured = { ...programs, ride: { ...programs.ride, bookingWindow:14, bookingOpenTime:'09:00' } };
+  const ticket = item({dateKey:'2026-11-07', date:'2026.11.07 (토)'});
+  assert.equal(rules.bookingOpensAt(configured.ride, ticket.dateKey).toISOString(), '2026-10-24T00:00:00.000Z');
+  assert.match(rules.validationError([ticket], [], memberId, configured, new Date('2026-10-24T08:59:59+09:00')), /아직 예약 오픈 시각/);
+  assert.equal(rules.validationError([ticket], [], memberId, configured, new Date('2026-10-24T09:00:00+09:00')), '');
+  assert.equal(rules.validationError([ticket], [], memberId, configured, new Date('2026-10-24T09:00:01+09:00')), '');
+  assert.equal(rules.bookingOpensAt({bookingWindow:14},'2027-01-03').toISOString(), '2026-12-19T15:00:00.000Z');
+  assert.equal(rules.bookingOpensAt({bookingWindow:1,bookingOpenTime:'23:59'},'2028-03-01').toISOString(), '2028-02-29T14:59:00.000Z');
+});
+
+test('calendar enables the newly released date only at the configured opening time', () => {
+  let clock = new Date('2026-10-24T08:59:59+09:00').getTime();
+  class ClockDate extends Date { constructor(...args) { super(...(args.length ? args : [clock])); } }
+  const grid = {previousElementSibling:{hidden:false},innerHTML:'',querySelectorAll:()=>[]};
+  const elements = {'calendar-grid':grid,'booking-window-note':{},'calendar-title':{},'calendar-prev':{},'calendar-next':{}};
+  const c=vm.createContext({Date:ClockDate,BookingRules:rules,calendarMonth:new Date(2026,10,1),calendarFirstMonth:new Date(2026,10,1),calendarMonths:[new Date(2026,10,1)],bookingStart:new Date(2026,9,24),bookingEnd:new Date(2026,10,7),program:{bookingWindow:14,bookingOpenTime:'09:00'},state:{dateKey:''},byId:id=>elements[id],dateKey:date=>[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-'),operationExceptionFor:()=>null,programOperatesOn:()=>true,formatBookingDate:date=>date.toDateString()});
+  vm.runInContext(appFunction('renderCalendar'),c);
+  c.renderCalendar();
+  assert.match(grid.innerHTML,/data-date-key="2026-11-07"[^>]*예약 불가[^>]*disabled/);
+  clock=new Date('2026-10-24T09:00:00+09:00').getTime();
+  c.renderCalendar();
+  assert.match(grid.innerHTML,/data-date-key="2026-11-07"[^>]*예약 가능/);
+  assert.doesNotMatch(grid.innerHTML,/data-date-key="2026-11-07"[^>]*disabled/);
+});

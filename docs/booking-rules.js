@@ -21,6 +21,14 @@
     return { start: start.getTime(), end: end.getTime() };
   }
 
+  // Booking release dates and times are defined in Korea Standard Time.
+  function bookingOpensAt(program, dateKey) {
+    var days = program && Number.isInteger(program.bookingWindow) && program.bookingWindow > 0 ? program.bookingWindow : 14;
+    var time = program && /^([01]\d|2[0-3]):[0-5]\d$/.test(program.bookingOpenTime) ? program.bookingOpenTime : "00:00";
+    var useDate = new Date(dateKey + "T" + time + ":00+09:00");
+    return new Date(useDate.getTime() - days * 86400000);
+  }
+
   function overlaps(left, right) {
     var a = interval(left), b = interval(right);
     // Adjacent sessions are allowed; the entry window is not the reserved session interval.
@@ -196,6 +204,7 @@
       if (!item || item.memberId !== memberId) return "현재 로그인한 계정의 장바구니만 결제할 수 있습니다.";
       try { quoteItem(item, programs); } catch (error) { return error.message; }
       var itemProgram = programFor(item, programs);
+      if (now < bookingOpensAt(itemProgram, item.dateKey)) return "아직 예약 오픈 시각이 아닙니다. 이용일 " + (itemProgram.bookingWindow || 14) + "일 전 " + (itemProgram.bookingOpenTime || "00:00") + "(한국시간)부터 예약할 수 있습니다.";
       var bookingWindowDays = itemProgram && Number.isFinite(itemProgram.bookingWindow) && itemProgram.bookingWindow > 0 ? itemProgram.bookingWindow : 14;
       var lastDay = new Date(today); lastDay.setDate(lastDay.getDate() + bookingWindowDays);
       var range = interval(item), date = new Date(range.start);
@@ -291,5 +300,5 @@
     };
   }
 
-  return { interval: interval, overlaps: overlaps, isActive: isActive, ticketRecords: ticketRecords, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
+  return { bookingOpensAt: bookingOpensAt, interval: interval, overlaps: overlaps, isActive: isActive, ticketRecords: ticketRecords, quoteItem: quoteItem, validationError: validationError, buildOrder: buildOrder };
 });

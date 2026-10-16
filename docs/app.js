@@ -240,6 +240,7 @@
         programs[key].name = source.programName || base.name;
         programs[key].bookingWindow = source && Number.isFinite(source.bookingWindow) && source.bookingWindow > 0 ? source.bookingWindow : baseBookingWindowDays[key];
         programs[key].arrivalLeadMinutes = source && Number.isInteger(source.arrivalLeadMinutes) && source.arrivalLeadMinutes >= 0 && source.arrivalLeadMinutes <= 100 ? source.arrivalLeadMinutes : base.arrivalLeadMinutes;
+        programs[key].bookingOpenTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(source.bookingOpenTime) ? source.bookingOpenTime : "00:00";
         programs[key].hideArrivalGuidance = typeof source.hideArrivalGuidance === "boolean" ? source.hideArrivalGuidance : base.hideArrivalGuidance === true;
         programs[key].hideCancelGuidance = typeof source.hideCancelGuidance === "boolean" ? source.hideCancelGuidance : base.hideCancelGuidance === true;
         programs[key].ticketNoticeText = typeof source.ticketNoticeText === "string" ? source.ticketNoticeText : base.ticketNoticeText || "";
@@ -1394,7 +1395,7 @@
   function renderCalendar() {
     var grid = byId("calendar-grid");
     var windowNote = byId("booking-window-note");
-    if (windowNote) windowNote.textContent = "오늘부터 " + (program.bookingWindow || 14) + "일 이내 운영일 예약 가능 · 휴장일 제외";
+    if (windowNote) windowNote.textContent = "이용일 " + (program.bookingWindow || 14) + "일 전 " + (program.bookingOpenTime || "00:00") + "(한국시간) 예약 오픈 · 휴장일 제외";
     if (calendarMonths.length && !calendarMonths.some(function (availableMonth) { return availableMonth.getTime() === calendarMonth.getTime(); })) calendarMonth = new Date(calendarFirstMonth);
     var monthIndex = calendarMonths.findIndex(function (availableMonth) { return availableMonth.getTime() === calendarMonth.getTime(); });
     var year = calendarMonth.getFullYear();
@@ -1416,7 +1417,7 @@
       var date = new Date(year, month, day);
       var key = dateKey(date);
       var operationException = operationExceptionFor(key);
-      var available = date >= bookingStart && date <= bookingEnd && programOperatesOn(program, key, date.getDay()) && !operationException;
+      var available = date >= bookingStart && date <= bookingEnd && new Date() >= BookingRules.bookingOpensAt(program, key) && programOperatesOn(program, key, date.getDay()) && !operationException;
       if (available) hasAvailableDate = true;
       var selected = key === state.dateKey;
       var today = key === dateKey(bookingStart);
@@ -1801,5 +1802,5 @@
     selectProgram(state.programKey, false); renderCart(); restoreShopRoute(); syncProgramExtras();
   });
   setInterval(function () { updateTicketAccess(); updateTicketListStatuses(); }, 1000);
-  setInterval(function () { renderSlots(); update(); renderCart(); }, 30000);
+  setInterval(function () { refreshBookingWindow(state.programKey); renderCalendar(); renderSlots(); update(); renderCart(); }, 30000);
 })();
