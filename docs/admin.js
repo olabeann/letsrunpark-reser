@@ -912,7 +912,7 @@
     byId("detail-purchase-max-qty").value = item.purchaseMaxQty != null ? item.purchaseMaxQty : 4;
     byId("detail-booking-window").value = item.bookingWindow != null ? item.bookingWindow : defaultBookingWindow;
     byId("detail-arrival-lead-minutes").value = item.arrivalLeadMinutes != null ? item.arrivalLeadMinutes : defaultArrivalLeadMinutes;
-    byId("detail-booking-open-time").value = item.bookingOpenTime || "00:00";
+    byId("detail-booking-open-time").value = item.bookingOpenTime || "";
     var saleDays = Array.isArray(item.saleDays) ? item.saleDays.map(Number) : [6, 0];
     document.querySelectorAll(".detail-days input").forEach(function (input) { input.checked = saleDays.includes(Number(input.value)); });
     var cancelMinutes = Number(item.cancelMinutes == null ? defaultCancelMinutes : item.cancelMinutes);
@@ -1165,7 +1165,7 @@
     if (!Number.isInteger(arrivalLeadMinutes) || arrivalLeadMinutes < 0 || arrivalLeadMinutes > 100) { event.preventDefault(); notify("입장 대기 시간은 0~100분 사이의 정수로 입력해주세요."); return; }
     if (!saleDays.length) { event.preventDefault(); notify("판매 요일을 하나 이상 선택해주세요."); return; }
     if (!Number.isFinite(cancelOffsetValue) || cancelOffsetValue < 0) { event.preventDefault(); notify("취소 마감 값을 확인해주세요."); return; }
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(bookingOpenTime)) { event.preventDefault(); notify("예약 오픈 시각을 입력해주세요."); return; }
+    if (bookingOpenTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(bookingOpenTime)) { event.preventDefault(); notify("예약 오픈 시각을 입력해주세요."); return; }
     var cancelMultiplier = cancelOffsetUnit === "days" ? 1440 : cancelOffsetUnit === "hours" ? 60 : 1;
     var program = Object.assign({}, existing || {}, {
       key: activeProgramKey || "custom-program-" + Date.now(),

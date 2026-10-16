@@ -930,4 +930,9 @@ td small {font-size:11px}
 
 .admin-view[data-view="program-edit"] .ticket-notice-setting textarea{box-sizing:border-box;display:block;width:100%;min-height:112px;padding:12px 14px;border:1px solid #dbe0e5;border-radius:7px;background:#fff;color:#24282e;font:inherit;font-size:13px;line-height:1.7;resize:vertical}
 
-.admin-view[data-view="program-edit"] .booking-open-time{display:grid;gap:8px;margin-top:16px;max-width:320px}
+.admin-view[data-view="program-edit"] .booking-window-controls{display:grid;grid-template-columns:minmax(160px,320px) minmax(160px,240px);gap:16px;align-items:end}
+.admin-view[data-view="program-edit"] .booking-window-controls>label{display:grid;gap:8px;margin:0;min-width:0}
+.admin-view[data-view="program-edit"] .booking-window-controls>label>span{margin:0;font-size:11px;font-weight:700;color:#4f5760}
+.admin-view[data-view="program-edit"] .booking-window-controls em{font-style:normal;font-weight:400;color:#747a81}
+.admin-view[data-view="program-edit"] .booking-window-controls input{box-sizing:border-box;width:100%;min-width:0;height:40px;margin:0;padding:0 12px;border:1px solid #dbe0e5;border-radius:7px;background:#fff;color:#24282e;font-family:inherit;font-size:13px}
+@media(max-width:420px){.admin-view[data-view="program-edit"] .booking-window-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}}

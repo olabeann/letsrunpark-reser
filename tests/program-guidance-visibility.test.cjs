@@ -34,8 +34,12 @@ test('visibility preferences save independently, reopen, and reset for legacy pr
     assert.equal(byId('detail-hide-arrival-guidance').checked,arrival); assert.equal(byId('detail-hide-cancel-guidance').checked,cancel);
   }
   c.openProductDialog(program);
-  assert.equal(byId('detail-booking-open-time').value,'00:00');
+  assert.equal(byId('detail-booking-open-time').value,'');
   assert.equal(byId('detail-ticket-notice').value,'');
+  c.saveProductDetail({preventDefault(){assert.fail('optional opening time must allow empty input');}});
+  assert.equal(c.saved.bookingOpenTime,'');
+  c.openProductDialog(c.saved);
+  assert.equal(byId('detail-booking-open-time').value,'');
   assert.equal(byId('detail-hide-arrival-guidance').checked,false); assert.equal(byId('detail-hide-cancel-guidance').checked,false);
 });
 test('hidden guidance preserves admission and cancellation rules and can be shown again', () => {
