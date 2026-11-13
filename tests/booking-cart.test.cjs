@@ -38,7 +38,7 @@ test('detects identical, contained and partially overlapping intervals in either
 
 test('rejects overlapping different programs in cart and reservations', () => {
   const ride = item({ qty: 1 });
-  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', qty: 1 });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기A', qty: 1 });
   assert.match(error([ride, play]), /시간이 겹/);
   assert.match(error([ride], [play]), /시간이 겹/);
   assert.equal(error([ride], [{ ...play, status: 'cancelled' }]), '');
@@ -63,7 +63,7 @@ test('blocks different-program overlaps while allowing same-session tickets', ()
   saved.push(tour());
   assert.match(error([item({ time: '15:00~15:20' })], saved), /시간이 겹/);
   assert.equal(error([item(), item({ id: 'duplicate' })]), '');
-  assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기' })]), /시간이 겹/);
+  assert.match(error([item(), item({ programKey: 'play', name: '포니랑 놀기A' })]), /시간이 겹/);
 });
 
 test('rejects logged-out, empty or foreign-member carts', () => {
@@ -103,7 +103,7 @@ test('percent discounts use the full rate even when an old policy stored an amou
 });
 
 test('caps each program independently and enforces per-usage-date citizen discount limits', () => {
-  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2 });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기A', time: '10:20~10:45', qty: 2 });
   assert.equal(error([item({ qty: 2 }), play]), '');
   assert.equal(error([item({ qty: 3 }), play]), '');
   assert.equal(error([item({ qty: 3 }), tour({ qty: 2 })]), '');
@@ -122,7 +122,7 @@ test('allows only one discount policy per account and usage date', () => {
     play: { ...programs.play, discountPolicies: [programs.play.discountPolicy, alternate] },
   };
   const ride = item({ qty: 1, discount: true, discountQty: 1, discountPolicyId: 'gwacheon' });
-  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1, discount: true, discountQty: 1, discountPolicyId: 'staff' });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기A', time: '10:20~10:45', qty: 1, discount: true, discountQty: 1, discountPolicyId: 'staff' });
   assert.match(rules.validationError([ride, play], [], memberId, multiPrograms, now), /하나의 할인 정책/);
 });
 
@@ -145,7 +145,7 @@ test('uses configured sale weekdays and blocks stored operation closures', () =>
 test('allows capped same-session additions and resets the discount cap per usage date', () => {
   const usedOnSameDate = [
     item({ id: 'used-1', qty: 1 }),
-    item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1 }),
+    item({ id: 'used-2', programKey: 'play', name: '포니랑 놀기A', time: '10:20~10:45', qty: 1 }),
   ];
   assert.equal(error([item({ qty: 1 })], usedOnSameDate), '');
   assert.equal(error([item({ dateKey: '2026-08-30', qty: 4 })], usedOnSameDate), '');
@@ -166,7 +166,7 @@ test('blocks mixed regions or departments', () => {
 
 test('caps each program at 4 per usage date across cart and reservations', () => {
   const ride = item({ qty: 2 });
-  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 2, price: 8000 });
+  const play = item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기A', time: '10:20~10:45', qty: 2, price: 8000 });
   assert.equal(error([ride, play]), '');
   assert.equal(error([item({ qty: 2 })], [item({ id: 'saved-same-session', qty: 1 })]), '');
   const savedRide = item({ id: 'saved-ride', qty: 3 });
@@ -182,9 +182,9 @@ test('fails payment when another member already paid for the same session', () =
 
 test('keeps ride and play as independent sellable programs in one cart', () => {
   const ride = rules.quoteItem(item({ qty: 1 }), programs);
-  const play = rules.quoteItem(item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기', time: '10:20~10:45', qty: 1, price: 4000 }), programs);
+  const play = rules.quoteItem(item({ id: 'cart-play', programKey: 'play', name: '포니랑 놀기A', time: '10:20~10:45', qty: 1, price: 4000 }), programs);
   assert.equal(ride.name, '포니 타기');
-  assert.equal(play.name, '포니랑 놀기');
+  assert.equal(play.name, '포니랑 놀기A');
   assert.equal(error([ride, play]), '');
 });
 
@@ -207,7 +207,7 @@ test('checkout recalculates prices and atomically produces one reservation with 
   assert.deepEqual(order.tickets[0].originalDiscountFlags, [true, true]);
   assert.deepEqual(order.tickets[0].adminTicketStatuses, ['confirmed', 'confirmed']);
   assert.equal(order.tickets[0].arrivalLeadMinutes, 20, 'Arrival waiting time is snapshotted at checkout');
-  assert.equal(order.tickets[0].cancelMinutes, 10, 'Cancellation deadline is snapshotted at checkout');
+  assert.equal(order.tickets[0].cancelMinutes, 30, 'Cancellation deadline is snapshotted at checkout');
   assert.equal(order.store.carts[memberId].length, 0);
   assert.deepEqual(order.store.carts.other, before.carts.other);
   assert.equal(order.store.revision, 4);
@@ -365,7 +365,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pro
   const runtime = vm.createContext({
     currentMember: { id: memberId },
     bookingSelectionError: () => '',
-    makeCartItem: () => item({ id: 'new-item', programKey: 'play', name: '포니랑 놀기', qty: 1 }),
+    makeCartItem: () => item({ id: 'new-item', programKey: 'play', name: '포니랑 놀기A', qty: 1 }),
     withStoreLock: action => Promise.resolve().then(action),
     readStore: () => savedStore,
     ownCart: () => savedStore.carts[memberId],
@@ -384,7 +384,7 @@ test('reserve redirects to a valid existing cart when a new item exceeds the pro
   vm.runInContext(appFunction('addToCart'), runtime);
   await runtime.addToCart(true);
   assert.deepEqual(steps, [4]);
-  assert.deepEqual(messages, ['선택한 포니랑 놀기 1명은 구매 한도를 초과해 장바구니에 담기지 않았습니다. 기존 상품 확인 후 결제해주세요.']);
+  assert.deepEqual(messages, ['선택한 포니랑 놀기A 1명은 구매 한도를 초과해 장바구니에 담기지 않았습니다. 기존 상품 확인 후 결제해주세요.']);
   assert.equal(elements['cart-page-error'].hidden, false);
   assert.equal(elements['cart-page-error'].textContent, messages[0]);
   assert.equal(checkoutStarted, false);
@@ -545,12 +545,12 @@ test('opening another program resets date, session, headcount and discount optio
   assert.equal(state.time, '');
   assert.equal(state.qty, 1);
   assert.equal(state.discount, false);
-  assert.equal(elements.get('product-title').textContent, '포니랑 놀기');
+  assert.equal(elements.get('product-title').textContent, '포니랑 놀기A');
   assert.equal(elements.get('product-subtitle').textContent, programs.play.noticeText, 'The summary shows only the latest administrator notice');
   assert.equal(elements.get('product-unit-price').textContent, '4000원');
   assert.equal(elements.get('date-picker').open, false);
   runtime.selectProgram('ride');
-  assert.equal(elements.get('product-subtitle').textContent, '', 'Removing the administrator notice removes the summary copy');
+  assert.equal(elements.get('product-subtitle').textContent, programs.ride.noticeText, 'Switching back restores the ride notice');
 });
 
 test('slot refresh requires explicit selection and keeps it while capacity remains', () => {

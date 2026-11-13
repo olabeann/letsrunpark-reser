@@ -110,15 +110,16 @@
       price: 5000,
       tag: "어린이 전용",
       tagClass: "tag--exp",
-      image: "assets/pony/cover.jpg",
+      image: "assets/characters/pony-rider.png",
       character: "assets/characters/pony-rider.png",
       subtitle: "작은 포니와 함께하는 어린이 승마 체험",
       region: "서울",
       department: "공원화사업추진TF",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
-      guidanceText: "[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용할 수 있습니다.\n[체험 방법] 안전장구를 착용하고 진행요원의 안내에 따라 체험해주세요.\n[준비 사항] 활동하기 편한 복장과 운동화를 착용해주세요.",
-      requiresGuidanceConfirmation: false,
+      noticeText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 표시되지 않으며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓 표시 여부를 확인해 주세요.\n\n-신장 100cm 이상, 초등학생 이하, 75kg 이하 이용 가능\n-체험 종료 시간 5분 전까지 도착하지 않을 경우 취소/환불 불가능합니다.\n- 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
+      guidanceText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 표시되지 않으며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓 표시 여부를 확인해 주세요.\n\n[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용 가능합니다.\n[이용 횟수] 1인당 동일 시간대에는 1회만 체험할 수 있습니다. 단, 시간대를 달리하면 1인 다회 이용 가능합니다.\n※ 예시1: 11:00~11:15 체험권 3매 구매 시, 3명이 각각 1회씩 이용할 수 있으며 1명이 3회 이용하는 것은 불가합니다.\n※ 예시2: 1인이 11:00~11:15, 11:15~11:30 체험을 2매 구매하여 각각 1회씩 이용 가능\n[예약 취소]\n(1) 회차 시작시간 30분 전까지만 가능합니다.\n(2) 아동 키가 100cm 미만으로 탑승이 거부되거나, 체험 종료 시간 5분 전까지 도착하지 않을 경우 취소 및 환불이 불가 함에 동의합니다.\n(3) 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
+      requiresGuidanceConfirmation: true,
       discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       discountPolicies: [
         { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50), noticeText: "체험 전 증빙서류(신분증, 주민등록초본 등)를 반드시 지참해주세요." }
@@ -126,13 +127,13 @@
       purchasePolicy: { maxQty: 4 },
       bookingWindow: 14,
       arrivalLeadMinutes: 20,
-      cancelMinutes: 10,
+      cancelMinutes: 30,
       slots: ponySlots
     },
     play: {
       key: "play",
       userBookable: true,
-      name: "포니랑 놀기",
+      name: "포니랑 놀기A",
       hideArrivalGuidance: true,
       hideCancelGuidance: true,
       ticketNoticeText: "당일 구매 후 취소 불가합니다.\n1번 발권으로 다회 이용 가능합니다.",
@@ -170,7 +171,7 @@
       discountPolicy: { id: "GWACHEON-CITIZEN", rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       experiences: {
         ride: { name: "포니 타기", price: 5000, image: "assets/pony/cover.jpg" },
-        play: { name: "포니랑 놀기", price: 4000, image: "assets/pony/gallery-02.jpg" }
+        play: { name: "포니랑 놀기A", price: 4000, image: "assets/pony/gallery-02.jpg" }
       },
       slots: ponySlots
     },
@@ -1064,7 +1065,7 @@
     var groupedReservationId = ticketReservationId(samplePaidDate, 1);
     var defaults = [
       { id: groupedReservationId + "-G01", reservationId: groupedReservationId, programKey: "ride", name: "포니 타기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: active.slot.time, qty: 2, price: 5000, discount: true, discountQty: 2, discountPolicyId: "gwacheon", discountLabel: discountDisplayLabel("과천시민 할인", "percent", 50), arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, forceActive: true, paymentMethod: "demo-card", createdAt: samplePaidAt },
-      { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt },
+      { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기A", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt },
       { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
     var savedCancellations = readDemoCancellations();
