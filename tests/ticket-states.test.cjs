@@ -15,6 +15,7 @@ const names = [
   'ticketReservationNumber',
   'formatTicketGroupDate', 'ticketListGroups',
   'exampleTicketsNeedRefresh',
+  'cancelledExampleTicket', 'addCancelledExampleToExistingReservations',
   'defaultTicketReservations', 'persistDefaultTicketReservations',
   'ticketListReservations', 'updateTicketListStatuses', 'updateTicketAccess',
 ];
@@ -43,7 +44,7 @@ function runtime(now, saved = [], examples = false) {
     Date: ClockDate,
     weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
     readReservations: () => saved,
-    readStore: () => ({ revision: 0, reservations: saved, carts: {} }),
+    readStore: () => ({ revision: 0, reservations: saved.slice(), carts: {} }),
     writeStore: store => { writtenStore = store; return true; },
     ownCart: () => [],
     readDemoCancellations: () => ({}),
@@ -62,9 +63,9 @@ function runtime(now, saved = [], examples = false) {
 }
 
 function assertStates(context, tickets, now) {
-  assert.equal(tickets.length, 3);
-  assert.deepEqual(Array.from(tickets, item => context.ticketTiming(item, now).accessState), ['upcoming', 'active', 'ended']);
-  assert.equal(new Set(Array.from(tickets, item => item.id)).size, 3);
+  assert.equal(tickets.length, 4);
+  assert.deepEqual(Array.from(tickets, item => context.ticketTiming(item, now).accessState), ['upcoming', 'active', 'ended', 'cancelled']);
+  assert.equal(new Set(Array.from(tickets, item => item.id)).size, 4);
   assert.equal(tickets[1].discount, true, 'Active sample retains citizen discount information');
 }
 
@@ -81,11 +82,11 @@ test('user ticket displays one shared reservation number for current and legacy 
 test('default tickets use admin reservation format and persist to the shared booking store', () => {
   const fixture = runtime(now);
   const tickets = fixture.context.ticketListReservations();
-  assert.equal(tickets.length, 3);
+  assert.equal(tickets.length, 4);
   tickets.forEach(ticket => assert.match(ticket.reservationId, /^LRP-\d{6}-\d{5}$/));
   const store = fixture.writtenStore();
   assert.ok(store);
-  assert.equal(store.reservations.length, 2);
+  assert.equal(store.reservations.length, 3);
   assert.equal(store.reservations[0].tickets.length, 2);
   assert.equal(store.reservations[0].total, 13000);
   assert.equal(store.reservations[0].tickets.reduce((sum, ticket) => sum + ticket.qty, 0), 4);
@@ -126,7 +127,7 @@ for (const count of [0, 1, 2, 8, 20]) {
     const before = JSON.stringify(saved);
     const { context } = runtime(now, saved);
     const tickets = context.ticketListReservations();
-    if (count === 0) assert.equal(tickets.length, 3);
+    if (count === 0) assert.equal(tickets.length, 4);
     else assert.deepEqual(Array.from(tickets, item => item.id), saved.map(item => item.id));
     assert.equal(JSON.stringify(saved), before, 'Stored reservations must remain untouched');
   });
@@ -276,4 +277,56 @@ test('example tickets include hidden timing with a multiline notice and a visibl
   const saved = BookingRules.ticketRecords(fixture.writtenStore().reservations).find(ticket => ticket.programKey === 'play');
   assert.equal(saved.ticketNoticeText, hidden.ticketNoticeText);
   assert.equal(saved.hideArrivalGuidance, true);
+});
+
+test('cancelled tickets remain visible and never become usable, including forced demo tickets', () => {
+  const saved = ['cancelled', 'canceled', 'confirmed'].map((status, index) => ({
+    id: 'cancel-' + index, memberId: 'member-1', isExample: true,
+    dateKey: '2026-08-30', time: '10:00~10:20', qty: 0, price: 0,
+    status, forceActive: true,
+  }));
+  const { context, writtenStore } = runtime(now, saved);
+  const tickets = context.ticketListReservations();
+  assert.equal(tickets.length, 3);
+  assert.equal(writtenStore(), null, 'Cancelled examples must not be replaced with fresh bookings');
+  for (const ticket of tickets) {
+    for (const date of [new Date('2026-08-29'), new Date('2026-08-30T10:05:00'), new Date('2026-09-01')]) {
+      const timing = context.ticketTiming(ticket, date);
+      assert.equal(timing.accessState, 'cancelled');
+      assert.equal(timing.status.label, '취소 완료');
+    }
+  }
+});
+
+test('reservation lookup includes own cancelled records while excluding other members', () => {
+  const start = source.indexOf('  function readReservations(');
+  const fn = source.slice(start, source.indexOf('\n  }', start) + 4);
+  const context = vm.createContext({ BookingRules, currentMember: { id: 'mine' }, readStore: () => ({ reservations: [
+    { id: 'own', memberId: 'mine', status: 'cancelled', qty: 0 },
+    { id: 'other', memberId: 'other', status: 'cancelled', qty: 0 },
+  ] }) });
+  vm.runInContext(fn, context);
+  assert.deepEqual(Array.from(context.readReservations(), item => item.id), ['own']);
+});
+
+test('adds one fully refunded example to an existing demo without replacing reservations', () => {
+  const saved = [{ id: 'existing', reservationId: 'existing', memberId: 'member-1', isExample: true, qty: 2, price: 10000, dateKey: '2026-11-21', time: '10:00~10:20' }];
+  const fixture = runtime(now, saved);
+  const tickets = fixture.context.ticketListReservations();
+  assert.equal(tickets.length, 2);
+  const cancelled = tickets.find(ticket => ticket.status === 'cancelled');
+  assert.ok(cancelled);
+  assert.equal(cancelled.qty, 0);
+  assert.equal(cancelled.price, 0);
+  assert.equal(cancelled.cancellationHistory[0].amount, 10000);
+  assert.equal(cancelled.cancellationHistory[0].qty, 2);
+  assert.equal(cancelled.originalTicketIds.length, 2);
+  assert.deepEqual(tickets.find(ticket => ticket.id === 'existing'), saved[0]);
+  const store = fixture.writtenStore();
+  assert.equal(store.reservations.length, 2);
+  assert.equal(store.reservations[1].status, 'cancelled');
+  fixture.context.readStore = () => store;
+  fixture.context.readReservations = () => BookingRules.ticketRecords(store.reservations);
+  assert.equal(fixture.context.ticketListReservations().length, 2);
+  assert.equal(store.reservations.length, 2, 'Reloading must not duplicate the cancelled example');
 });

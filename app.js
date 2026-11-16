@@ -117,8 +117,8 @@
       department: "공원화사업추진TF",
       description: "어린이를 위한 포니 승마 체험입니다. 이용 조건과 복장을 확인한 뒤 방문해주세요.",
       notes: ["키 100cm 이상 · 몸무게 75kg 이하", "초등학생까지 체험 가능", "안전모와 안전조끼 필수 착용", "치마·샌들보다 활동하기 편한 복장 권장"],
-      noticeText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 표시되지 않으며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓 표시 여부를 확인해 주세요.\n\n-신장 100cm 이상, 초등학생 이하, 75kg 이하 이용 가능\n-체험 종료 시간 5분 전까지 도착하지 않을 경우 취소/환불 불가능합니다.\n- 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
-      guidanceText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 표시되지 않으며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓 표시 여부를 확인해 주세요.\n\n[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용 가능합니다.\n[이용 횟수] 1인당 동일 시간대에는 1회만 체험할 수 있습니다. 단, 시간대를 달리하면 1인 다회 이용 가능합니다.\n※ 예시1: 11:00~11:15 체험권 3매 구매 시, 3명이 각각 1회씩 이용할 수 있으며 1명이 3회 이용하는 것은 불가합니다.\n※ 예시2: 1인이 11:00~11:15, 11:15~11:30 체험을 2매 구매하여 각각 1회씩 이용 가능\n[예약 취소]\n(1) 회차 시작시간 30분 전까지만 가능합니다.\n(2) 아동 키가 100cm 미만으로 탑승이 거부되거나, 체험 종료 시간 5분 전까지 도착하지 않을 경우 취소 및 환불이 불가 함에 동의합니다.\n(3) 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
+      noticeText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 ‘취소 완료’로 표시되며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓의 취소 상태와 환불 내역을 확인해 주세요.\n\n-신장 100cm 이상, 초등학생 이하, 75kg 이하 이용 가능\n-체험 종료 시간 5분 전까지 도착하지 않을 경우 취소/환불 불가능합니다.\n- 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
+      guidanceText: "⚠️ 11월 14일 ‘포니 타기’ 기상 악화로 취소 안내\n기상 악화로 이용일 전날 일괄 취소되었습니다. 취소된 티켓은 예약조회에 ‘취소 완료’로 표시되며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓의 취소 상태와 환불 내역을 확인해 주세요.\n\n[이용 대상] 키 100cm 이상, 초등학생 이하 어린이만 이용 가능합니다.\n[이용 횟수] 1인당 동일 시간대에는 1회만 체험할 수 있습니다. 단, 시간대를 달리하면 1인 다회 이용 가능합니다.\n※ 예시1: 11:00~11:15 체험권 3매 구매 시, 3명이 각각 1회씩 이용할 수 있으며 1명이 3회 이용하는 것은 불가합니다.\n※ 예시2: 1인이 11:00~11:15, 11:15~11:30 체험을 2매 구매하여 각각 1회씩 이용 가능\n[예약 취소]\n(1) 회차 시작시간 30분 전까지만 가능합니다.\n(2) 아동 키가 100cm 미만으로 탑승이 거부되거나, 체험 종료 시간 5분 전까지 도착하지 않을 경우 취소 및 환불이 불가 함에 동의합니다.\n(3) 기상 악화 시 체험 전날 관리자에 의해 예약이 일괄 취소될 수 있으니, ★★반드시 방문 전날 오후 6시 이후 티켓의 예약 상태를 확인해 주시기 바랍니다.★★\n※ 사전 예약이 취소되더라도 당일 기상 상황에 따라 현장 발권 및 체험은 정상 운영될 수 있습니다.",
       requiresGuidanceConfirmation: true,
       discountPolicy: { id: "gwacheon", type: "percent", value: 50, rate: 0.5, maxQty: 2, maxQtyPerDate: 2, label: discountDisplayLabel("과천시민 할인", "percent", 50) },
       discountPolicies: [
@@ -383,7 +383,7 @@
   }
 
   function ticketPaymentStatus(reservation) {
-    if (reservation.status === "cancelled" || reservation.qty === 0) return "취소완료";
+    if (reservation.status === "cancelled" || reservation.status === "canceled" || reservation.qty === 0) return "취소완료";
     return Array.isArray(reservation.cancellationHistory) && reservation.cancellationHistory.length ? "부분환불 완료" : "결제완료";
   }
 
@@ -408,9 +408,10 @@
     var arrivalLeadMinutes = Number.isInteger(reservation.arrivalLeadMinutes) && reservation.arrivalLeadMinutes >= 0 ? reservation.arrivalLeadMinutes : 20;
     var entryOpen = new Date(sessionStart.getTime() - arrivalLeadMinutes * 60 * 1000);
     var entryClose = ticketSessionEnd(reservation, sessionStart);
-    var accessState = reservation.forceActive ? "active" : now < entryOpen ? "upcoming" : now <= entryClose ? "active" : "ended";
+    var accessState = (reservation.status === "cancelled" || reservation.status === "canceled" || reservation.qty === 0) ? "cancelled" : reservation.forceActive ? "active" : now < entryOpen ? "upcoming" : now <= entryClose ? "active" : "ended";
     var arrivalGuidance = arrivalLeadMinutes === 0 ? "예약 시간까지 방문하셔서 입장을 대기해주세요." : arrivalLeadMinutes + "분 전까지 방문하셔서 입장을 대기해주세요.";
     var status = {
+      cancelled: { label: "취소 완료", title: "취소된 티켓입니다.", detail: "취소·환불 내역을 확인해주세요.", live: "취소된 티켓으로는 입장할 수 없습니다." },
       upcoming: { label: "입장 대기", title: "입장 가능 시간이 아닙니다.", detail: arrivalGuidance, live: "입장 시간에 자동으로 활성화됩니다." },
       active: { label: "입장 가능", title: "지금 입장할 수 있습니다.", detail: arrivalGuidance, live: "활성화된 티켓입니다. 입장 시 보여주세요." },
       ended: { label: "입장 종료", title: "입장 시간이 지났습니다.", detail: formatTime(sessionStart, false) + " 회차 입장이 마감되었습니다.", live: "사용할 수 없는 티켓입니다." }
@@ -431,9 +432,9 @@
     byId("ticket-status-label").textContent = timing.status.label;
     byId("ticket-access-title").textContent = timing.status.title;
     byId("ticket-access-detail").textContent = timing.status.detail;
-    byId("ticket-access-detail").hidden = timing.accessState !== "ended" && ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
-    byId("ticket-window-note").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
-    byId("ticket-time-window").hidden = ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    byId("ticket-access-detail").hidden = (timing.accessState === "upcoming" || timing.accessState === "active") && ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    byId("ticket-window-note").hidden = timing.accessState === "cancelled" || ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
+    byId("ticket-time-window").hidden = timing.accessState === "cancelled" || ticketGuidanceHidden(ticketReservation, "hideArrivalGuidance");
     var configuredProgram = programs[ticketReservation.programKey];
     var ticketNoticeText = configuredProgram && typeof configuredProgram.ticketNoticeText === "string" ? configuredProgram.ticketNoticeText : ticketReservation.ticketNoticeText || "";
     byId("ticket-free-notice").textContent = ticketNoticeText;
@@ -456,7 +457,7 @@
     byId("ticket-payment-method").textContent = paymentMethodLabel(ticketReservation.paymentMethod);
     byId("ticket-payment-status").textContent = ticketPaymentStatus(ticketReservation);
     byId("ticket-price").textContent = money(ticketReservation.price);
-    var hasDiscount = ticketDiscountQty(ticketReservation) > 0;
+    var hasDiscount = timing.accessState !== "cancelled" && ticketDiscountQty(ticketReservation) > 0;
     byId("ticket-discount-proof").hidden = !hasDiscount;
     byId("ticket-discount-proof").setAttribute("aria-label", "할인 증빙 검토가 필요한 티켓입니다.");
     byId("ticket-discount-label").textContent = "할인 증빙 검토 필요";
@@ -534,20 +535,21 @@
     var originalQty = Number(ticketReservation.qty || 0) + cancelledQty;
     var originalPrice = Number(ticketReservation.price || 0) + refundedAmount;
     byId("ticket-refund-history").hidden = !history.length;
-    byId("ticket-confirmation-message").textContent = history.length ? originalQty + "명 중 " + cancelledQty + "명 취소 · " + ticketReservation.qty + "명 이용 가능" : "예약이 확정되었습니다.";
-    byId("ticket-refund-summary-text").textContent = history.length ? "총 " + originalQty + "명 중 " + cancelledQty + "명의 취소를 접수했어요." : "";
+    byId("ticket-confirmation-message").textContent = ticketTiming(ticketReservation, new Date()).accessState === "cancelled" ? "예약이 전체 취소되었습니다." : history.length ? originalQty + "명 중 " + cancelledQty + "명 취소 · " + ticketReservation.qty + "명 이용 가능" : "예약이 확정되었습니다.";
+    byId("ticket-refund-summary-text").textContent = history.length ? "총 " + originalQty + "명 중 " + cancelledQty + "명의 취소·환불이 완료되었습니다." : "";
     byId("ticket-original-price").textContent = money(originalPrice);
     byId("ticket-refunded-price").textContent = "−" + money(refundedAmount);
     byId("ticket-remaining-price").textContent = money(ticketReservation.price);
     byId("ticket-refund-history-list").innerHTML = history.map(function (item) {
       var detail = [item.regularQty ? "정상가 " + item.regularQty + "명" : "", item.discountQty ? (item.discountLabel || "할인 적용") + " " + item.discountQty + "명" : ""].filter(Boolean).join(" · ");
       var requestedAt = new Date(item.createdAt).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-      return '<article><span><strong>' + item.qty + '명 취소 완료</strong><small>' + escapeHtml(detail) + '</small><small>처리 ' + escapeHtml(requestedAt) + '</small></span><div><em>환불 완료</em><b>−' + money(item.amount) + '</b></div></article>';
+      return '<article><span><strong>' + item.qty + '명 취소 완료</strong><small>' + escapeHtml([detail, item.reason].filter(Boolean).join(" · ")) + '</small><small>처리 ' + escapeHtml(requestedAt) + '</small></span><div><em>환불 완료</em><b>−' + money(item.amount) + '</b></div></article>';
     }).join("");
   }
 
   function renderTicketCancellation(timing, now) {
     var canCancel = ticketCanCancel(ticketReservation, timing, now);
+    byId("ticket-cancellation").hidden = timing.accessState === "cancelled";
     var deadline = ticketCancellationDeadline(ticketReservation);
     byId("open-ticket-cancel").disabled = !canCancel;
     byId("ticket-cancel-deadline").hidden = ticketGuidanceHidden(ticketReservation, "hideCancelGuidance");
@@ -662,7 +664,7 @@
   function readReservations() {
     var store = readStore();
     return currentMember && store ? BookingRules.ticketRecords(store.reservations).filter(function (item) {
-      return item && item.memberId === currentMember.id && item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
+      return item && item.memberId === currentMember.id;
     }) : [];
   }
 
@@ -1045,6 +1047,30 @@
     return { slot: closestSlot.slot, forceActive: true };
   }
 
+  function cancelledExampleTicket() {
+    var reservationId = "LRP-261113-90003";
+    return {
+      id: reservationId + "-G01", reservationId: reservationId,
+      programKey: "ride", name: "포니 타기", dateKey: "2026-11-14", date: "2026.11.14 (토)",
+      time: programs.ride.slots[2].time, qty: 0, price: 0, discount: false, discountQty: 0,
+      status: "cancelled", paymentMethod: "demo-card", createdAt: "2026-11-13T10:00:00+09:00",
+      originalTicketIds: [reservationId + "-T01", reservationId + "-T02"],
+      originalUnitAmounts: [5000, 5000], originalDiscountFlags: [false, false],
+      adminTicketStatuses: ["cancelled", "cancelled"],
+      cancellationHistory: [{ source: "admin", reason: "기상 악화로 회차 운영 취소", createdAt: "2026-11-13T18:00:00+09:00", qty: 2, regularQty: 2, discountQty: 0, amount: 10000, status: "cancelled" }]
+    };
+  }
+
+  function addCancelledExampleToExistingReservations(reservations) {
+    if (!currentMember || !reservations.some(function (item) { return item.isExample; }) || reservations.some(function (item) { return item.status === "cancelled" || item.status === "canceled" || item.qty === 0; })) return reservations;
+    var store = readStore();
+    if (!store) return reservations;
+    var ticket = Object.assign(cancelledExampleTicket(), { memberId: currentMember.id, isExample: true, ticketIds: [], unitAmounts: [] });
+    store.reservations.push({ id: ticket.reservationId, memberId: currentMember.id, paymentId: "DEMO-PAY-" + ticket.reservationId, paymentMethod: ticket.paymentMethod, createdAt: ticket.createdAt, status: "cancelled", total: 0, isExample: true, tickets: [ticket] });
+    store.revision += 1;
+    return writeStore(store) ? reservations.concat([ticket]) : reservations;
+  }
+
   function defaultTicketReservations(now) {
     now = now || new Date();
     var samplePaidDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -1068,14 +1094,16 @@
       { id: groupedReservationId + "-G02", reservationId: groupedReservationId, programKey: "play", name: "포니랑 놀기A", dateKey: dateKey(upcomingDate), date: formatBookingDate(upcomingDate), time: secondSlot, qty: 2, price: 8000, discount: false, discountQty: 0, arrivalLeadMinutes: programs.play.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt },
       { id: ticketReservationId(samplePaidDate, 2) + "-G01", reservationId: ticketReservationId(samplePaidDate, 2), programKey: "ride", name: "포니 타기", dateKey: dateKey(endedDate), date: formatBookingDate(endedDate), time: endedSlot, qty: 2, price: 10000, discount: false, arrivalLeadMinutes: programs.ride.arrivalLeadMinutes, paymentMethod: "demo-card", createdAt: samplePaidAt }
     ];
+    defaults.push(cancelledExampleTicket());
     var savedCancellations = readDemoCancellations();
     return defaults.map(function (reservation) {
       var settings = programs[reservation.programKey];
       return savedCancellations[reservation.id] || Object.assign({}, reservation, { hideArrivalGuidance: settings.hideArrivalGuidance === true, hideCancelGuidance: settings.hideCancelGuidance === true, ticketNoticeText: settings.ticketNoticeText || "" });
-    }).filter(function (reservation) { return reservation.qty > 0; });
+    });
   }
 
   function exampleTicketsNeedRefresh(records) {
+    if (records.some(function (item) { return item.status === "cancelled" || item.status === "canceled" || item.qty === 0; })) return false;
     if (!records.length || !records.every(function (item) { return item.isExample; })) return false;
     if (!ticketListGroups(records).some(function (group) { return group.tickets.length > 1; })) return true;
     var byUsageDate = new Map();
@@ -1096,11 +1124,8 @@
     if (!store) return tickets;
     var memberRecords = BookingRules.ticketRecords(store.reservations).filter(function (item) { return item && item.memberId === currentMember.id; });
     if (memberRecords.length) {
-      var activeMemberRecords = memberRecords.filter(function (item) {
-        return item.status !== "cancelled" && item.status !== "canceled" && item.qty !== 0;
-      });
-      var shouldRefreshExamples = exampleTicketsNeedRefresh(activeMemberRecords);
-      if (!shouldRefreshExamples) return activeMemberRecords;
+      var shouldRefreshExamples = exampleTicketsNeedRefresh(memberRecords);
+      if (!shouldRefreshExamples) return memberRecords;
       store.reservations = store.reservations.filter(function (reservation) {
         return !(reservation && reservation.isExample && reservation.memberId === currentMember.id);
       });
@@ -1134,7 +1159,7 @@
       var savedTicket = Object.assign({}, ticket, {
         memberId: currentMember.id,
         isExample: true,
-        status: "confirmed",
+        status: ticket.status || "confirmed",
         ticketIds: ticketIds,
         unitAmounts: unitAmounts
       });
@@ -1142,6 +1167,7 @@
       parent.tickets.push(savedTicket);
     });
     var parents = Array.from(parentsById.values()).map(function (parent) {
+      parent.status = parent.tickets.every(function (ticket) { return ticket.status === "cancelled" || ticket.qty === 0; }) ? "cancelled" : "confirmed";
       delete parent.personSequence;
       return parent;
     });
@@ -1152,12 +1178,12 @@
 
   function ticketListReservations(now) {
     now = now || new Date();
-    var reservations = readReservations();
+    var reservations = addCancelledExampleToExistingReservations(readReservations());
     // Persist the first demo tickets in the same reservation store the admin reads,
     // so both screens always show the exact same reservation number.
     var needsExampleRefresh = exampleTicketsNeedRefresh(reservations);
     var visibleReservations = !reservations.length || needsExampleRefresh ? persistDefaultTicketReservations(defaultTicketReservations(now)) : reservations;
-    var stateOrder = { upcoming: 0, active: 1, ended: 2 };
+    var stateOrder = { upcoming: 0, active: 1, ended: 2, cancelled: 3 };
     return visibleReservations.sort(function (first, second) {
       return stateOrder[ticketTiming(first, now).accessState] - stateOrder[ticketTiming(second, now).accessState];
     });
@@ -1165,7 +1191,7 @@
 
   function ticketListGroups(reservations) {
     var now = new Date();
-    var stateOrder = { active: 0, upcoming: 1, ended: 2 };
+    var stateOrder = { active: 0, upcoming: 1, ended: 2, cancelled: 3 };
     var groups = [];
     var byReservationId = new Map();
     reservations.forEach(function (reservation) {
@@ -1209,7 +1235,7 @@
     body.append(status);
     body.append(createTextElement("strong", "ticket-list-card__title", reservation.name));
     body.append(createTextElement("span", "ticket-list-card__schedule", reservation.date + " · " + reservation.time));
-    body.append(createTextElement("span", "ticket-list-card__meta", reservation.qty + "명 · " + money(reservation.price)));
+    if (timing.accessState !== "cancelled") body.append(createTextElement("span", "ticket-list-card__meta", reservation.qty + "명 · " + money(reservation.price)));
     card.append(image, body, createTextElement("span", "ticket-list-card__arrow", "티켓 보기 →"));
     card.addEventListener("click", function () { showTicketDetail(reservation.id); });
     return card;
@@ -1248,7 +1274,7 @@
       var header = document.createElement("header");
       header.className = "ticket-list-group__header";
       header.append(createTextElement("span", "ticket-list-group__date", group.date));
-      header.append(createTextElement("strong", "ticket-list-group__total", money(group.total)));
+      if (group.tickets.some(function (ticket) { return ticketTiming(ticket, new Date()).accessState !== "cancelled"; })) header.append(createTextElement("strong", "ticket-list-group__total", money(group.total)));
       var items = document.createElement("div");
       items.className = "ticket-list-group__items";
       group.tickets.forEach(function (reservation) { items.append(createTicketListCard(reservation)); });

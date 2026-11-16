@@ -28,3 +28,20 @@ test('does not create state for a new browser or throw when storage is blocked',
   vm.runInNewContext(source, { window: { localStorage: { getItem: () => null, setItem: () => assert.fail() } } });
   assert.doesNotThrow(() => vm.runInNewContext(source, { window: { localStorage: { getItem() { throw Error('blocked'); } } } }));
 });
+
+test('migrates hidden-ticket notices without changing bookings or custom guidance', () => {
+  const original = { reservations: [{ id: 'cancelled', status: 'cancelled' }], catalog: {
+    referenceContentRevision: '20261113-reference-content', weatherNoticeRevision: '20261114-weather-cancellation-compact',
+    programOverrides: { ride: { noticeText: '취소된 티켓은 예약조회에 표시되지 않으며, 결제 금액은 전액 환불 처리됩니다.\n예약조회에서 티켓 표시 여부를 확인해 주세요.', guidanceText: '별도 안내 유지' } }
+  } };
+  const storage = new Map([[key, JSON.stringify(original)]]);
+  const run = () => vm.runInNewContext(source, { window: { localStorage: { getItem: k => storage.get(k), setItem: (k, v) => storage.set(k, v) } } });
+  run();
+  const updated = JSON.parse(storage.get(key));
+  assert.match(updated.catalog.programOverrides.ride.noticeText, /‘취소 완료’로 표시/);
+  assert.equal(updated.catalog.programOverrides.ride.guidanceText, '별도 안내 유지');
+  assert.deepEqual(updated.reservations, original.reservations);
+  const once = storage.get(key);
+  run();
+  assert.equal(storage.get(key), once);
+});

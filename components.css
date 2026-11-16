@@ -425,3 +425,15 @@ kbd{display:inline-grid;min-width:20px;height:18px;padding:0 4px;place-items:cen
 /* Preserve the line breaks in program descriptions entered by administrators. */
 .booking-review #product-subtitle{white-space:pre-line}
  .booking-review__media img[src="assets/characters/pony-rider.png"]{object-fit:contain;object-position:center}
+
+/* Cancelled tickets remain readable as reservation history. */
+.ticket-list-card__status--cancelled{background:var(--bg);color:var(--grey)}
+.ticket-list-card[data-access-state="cancelled"]>img{filter:grayscale(1);opacity:.65}
+.entry-ticket[data-access-state="cancelled"] .entry-ticket__status{background:var(--grey)}
+.entry-ticket[data-access-state="cancelled"] .entry-ticket__badge{border-color:var(--line);background:var(--white);color:var(--grey)}
+.entry-ticket[data-access-state="cancelled"] .entry-ticket__badge i{background:var(--soft)}
+
+.entry-ticket[data-access-state="cancelled"] #ticket-people,
+.entry-ticket[data-access-state="cancelled"] dl>div:has(#ticket-admission-count),
+.entry-ticket[data-access-state="cancelled"] dl>div:has(#ticket-price),
+.entry-ticket[data-access-state="cancelled"] dl>div:has(#ticket-remaining-price){display:none}

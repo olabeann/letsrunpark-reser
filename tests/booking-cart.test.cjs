@@ -503,11 +503,11 @@ test('storage failure does not report payment complete or clear the persisted ca
   assert.match(messages.join(' '), /결제는 완료되지 않았으며/);
 });
 
-test('app reads only the signed-in member cart and active reservations', () => {
+test('app reads only the signed-in member cart and reservations including cancellations', () => {
   const saved = store([item()], [item(), tour({ memberId: 'other' }), item({ status: 'cancelled' })]);
   const runtime = vm.createContext({ currentMember: { id: memberId }, BookingRules: rules, readStore: () => saved });
   vm.runInContext(['readReservations', 'ownCart'].map(appFunction).join('\n'), runtime);
-  assert.equal(runtime.readReservations().length, 1);
+  assert.equal(runtime.readReservations().length, 2);
   assert.equal(runtime.ownCart(saved)[0].memberId, memberId);
   runtime.currentMember = null;
   assert.equal(runtime.readReservations().length, 0);

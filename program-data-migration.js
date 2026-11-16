@@ -51,3 +51,25 @@
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   } catch (error) { /* Keep the page usable when browser storage is unavailable. */ }
 })();
+
+(function () {
+  "use strict";
+  var key = "letsrunPlayAdminDemoV4";
+  try {
+    var raw = window.localStorage.getItem(key);
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    var overrides = state.catalog && state.catalog.programOverrides || {};
+    Object.keys(overrides).forEach(function (id) {
+      ["noticeText", "guidanceText"].forEach(function (field) {
+        if (typeof overrides[id][field] !== "string") return;
+        overrides[id][field] = overrides[id][field]
+          .replace(/취소된 티켓은 예약조회에 표시되지 않으며,/g, "취소된 티켓은 예약조회에 ‘취소 완료’로 표시되며,")
+          .replace(/취소된 티켓은 예약조회에 표시되지 않습니다\./g, "취소된 티켓은 예약조회에 ‘취소 완료’로 표시됩니다.")
+          .replace(/예약조회에서 티켓 표시 여부를 확인해 주세요\./g, "예약조회에서 티켓의 취소 상태와 환불 내역을 확인해 주세요.");
+      });
+    });
+    var updated = JSON.stringify(state);
+    if (updated !== raw) window.localStorage.setItem(key, updated);
+  } catch (error) { /* Keep booking available if browser storage is unavailable. */ }
+})();
